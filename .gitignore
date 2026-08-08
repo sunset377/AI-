@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+.codex-run/
+source-materials/
+.DS_Store
+*.local
