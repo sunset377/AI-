@@ -2,16 +2,22 @@ import { useMemo, useState } from 'react'
 
 const wallpapers = [
   {
-    id: 'ice',
-    label: 'Wallpaper 01',
-    title: 'Ice / Motion',
-    src: '/assets/wallpaper-ice.jpg',
+    id: 'electric',
+    label: 'Style 01',
+    title: 'Electric Portrait',
+    src: '/assets/style-gallery/electric-portrait-wide.jpg',
   },
   {
-    id: 'blade',
-    label: 'Wallpaper 02',
-    title: 'Blade / Focus',
-    src: '/assets/wallpaper-blade.png',
+    id: 'garden',
+    label: 'Style 02',
+    title: 'Future Garden',
+    src: '/assets/style-gallery/future-garden-hero.jpg',
+  },
+  {
+    id: 'surreal',
+    label: 'Style 03',
+    title: 'Surreal Vision',
+    src: '/assets/style-gallery/surreal-eye-garden.jpg',
   },
 ]
 
@@ -47,7 +53,7 @@ const projects = [
     title: 'AI 抽卡实验室',
     subtitle: '角色设定、提示词与视觉筛选流程',
     type: 'image',
-    image: '/assets/wallpaper-blade.png',
+    image: '/assets/style-gallery/electric-portrait-wide.jpg',
     meta: 'Midjourney / Liblib / 即梦 / 审美筛选',
     description:
       '围绕角色一致性、镜头张力和商业可用度进行批量出图、筛选、复盘与风格收敛，形成稳定可复用的抽卡方法。',
@@ -56,10 +62,127 @@ const projects = [
     title: '小程序视觉概念',
     subtitle: '轻量交互产品的视觉系统预留位',
     type: 'mini',
-    image: '/assets/wallpaper-ice.jpg',
+    image: '/assets/style-gallery/future-garden-board.jpg',
     meta: 'Mini Program / UI Direction / 后续替换真实案例',
     description:
       '为后续小程序项目预留展示模块，可扩展为二维码入口、交互视频、组件规范与关键页面走查。',
+  },
+]
+
+const styleDirections = [
+  {
+    title: '梦核与未来花园',
+    text: '植物、废墟、机械与柔光人物叙事，适合 AI 短片世界观、海报组图和账号视觉系列。',
+  },
+  {
+    title: '电影感人物肖像',
+    text: '冷暖对撞、近景凝视、强情绪面部光线，适合角色设定、短剧主视觉和商业人物风格稿。',
+  },
+  {
+    title: '复古黑白与故障印刷',
+    text: '高反差黑白、彩色噪点、旧海报质感，适合封面、视觉实验和品牌态度型物料。',
+  },
+  {
+    title: '童话自然与手作感',
+    text: '草地、兔子、纸箱宇航员、暖色儿童叙事，适合亲和型内容、儿童生活方式和治愈系画面。',
+  },
+]
+
+const styleShots = [
+  {
+    title: '瓷白暗房',
+    category: '人像 / 暗黑童话',
+    src: '/assets/style-gallery/porcelain-noir.jpg',
+  },
+  {
+    title: '黑白吉他房间',
+    category: '纪实 / 音乐情绪',
+    src: '/assets/style-gallery/blackroom-guitar.jpg',
+  },
+  {
+    title: '超现实凝视',
+    category: '梦核 / 世界观',
+    src: '/assets/style-gallery/surreal-eye-garden.jpg',
+  },
+  {
+    title: '电子绘画肖像',
+    category: '色彩 / 角色海报',
+    src: '/assets/style-gallery/electric-portrait-wide.jpg',
+  },
+  {
+    title: '纸箱宇航员',
+    category: '童趣 / 手作设定',
+    src: '/assets/style-gallery/cardboard-astronaut.jpg',
+  },
+  {
+    title: '舞台夸张角色',
+    category: '角色 / 表演感',
+    src: '/assets/style-gallery/stage-caricature.jpg',
+  },
+  {
+    title: '草地兔子女孩',
+    category: '自然 / 治愈叙事',
+    src: '/assets/style-gallery/meadow-rabbit-girl.jpg',
+  },
+  {
+    title: '故障印刷偶像',
+    category: '海报 / Glitch',
+    src: '/assets/style-gallery/glitch-icon-poster.jpg',
+  },
+  {
+    title: '沙漠锈色肖像',
+    category: '时装 / 胶片感',
+    src: '/assets/style-gallery/desert-rust-portrait.jpg',
+  },
+  {
+    title: '神话舞者',
+    category: '绘画 / 身体动态',
+    src: '/assets/style-gallery/mythic-dancer.jpg',
+  },
+  {
+    title: '雪夜电影脸',
+    category: '影视 / 冷暖光',
+    src: '/assets/style-gallery/winter-cinema-face.jpg',
+  },
+  {
+    title: '瓷白近景',
+    category: '美学 / 近景肖像',
+    src: '/assets/style-gallery/porcelain-close.jpg',
+  },
+  {
+    title: '云海旅人',
+    category: '史诗 / 场景概念',
+    src: '/assets/style-gallery/cloud-cliff-journey.jpg',
+  },
+  {
+    title: '遗落未来花园',
+    category: '组图 / 社媒排版',
+    src: '/assets/style-gallery/future-garden-board.jpg',
+  },
+  {
+    title: '花园入口',
+    category: '场景 / 角色叙事',
+    src: '/assets/style-gallery/future-garden-hero.jpg',
+  },
+  {
+    title: '旷野红发',
+    category: '时装 / 户外肖像',
+    src: '/assets/style-gallery/desert-redhair-portrait.jpg',
+  },
+  {
+    title: '干净棚拍脸',
+    category: '商业 / 人像样片',
+    src: '/assets/style-gallery/studio-clean-face.jpg',
+  },
+  {
+    title: '风中兔子男孩',
+    category: '童话 / 田野叙事',
+    src: '/assets/style-gallery/field-rabbit-boy.jpg',
+  },
+  {
+    title: '维多利亚秋日',
+    category: '暗黑 / 复古幻想',
+    src: '/assets/style-gallery/victorian-witch-autumn.jpg',
   },
 ]
 
@@ -105,9 +228,10 @@ const stats = [
 
 const navItems = [
   ['01 / Works', 'works'],
-  ['02 / About', 'about'],
-  ['03 / Strengths', 'strengths'],
-  ['04 / Contact', 'contact'],
+  ['02 / Style', 'style'],
+  ['03 / About', 'about'],
+  ['04 / Strengths', 'strengths'],
+  ['05 / Contact', 'contact'],
 ]
 
 function App() {
@@ -201,10 +325,10 @@ function App() {
       </section>
 
       <section className="about section shell" id="about">
-        <div className="sectionKicker">02 / ABOUT</div>
+        <div className="sectionKicker">03 / ABOUT</div>
         <div className="aboutGrid">
           <div className="portraitCard">
-            <img src="/assets/wallpaper-blade.png" alt="辞的视觉风格人物图" />
+            <img src="/assets/style-gallery/porcelain-close.jpg" alt="辞的视觉风格人物图" />
             <div className="portraitCaption">
               <span>刘耀华</span>
               <span>23 岁 / 成都</span>
@@ -282,10 +406,45 @@ function App() {
         </div>
       </section>
 
+      <section className="styleLab section" id="style">
+        <div className="shell">
+          <div className="sectionHead styleHead">
+            <div>
+              <div className="sectionKicker">02 / STYLE LAB</div>
+              <h2>风格创意库</h2>
+            </div>
+            <p>
+              这里收录我做过和正在沉淀的视觉方向：人像、壁纸、AI 绘画、短片概念、社媒封面和角色设定都可以继续扩展进来。
+            </p>
+          </div>
+
+          <div className="directionGrid">
+            {styleDirections.map((item) => (
+              <article className="directionCard" key={item.title}>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="styleMasonry" aria-label="风格创意图片展示">
+            {styleShots.map((shot, index) => (
+              <figure className={index % 5 === 2 ? 'styleShot wideShot' : 'styleShot'} key={shot.src}>
+                <img src={shot.src} alt={`${shot.title} 风格创意`} loading="lazy" />
+                <figcaption>
+                  <span>{shot.category}</span>
+                  {shot.title}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="strengths section shell" id="strengths">
         <div className="sectionHead">
           <div>
-            <div className="sectionKicker">03 / SERVICES</div>
+            <div className="sectionKicker">04 / SERVICES</div>
             <h2>个人优势</h2>
           </div>
           <p>
@@ -307,7 +466,7 @@ function App() {
       <section className="closing" id="contact">
         <div className="closingMedia" aria-hidden="true" />
         <div className="closingInner shell">
-          <p className="eyebrow">04 / CONTACT</p>
+          <p className="eyebrow">05 / CONTACT</p>
           <h2>让故事长出画面。</h2>
           <p>
             如果你正在做 AI 漫剧、品牌视觉、AIGC 影像或小程序视觉方向，我们可以从一个角色、一支片子或一套视觉系统开始。
