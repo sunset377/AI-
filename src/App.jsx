@@ -61,15 +61,21 @@ const projects = [
       '围绕角色一致性、镜头张力和商业可用度进行批量出图、筛选、复盘与风格收敛，形成稳定可复用的抽卡方法。',
   },
   {
-    title: '小程序视觉概念',
-    subtitle: '轻量交互产品的视觉系统预留位',
+    title: '小刘带你挖三星堆',
+    subtitle: '线上互动考古工具 · 小红书已发布',
     type: 'mini',
-    image: 'assets/style-gallery/future-garden-board.jpg',
-    meta: 'Mini Program / UI Direction / 后续替换真实案例',
+    image: 'assets/sanxingdui-tool-cover.jpg',
+    meta: 'H5 / 1927—今天 / 16 件文物互动探索',
     description:
-      '为后续小程序项目预留展示模块，可扩展为二维码入口、交互视频、组件规范与关键页面走查。',
+      '将三年线下讲解中的提问、看展顺序与文物知识，转成可自己推进的互动考古体验：沿时间线发掘、看懂材质，并追踪文物从出土到展柜的旅程。',
+    href: 'sanxingdui/',
+    actionLabel: '打开互动工具',
   },
-].map((project) => ({ ...project, image: assetPath(project.image) }))
+].map((project) => ({
+  ...project,
+  image: assetPath(project.image),
+  href: project.href ? assetPath(project.href) : undefined,
+}))
 
 const styleDirections = [
   {
@@ -402,6 +408,12 @@ function App() {
               </div>
               <div className="projectInfo">
                 <p>{project.description}</p>
+                {project.href ? (
+                  <a className="projectAction" href={project.href} target="_blank" rel="noreferrer">
+                    {project.actionLabel}
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                ) : null}
               </div>
             </article>
           ))}
@@ -466,7 +478,11 @@ function App() {
       </section>
 
       <section className="closing" id="contact">
-        <div className="closingMedia" aria-hidden="true" />
+        <div
+          className="closingMedia"
+          aria-hidden="true"
+          style={{ backgroundImage: `url(${assetPath('assets/style-gallery/future-garden-hero.jpg')})` }}
+        />
         <div className="closingInner shell">
           <p className="eyebrow">05 / CONTACT</p>
           <h2>让故事长出画面。</h2>

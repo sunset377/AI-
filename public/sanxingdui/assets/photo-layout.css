@@ -1,0 +1,3 @@
+/* Photo topics are not measured annotations on the supplied photographs. */
+.inspect-stage .spot,.inspect-stage .height-rule{display:none!important}
+.inspect-image,.object-thumb img{object-fit:contain}

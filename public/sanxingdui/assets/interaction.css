@@ -1,0 +1,29 @@
+.field-plan{height:220px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.record-scene{width:100%;height:100%;position:relative;overflow:hidden;background:#272820;animation:record-in .45s ease}
+.record-scene img{display:block;width:100%;height:100%;object-fit:cover;animation:record-photo-in .48s ease both}
+.record-scene .plan-caption{left:0;right:0;top:auto;bottom:0;padding:22px 10px 8px;color:#f3ead4;background:linear-gradient(transparent,rgba(17,24,18,.9));font-size:9px;line-height:1.35;text-align:left;letter-spacing:.3px}
+.record-scene .plan-caption small{display:block;margin-top:2px;color:#d5cab0;font-size:8px}
+@keyframes record-photo-in{from{opacity:.35;transform:scale(1.025)}to{opacity:1;transform:scale(1)}}
+.record-scene .plan-pin{position:absolute;left:52%;top:38%;width:22px;height:22px;border:5px solid #685330;border-radius:50%;box-shadow:0 0 0 14px #b99b5755}
+.record-scene .plan-label{position:absolute;top:58%;left:40%;font-size:16px}
+.record-scene .stratum{height:31%;padding:10px 20px;background:#cbb888;border-bottom:2px solid #776044;font-size:14px}
+.record-scene .stratum:nth-child(2){background:#a58a59;color:#171f18}
+.record-scene .stratum:nth-child(3){background:#786446;color:#fff}
+.relation-node{position:absolute;border:2px solid #687055;padding:12px;background:#ded4b5;top:20%;left:8%;font-size:15px}
+.relation-node:nth-child(2){top:53%;left:36%;background:#c4b281}
+.relation-node:nth-child(3){top:15%;left:65%}
+.relation-line{position:absolute;left:22%;top:44%;width:57%;height:2px;background:#79663e;transform:rotate(8deg)}
+.record-explanation{padding:16px 0 0;min-height:108px;line-height:1.65;animation:record-in .35s ease}
+.record-explanation h3{font-size:21px;margin:0 0 6px}.record-explanation p{font-size:15px;margin:0}
+.archive-row.selected{background:#7d684c20;box-shadow:inset 4px 0 #685330}
+.pit-view{border:1px solid var(--line);background:#0e211b;padding:16px;margin:24px 0;scroll-margin-top:90px;animation:record-in .45s ease}
+.pit-view h2{margin:0 0 10px}.pit-view img{display:block;width:100%;height:auto;max-height:530px;object-fit:contain;background:#747474}.pit-view p{font-size:14px;line-height:1.6;margin:12px 0}.pit-switch{display:flex}.pit-switch button{flex:1;min-height:44px}
+.six-pits button.selected{outline:3px solid #eedaa1;outline-offset:-5px}
+.pit-view img{height:400px;max-height:400px}
+.inspect-stage{background:#171c1b;scroll-margin-top:82px}.inspect-image{transition:transform .8s cubic-bezier(.2,.7,.15,1);transform-origin:50% 50%;will-change:transform;max-width:none}
+.inspect-stage.manipulating .inspect-image{transition:none}.inspect-stage .focus-caption{position:absolute;top:12px;left:12px;right:12px;z-index:3;pointer-events:none;display:flex;justify-content:space-between;;font-size:12px;color:#f5eac9;text-shadow:0 1px 3px #000}
+.focus-caption b{background:#111b16d9;padding:7px 10px;font-weight:400}.image-quality{font-size:12px;line-height:1.65;color:var(--muted);margin:10px 0 14px}
+.spot-tabs{display:flex;flex-wrap:wrap}.spot-tabs button{min-width:80px;min-height:48px;flex:1;font-size:15px}.spot-copy{scroll-margin-top:80px}
+.album-preview{display:block;width:100%;height:auto}.album-status{padding:12px 0;line-height:1.6;font-size:15px;min-height:64px}.save-actions{display:flex;flex-direction:column;margin:20px 0;}.save-actions button{min-height:52px}.save-actions button:disabled{opacity:.5}
+@keyframes record-in{from{opacity:.4;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.inspect-image,.record-scene,.record-explanation,.pit-view{transition:none;animation:none}}

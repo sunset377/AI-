@@ -1,0 +1,11 @@
+.app:not(.home-mode) #header{
+  position:-webkit-sticky;
+  position:sticky;
+  top:0;
+  z-index:30;
+  background:var(--bg);
+  box-shadow:0 1px 0 var(--line);
+}
+.back span+span{margin-left:9px}
+.focus-caption b+b{margin-left:10px}
+.save-actions>*+*{margin-top:12px}

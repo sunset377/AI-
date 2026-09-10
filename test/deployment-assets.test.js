@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readdir, readFile } from 'node:fs/promises'
+import { access, readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import test from 'node:test'
 
@@ -20,6 +20,15 @@ async function collectTextFiles(directory) {
   return files
 }
 
+async function fileExists(filePath) {
+  try {
+    await access(filePath)
+    return true
+  } catch {
+    return false
+  }
+}
+
 test('GitHub Pages build does not request media from the domain root', async () => {
   const files = await collectTextFiles('dist')
   const offenders = []
@@ -33,4 +42,25 @@ test('GitHub Pages build does not request media from the domain root', async () 
   }
 
   assert.deepEqual(offenders, [])
+})
+
+test('GitHub Pages build publishes the Sanxingdui tool as a self-contained interactive page', async () => {
+  const toolFiles = [
+    'dist/sanxingdui/index.html',
+    'dist/sanxingdui/assets/experience.js',
+    'dist/sanxingdui/assets/visual.css',
+    'dist/sanxingdui/assets/museum/tree.webp',
+  ]
+
+  for (const filePath of toolFiles) {
+    assert.equal(
+      await fileExists(filePath),
+      true,
+      `Expected the deployed tool to include ${filePath}`,
+    )
+  }
+
+  const toolHtml = await readFile('dist/sanxingdui/index.html', 'utf8')
+  assert.match(toolHtml, /<title>小刘带你挖三星堆<\/title>/)
+  assert.match(toolHtml, /\.\/assets\/experience\.js/)
 })

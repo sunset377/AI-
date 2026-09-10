@@ -1,0 +1,39 @@
+.today-mode main{padding-bottom:74px;padding-bottom:calc(74px + var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px)));overflow:hidden}
+.today-mode .chapter-strip{padding-top:8px}
+.today-mode .scene-heading{padding:8px 24px 9px}
+.today-mode .scene-heading .kicker{display:none}
+.today-mode .scene-year{font-size:36px;line-height:1;margin:0 0 3px;letter-spacing:0}
+.today-mode .scene-heading h1{font-size:23px;line-height:1.35}
+.today-mode .scene-heading p{font-size:11px;line-height:1.55;margin-top:4px;max-width:390px}
+.today-journey{margin:0 20px}
+.journey-rail{position:relative;display:grid;grid-template-columns:repeat(5,1fr);grid-gap:6px;margin:0 0 8px}
+.journey-rail:before{content:"";position:absolute;left:9%;right:9%;top:17px;height:1px;background:var(--line)}
+.journey-step{position:relative;z-index:1;min-height:34px;padding:0;background:var(--bg)}
+.journey-step span{display:block;width:25px;height:25px;margin:auto;border:1px solid var(--line);background:var(--bg);color:var(--soft);font:11px/23px Georgia,serif;transform:rotate(45deg)}
+.journey-step span:after{content:""}
+.journey-step.active span,.journey-step.passed span{border-color:var(--accent);color:var(--accent)}
+.journey-step.active span{background:var(--accent);color:var(--bg)}
+.journey-card{border:1px solid var(--line);background:#10251d;overflow:hidden;touch-action:pan-y;animation:journey-in .35s ease both}
+.journey-photo{position:relative;height:280px;height:clamp(220px,36vh,315px);margin:0;overflow:hidden;background:#0c1712}
+.journey-photo:after{content:"";position:absolute;left:0;right:0;bottom:0;height:28%;pointer-events:none;background:linear-gradient(transparent,rgba(11,25,19,.62))}
+.journey-photo img{width:100%;height:100%;object-fit:cover}
+.journey-ai-badge,.journey-place{position:absolute;z-index:2;top:11px;padding:5px 8px;border:1px solid rgba(216,183,109,.8);background:rgba(12,25,19,.86);color:#f0d894;font-size:9px;letter-spacing:1px}
+.journey-ai-badge{left:11px;font-weight:600}
+.journey-place{right:11px;color:#eee2c5;border-color:rgba(238,226,197,.4);letter-spacing:0}
+.journey-copy{position:relative;padding:12px 16px 10px;min-height:137px;background:linear-gradient(115deg,#153d2f,#0f2a20)}
+.journey-copy:after{content:"";position:absolute;right:-22px;bottom:-36px;width:126px;height:126px;border:1px solid rgba(216,183,109,.09);transform:rotate(45deg);pointer-events:none}
+.journey-count{display:flex;justify-content:space-between;color:var(--accent);font:9px/1.2 Georgia,serif;letter-spacing:1.4px}
+.journey-count b{font-weight:400;font-size:11px}
+.journey-copy h2{font-size:23px;line-height:1.25;margin:5px 0 1px;color:#f1e7cf}
+.journey-lead{color:var(--accent);font:17px/1.35 "Songti SC",SimSun,serif}
+.journey-detail{color:#c6d0c2;font-size:11px;line-height:1.55;margin-top:5px;padding-right:5px}
+.journey-controls{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
+.journey-arrow{min-height:47px;padding:8px 13px;text-align:left;color:var(--soft);font-size:12px;border-right:1px solid var(--line)}
+.journey-arrow.next{text-align:right;color:var(--accent);border-right:0}
+.journey-arrow.finish{background:var(--accent);color:var(--bg);font-weight:600}
+.journey-footnote{font-size:10px!important;line-height:1.5!important;color:var(--soft);padding:7px 2px 0}
+.journey-footnote b{color:var(--accent);font-weight:500}
+@keyframes journey-in{from{opacity:.45;transform:translateX(12px)}to{opacity:1;transform:none}}
+@media(max-height:760px){.today-mode .scene-heading{padding-top:5px;padding-bottom:6px}.today-mode .scene-year{font-size:29px}.today-mode .scene-heading h1{font-size:20px}.today-mode .scene-heading p{display:none}.journey-photo{height:230px}.journey-copy{min-height:118px;padding-top:9px;padding-bottom:8px}.journey-copy h2{font-size:20px}.journey-lead{font-size:15px}.journey-detail{font-size:10px;margin-top:3px}.journey-footnote{display:none}}
+@media(max-width:360px){.today-journey{margin-left:16px;margin-right:16px}.today-mode .scene-heading{padding-left:18px;padding-right:18px}.journey-photo{height:230px;height:clamp(205px,34vh,270px)}.journey-copy h2{font-size:21px}}
+@media(prefers-reduced-motion:reduce){.journey-card{animation:none}}

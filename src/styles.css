@@ -523,6 +523,34 @@ video {
   line-height: 1.72;
 }
 
+.projectAction {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  background: rgba(7, 10, 10, 0.32);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+.projectAction:hover {
+  background: rgba(7, 10, 10, 0.64);
+  transform: translateY(-2px);
+}
+
+.projectAction span {
+  color: var(--gold);
+  font-size: 18px;
+  line-height: 1;
+}
+
 .styleLab {
   position: relative;
   overflow: hidden;
@@ -671,7 +699,6 @@ video {
   position: absolute;
   inset: 0;
   z-index: -2;
-  background-image: url("/assets/style-gallery/future-garden-hero.jpg");
   background-position: center;
   background-size: cover;
   opacity: 0.32;

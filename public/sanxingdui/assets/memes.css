@@ -1,0 +1,71 @@
+.meme-entry{width:100%;margin:18px 0 24px;text-align:left}
+.meme-badge{display:inline-block;margin-top:8px;color:#d8b96d;font-size:14px;border-bottom:1px solid #d8b96d}
+.meme-section{margin:20px 0 16px;padding:16px 16px 0;border-top:1px solid #9c8c5d}
+#main>.enter>h1{padding:0 16px}
+.meme-section>p{font-size:15px;line-height:1.8}
+.meme-section figure{margin:12px 0;background:#101713}
+.meme-section figure>img{display:block;width:100%;height:auto;max-height:76vh;object-fit:contain}
+.meme-section figcaption{padding:12px 14px;color:#e9e2ca}
+.meme-section figcaption h3{font-size:22px;margin:0 0 6px}
+.meme-section figcaption p{font-size:14px;line-height:1.8}
+.meme-section .meme-credit{color:#c4cdbd;margin:0;-webkit-user-select:text;user-select:text}
+.meme-controls{display:flex;align-items:center;justify-content:space-between;margin:10px 0}
+.meme-controls button{min-height:48px;padding:10px 15px}
+.meme-controls button:disabled{opacity:.35}
+.meme-controls span{padding:0 12px;white-space:nowrap}
+.meme-section h2:focus{outline:1px solid #d8b96d;outline-offset:4px}
+
+.fixed-shell{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.fixed-shell #header{flex:0 0 auto;position:relative;z-index:13;background:var(--bg)}
+.fixed-shell main{flex:1 1 auto;min-height:0;overflow:hidden;padding-bottom:72px}
+.fixed-shell main>.enter{height:100%;overflow:hidden}
+
+.collection-page-shell{height:100%;display:flex;flex-direction:column;padding:8px 16px 4px}
+.collection-mode .collection-intro{flex:0 0 auto;padding:0 0 7px}
+.collection-title-row{display:flex;align-items:flex-end;justify-content:space-between}
+.collection-mode .collection-intro h1{font-size:26px;line-height:1.25;margin:2px 0}
+.collection-title-row span{font-size:11px;color:var(--soft);white-space:nowrap}
+.collection-mode .collection-intro>p:last-child{font-size:12px;line-height:1.5}
+.collection-mode .meme-entry{flex:0 0 auto;min-height:42px;padding:7px 12px;margin:0 0 7px;font-size:13px}
+.collection-mode .materials{flex:0 0 auto;padding:0 0 7px}
+.collection-mode .materials button{min-height:40px;padding:6px 10px}
+.collection-mode .collection-grid{flex:1 1 auto;min-height:0;grid-gap:8px 12px;padding:0;grid-template-rows:repeat(2,minmax(0,1fr))}
+.collection-mode .object-card{min-height:0;overflow:hidden}
+.collection-mode .object-thumb{height:calc(100% - 55px);min-height:72px}
+.collection-mode .object-label{height:55px;padding-top:3px;overflow:hidden}
+.collection-mode .object-label small{display:block;font-size:9px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.collection-mode .object-card h2{font-size:16px;line-height:1.3;margin:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.collection-mode .object-card p{display:none}
+.collection-mode .meme-badge{margin:0;font-size:9px;line-height:1.2}
+.collection-footer{flex:0 0 auto;display:flex;align-items:center;padding-top:7px}
+.page-controls{display:flex;align-items:center;flex:1}
+.page-controls button{flex:1;min-height:40px;padding:5px 7px;margin:0;border:1px solid var(--line);font-size:11px}
+.page-controls span{padding:0 9px;font-size:12px;white-space:nowrap}
+.collection-quiz-link{flex:0 0 auto;margin-left:10px;padding:7px 0;font-size:11px}
+
+.meme-mode .meme-section{height:100%;margin:0;padding:8px 14px 4px;border:0;display:flex;flex-direction:column}
+.meme-overview-head{flex:0 0 auto}
+.meme-mode .meme-overview-head h2{font-size:22px;line-height:1.25}
+.meme-mode .meme-overview-head>p:last-child{font-size:12px;line-height:1.45}
+.meme-grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;grid-gap:8px;margin-top:7px}
+.meme-grid button{min-height:0;overflow:hidden;border:1px solid var(--line);display:flex;flex-direction:column;background:#101713}
+.meme-grid img{flex:1 1 auto;min-height:0;width:100%;height:0;object-fit:contain}
+.meme-grid span{flex:0 0 auto;padding:3px 4px;font-size:11px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meme-overview>.meme-credit{flex:0 0 auto;margin:3px 0 0;font-size:10px;line-height:1.35}
+.meme-mode .meme-controls{flex:0 0 auto;margin:4px 0 0}
+.meme-mode .meme-controls button{min-height:40px;padding:5px 9px;font-size:11px}
+.meme-focus .meme-close{flex:0 0 auto;min-height:38px;text-align:left;color:var(--accent)}
+.meme-mode .meme-focus figure{flex:1 1 auto;min-height:0;margin:0;display:flex;flex-direction:column}
+.meme-mode .meme-focus figure>img{flex:1 1 auto;min-height:0;height:0;max-height:none;width:100%;object-fit:contain}
+.meme-mode .meme-focus figcaption{flex:0 0 auto;padding:7px 10px}
+.meme-mode .meme-focus figcaption h3{font-size:17px;margin:0}
+.meme-mode .meme-focus .meme-credit{font-size:10px;line-height:1.4}
+
+@media(max-height:720px){
+ .collection-page-shell{padding-top:4px}
+ .collection-mode .collection-intro>p:last-child{display:none}
+ .collection-mode .collection-intro h1{font-size:22px}
+ .collection-mode .meme-entry{min-height:38px}
+ .collection-mode .materials button{min-height:36px}
+ .meme-mode .meme-overview-head>p:last-child{display:none}
+}

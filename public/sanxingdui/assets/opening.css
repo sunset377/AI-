@@ -1,0 +1,18 @@
+.opening.archive-opening{padding:20px 24px 18px;min-height:0;background:#111713;justify-content:flex-start}
+.archive-opening:before{display:none}
+.archive-opening .hero-copy{margin-top:0}
+.archive-opening h1{font-size:30px;line-height:1.35;letter-spacing:1px;margin:8px 0 18px;animation:none}
+.archive-hero{margin:0}
+.archive-photo{overflow:hidden;background:#d8c9a8;border:1px solid #857b63}
+.archive-photo img{display:block;width:100%;height:auto;animation:archive-push 8s ease-out both;transform-origin:50% 65%}
+.archive-hero figcaption{font-size:11px;line-height:1.65;color:#c0baa8;margin:8px 0 15px}
+.archive-opening .opening-foot{padding-top:0}
+.archive-opening .primary{font-size:14px;letter-spacing:0;min-height:52px}
+.archive-opening .secondary{min-height:44px;font-size:13px;color:#d8b76d;margin-top:9px}
+.archive-opening .opening-footer{margin-top:12px}
+.archive-opening .credit{margin-top:10px;letter-spacing:0}
+.discovery-shortcut{width:calc(100% - 48px);margin:0 24px 24px}
+@keyframes archive-push{from{transform:scale(1)}to{transform:scale(1.045)}}
+@media(min-width:600px){.archive-opening h1{font-size:36px}.archive-photo{max-height:340px}.archive-photo img{height:340px;object-fit:contain}}
+@media(max-width:360px){.opening.archive-opening{padding:16px 18px}.archive-opening h1{font-size:25px}.archive-opening .primary{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.archive-photo img{animation:none}}
