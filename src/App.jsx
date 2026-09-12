@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`
 
@@ -77,122 +77,51 @@ const projects = [
   href: project.href ? assetPath(project.href) : undefined,
 }))
 
-const styleDirections = [
+const galleryGroups = [
   {
-    title: '梦核与未来花园',
-    text: '植物、废墟、机械与柔光人物叙事，适合 AI 短片世界观、海报组图和账号视觉系列。',
+    id: 'world',
+    label: '梦幻世界',
+    count: 33,
+    description: '梦核场景、神话人物与电影感世界观',
   },
   {
-    title: '电影感人物肖像',
-    text: '冷暖对撞、近景凝视、强情绪面部光线，适合角色设定、短剧主视觉和商业人物风格稿。',
+    id: 'portrait',
+    label: '人像实验',
+    count: 23,
+    description: '情绪肖像、胶片摄影与角色气质探索',
   },
   {
-    title: '复古黑白与故障印刷',
-    text: '高反差黑白、彩色噪点、旧海报质感，适合封面、视觉实验和品牌态度型物料。',
+    id: 'illustration',
+    label: '插画手作',
+    count: 14,
+    description: '绘画、拼贴、童话与训练手账视觉',
   },
   {
-    title: '童话自然与手作感',
-    text: '草地、兔子、纸箱宇航员、暖色儿童叙事，适合亲和型内容、儿童生活方式和治愈系画面。',
+    id: 'brand',
+    label: '商业创意',
+    count: 13,
+    description: '角色资产、产品表达与广告视觉方案',
+  },
+  {
+    id: 'fashion',
+    label: '服装造型',
+    count: 24,
+    description: '服装设定、造型组合与人物一致性测试',
   },
 ]
 
-const styleShots = [
-  {
-    title: '瓷白暗房',
-    category: '人像 / 暗黑童话',
-    src: 'assets/style-gallery/porcelain-noir.jpg',
-  },
-  {
-    title: '黑白吉他房间',
-    category: '纪实 / 音乐情绪',
-    src: 'assets/style-gallery/blackroom-guitar.jpg',
-  },
-  {
-    title: '超现实凝视',
-    category: '梦核 / 世界观',
-    src: 'assets/style-gallery/surreal-eye-garden.jpg',
-  },
-  {
-    title: '电子绘画肖像',
-    category: '色彩 / 角色海报',
-    src: 'assets/style-gallery/electric-portrait-wide.jpg',
-  },
-  {
-    title: '纸箱宇航员',
-    category: '童趣 / 手作设定',
-    src: 'assets/style-gallery/cardboard-astronaut.jpg',
-  },
-  {
-    title: '舞台夸张角色',
-    category: '角色 / 表演感',
-    src: 'assets/style-gallery/stage-caricature.jpg',
-  },
-  {
-    title: '草地兔子女孩',
-    category: '自然 / 治愈叙事',
-    src: 'assets/style-gallery/meadow-rabbit-girl.jpg',
-  },
-  {
-    title: '故障印刷偶像',
-    category: '海报 / Glitch',
-    src: 'assets/style-gallery/glitch-icon-poster.jpg',
-  },
-  {
-    title: '沙漠锈色肖像',
-    category: '时装 / 胶片感',
-    src: 'assets/style-gallery/desert-rust-portrait.jpg',
-  },
-  {
-    title: '神话舞者',
-    category: '绘画 / 身体动态',
-    src: 'assets/style-gallery/mythic-dancer.jpg',
-  },
-  {
-    title: '雪夜电影脸',
-    category: '影视 / 冷暖光',
-    src: 'assets/style-gallery/winter-cinema-face.jpg',
-  },
-  {
-    title: '瓷白近景',
-    category: '美学 / 近景肖像',
-    src: 'assets/style-gallery/porcelain-close.jpg',
-  },
-  {
-    title: '云海旅人',
-    category: '史诗 / 场景概念',
-    src: 'assets/style-gallery/cloud-cliff-journey.jpg',
-  },
-  {
-    title: '遗落未来花园',
-    category: '组图 / 社媒排版',
-    src: 'assets/style-gallery/future-garden-board.jpg',
-  },
-  {
-    title: '花园入口',
-    category: '场景 / 角色叙事',
-    src: 'assets/style-gallery/future-garden-hero.jpg',
-  },
-  {
-    title: '旷野红发',
-    category: '时装 / 户外肖像',
-    src: 'assets/style-gallery/desert-redhair-portrait.jpg',
-  },
-  {
-    title: '干净棚拍脸',
-    category: '商业 / 人像样片',
-    src: 'assets/style-gallery/studio-clean-face.jpg',
-  },
-  {
-    title: '风中兔子男孩',
-    category: '童话 / 田野叙事',
-    src: 'assets/style-gallery/field-rabbit-boy.jpg',
-  },
-  {
-    title: '维多利亚秋日',
-    category: '暗黑 / 复古幻想',
-    src: 'assets/style-gallery/victorian-witch-autumn.jpg',
-  },
-].map((shot) => ({ ...shot, src: assetPath(shot.src) }))
+const styleShots = galleryGroups.flatMap((group) =>
+  Array.from({ length: group.count }, (_, index) => ({
+    id: `${group.id}-${String(index + 1).padStart(2, '0')}`,
+    title: `${group.label} · ${String(index + 1).padStart(2, '0')}`,
+    category: group.label,
+    categoryId: group.id,
+    description: group.description,
+    src: assetPath(
+      `assets/portfolio-gallery/${group.id}-${String(index + 1).padStart(2, '0')}.webp`,
+    ),
+  })),
+)
 
 const strengths = [
   {
@@ -245,12 +174,59 @@ const navItems = [
 function App() {
   const [activeWallpaper, setActiveWallpaper] = useState(wallpapers[0])
   const [filter, setFilter] = useState('all')
+  const [styleFilter, setStyleFilter] = useState('all')
+  const [lightboxIndex, setLightboxIndex] = useState(null)
   const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    const target = window.location.hash
+      ? document.querySelector(window.location.hash)
+      : null
+
+    if (!target) return undefined
+
+    const frame = window.requestAnimationFrame(() => target.scrollIntoView())
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
 
   const visibleProjects = useMemo(() => {
     if (filter === 'all') return projects
     return projects.filter((project) => project.type === filter)
   }, [filter])
+
+  const visibleStyleShots = useMemo(() => {
+    if (styleFilter === 'all') return styleShots
+    return styleShots.filter((shot) => shot.categoryId === styleFilter)
+  }, [styleFilter])
+
+  const activeStyleShot =
+    lightboxIndex === null ? null : visibleStyleShots[lightboxIndex]
+
+  useEffect(() => {
+    if (lightboxIndex === null) return undefined
+
+    const moveLightbox = (direction) => {
+      setLightboxIndex((current) => {
+        if (current === null) return null
+        return (current + direction + visibleStyleShots.length) % visibleStyleShots.length
+      })
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setLightboxIndex(null)
+      if (event.key === 'ArrowLeft') moveLightbox(-1)
+      if (event.key === 'ArrowRight') moveLightbox(1)
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [lightboxIndex, visibleStyleShots.length])
 
   const handleCopy = async () => {
     try {
@@ -428,23 +404,55 @@ function App() {
               <h2>风格创意库</h2>
             </div>
             <p>
-              这里收录我做过和正在沉淀的视觉方向：人像、壁纸、AI 绘画、短片概念、社媒封面和角色设定都可以继续扩展进来。
+              从桌面壁纸、AI 绘画到角色与服装设定，共收录 107 件视觉作品。像浏览小红书一样向下滑动，点击图片可查看完整大图。
             </p>
           </div>
 
-          <div className="directionGrid">
-            {styleDirections.map((item) => (
-              <article className="directionCard" key={item.title}>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
-              </article>
-            ))}
+          <div className="styleToolbar">
+            <div className="styleFilters" aria-label="作品风格筛选">
+              <button
+                type="button"
+                className={styleFilter === 'all' ? 'active' : ''}
+                onClick={() => {
+                  setStyleFilter('all')
+                  setLightboxIndex(null)
+                }}
+              >
+                全部 <span>{styleShots.length}</span>
+              </button>
+              {galleryGroups.map((group) => (
+                <button
+                  type="button"
+                  key={group.id}
+                  className={styleFilter === group.id ? 'active' : ''}
+                  onClick={() => {
+                    setStyleFilter(group.id)
+                    setLightboxIndex(null)
+                  }}
+                >
+                  {group.label} <span>{group.count}</span>
+                </button>
+              ))}
+            </div>
+            <p>{visibleStyleShots.length} 件作品</p>
           </div>
 
           <div className="styleMasonry" aria-label="风格创意图片展示">
-            {styleShots.map((shot, index) => (
-              <figure className={index % 5 === 2 ? 'styleShot wideShot' : 'styleShot'} key={shot.src}>
-                <img src={shot.src} alt={`${shot.title} 风格创意`} loading="lazy" />
+            {visibleStyleShots.map((shot, index) => (
+              <figure className="styleShot" key={shot.id}>
+                <button
+                  type="button"
+                  className="styleShotButton"
+                  onClick={() => setLightboxIndex(index)}
+                  aria-label={`打开大图：${shot.title}`}
+                >
+                  <img
+                    src={shot.src}
+                    alt={`${shot.title} 风格创意`}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </button>
                 <figcaption>
                   <span>{shot.category}</span>
                   {shot.title}
@@ -454,6 +462,59 @@ function App() {
           </div>
         </div>
       </section>
+
+      {activeStyleShot ? (
+        <div
+          className="galleryLightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${activeStyleShot.title} 大图预览`}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setLightboxIndex(null)
+          }}
+        >
+          <button
+            type="button"
+            className="lightboxClose"
+            onClick={() => setLightboxIndex(null)}
+            aria-label="关闭大图"
+          >
+            ×
+          </button>
+          <button
+            type="button"
+            className="lightboxArrow lightboxPrevious"
+            onClick={() =>
+              setLightboxIndex(
+                (lightboxIndex - 1 + visibleStyleShots.length) % visibleStyleShots.length,
+              )
+            }
+            aria-label="上一张"
+          >
+            ←
+          </button>
+          <div className="lightboxContent">
+            <img src={activeStyleShot.src} alt={`${activeStyleShot.title} 大图`} />
+            <div className="lightboxCaption">
+              <div>
+                <span>{activeStyleShot.category}</span>
+                <strong>{activeStyleShot.title}</strong>
+              </div>
+              <p>{lightboxIndex + 1} / {visibleStyleShots.length}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="lightboxArrow lightboxNext"
+            onClick={() =>
+              setLightboxIndex((lightboxIndex + 1) % visibleStyleShots.length)
+            }
+            aria-label="下一张"
+          >
+            →
+          </button>
+        </div>
+      ) : null}
 
       <section className="strengths section shell" id="strengths">
         <div className="sectionHead">
