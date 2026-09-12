@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import ScrollExpand from './components/ScrollExpand/ScrollExpand'
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`
 
@@ -165,7 +166,7 @@ const stats = [
 
 const navItems = [
   ['01 / Works', 'works'],
-  ['02 / Style', 'style'],
+  ['02 / Style', 'gallery-intro'],
   ['03 / About', 'about'],
   ['04 / Strengths', 'strengths'],
   ['05 / Contact', 'contact'],
@@ -394,6 +395,36 @@ function App() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="galleryPortalSection" id="gallery-intro" aria-label="进入视觉作品库">
+        <ScrollExpand
+          src={assetPath('assets/portfolio-gallery/world-01.webp')}
+          alt="超现实花园中的巨型眼睛与旅行者"
+          title="进入视觉档案"
+          scrollHint="向下滚动，展开作品"
+          startWidth={48}
+          startHeight={58}
+          startRadius={32}
+          mediaZoom={1.24}
+          scrollDistance={0.9}
+          holdDistance={0.18}
+          smoothing={0.08}
+          overlayScrim={0.62}
+          useWindowScroll
+        >
+          <div className="galleryPortalCopy">
+            <p>VISUAL ARCHIVE / 2026</p>
+            <h2>
+              107 件作品
+              <span>5 种视觉方向</span>
+            </h2>
+            <p className="galleryPortalLead">
+              梦幻世界、人像实验、插画手作、商业创意与服装造型。
+            </p>
+            <a href="#style">进入双列图库 <span aria-hidden="true">↓</span></a>
+          </div>
+        </ScrollExpand>
       </section>
 
       <section className="styleLab section" id="style">
