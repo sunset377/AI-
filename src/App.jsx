@@ -3,6 +3,12 @@ import ScrollExpand from './components/ScrollExpand/ScrollExpand'
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`
 
+const defaultHeroWallpaper = {
+  id: 'field-portrait',
+  src: assetPath('assets/hero-field-portrait.jpg'),
+  position: 'center 61%',
+}
+
 const wallpapers = [
   {
     id: 'electric',
@@ -173,11 +179,10 @@ const navItems = [
 ]
 
 function App() {
-  const [activeWallpaper, setActiveWallpaper] = useState(wallpapers[0])
+  const [activeWallpaper, setActiveWallpaper] = useState(defaultHeroWallpaper)
   const [filter, setFilter] = useState('all')
   const [styleFilter, setStyleFilter] = useState('all')
   const [lightboxIndex, setLightboxIndex] = useState(null)
-  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const target = window.location.hash
@@ -229,32 +234,31 @@ function App() {
     }
   }, [lightboxIndex, visibleStyleShots.length])
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText('980175020@qq.com')
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1800)
-    } catch {
-      window.location.href = 'mailto:980175020@qq.com'
-    }
-  }
-
   return (
     <main>
       <section className="hero" id="home" aria-label="首页">
-        <video className="heroVideo" autoPlay muted loop playsInline poster={activeWallpaper.src}>
-          <source src={assetPath('assets/hero-loop.mp4')} type="video/mp4" />
-        </video>
         <div
           className="heroWallpaper"
-          style={{ backgroundImage: `url(${activeWallpaper.src})` }}
+          style={{
+            backgroundImage: `url(${activeWallpaper.src})`,
+            backgroundPosition: activeWallpaper.position ?? 'center',
+          }}
           aria-hidden="true"
         />
         <div className="shade" aria-hidden="true" />
 
         <header className="siteHeader">
-          <a className="brand" href="#home" aria-label="回到首页">
-            辞.
+          <a
+            className="brand"
+            href="#home"
+            aria-label="回到首页并恢复首屏图片"
+            onClick={() => setActiveWallpaper(defaultHeroWallpaper)}
+          >
+            <img
+              className="brandAvatar"
+              src={assetPath('assets/hero-avatar.jpg')}
+              alt=""
+            />
           </a>
           <nav className="nav" aria-label="主导航">
             {navItems.map(([label, href]) => (
@@ -273,24 +277,6 @@ function App() {
             <span>成都 / 可合作</span>
             <span>AI Film · Brand · Visual</span>
             <span>2026 Portfolio</span>
-          </div>
-
-          <div className="heroCopy">
-            <p className="eyebrow">Visual Designer / AI Designer / Brand Designer</p>
-            <h1>
-              辞<span>.</span>
-            </h1>
-            <p className="heroLead">
-              AI 漫剧导演，也是抽卡师。用视觉设计的秩序感，校准 AI 影像的情绪、镜头与商业质感。
-            </p>
-            <div className="heroActions">
-              <a className="primaryBtn" href="#works">
-                查看作品
-              </a>
-              <button className="ghostBtn" type="button" onClick={handleCopy}>
-                {copied ? '邮箱已复制' : '复制邮箱'}
-              </button>
-            </div>
           </div>
 
           <div className="wallpaperSwitch" aria-label="壁纸切换">
