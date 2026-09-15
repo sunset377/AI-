@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import ScrollExpand from './components/ScrollExpand/ScrollExpand'
+import Gateway from './components/Gateway/Gateway'
+import { readView, writeView } from './navigation'
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`
 
@@ -178,11 +180,27 @@ const navItems = [
   ['05 / Contact', 'contact'],
 ]
 
-function App() {
+function App({ initialView }) {
+  const [view, setView] = useState(() => {
+    if (initialView) return initialView
+    return typeof window === 'undefined' ? 'gateway' : readView(window.location)
+  })
   const [activeWallpaper, setActiveWallpaper] = useState(defaultHeroWallpaper)
   const [filter, setFilter] = useState('all')
   const [styleFilter, setStyleFilter] = useState('all')
   const [lightboxIndex, setLightboxIndex] = useState(null)
+
+  useEffect(() => {
+    const handlePopState = () => setView(readView(window.location))
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  const navigateTo = (nextView) => {
+    writeView(nextView)
+    setView(nextView)
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+  }
 
   useEffect(() => {
     const target = window.location.hash
@@ -234,6 +252,25 @@ function App() {
     }
   }, [lightboxIndex, visibleStyleShots.length])
 
+  if (view === 'gateway') {
+    return (
+      <Gateway
+        assetPath={assetPath}
+        onEnterPortfolio={() => navigateTo('portfolio')}
+        onEnterInterview={() => navigateTo('interview')}
+      />
+    )
+  }
+
+  if (view === 'interview') {
+    return (
+      <main className="interviewPending">
+        <button type="button" onClick={() => navigateTo('gateway')}>返回入口</button>
+        <p>AI 面试体验正在接入。</p>
+      </main>
+    )
+  }
+
   return (
     <main>
       <section className="hero" id="home" aria-label="首页">
@@ -248,18 +285,23 @@ function App() {
         <div className="shade" aria-hidden="true" />
 
         <header className="siteHeader">
-          <a
-            className="brand"
-            href="#home"
-            aria-label="回到首页并恢复首屏图片"
-            onClick={() => setActiveWallpaper(defaultHeroWallpaper)}
-          >
-            <img
-              className="brandAvatar"
-              src={assetPath('assets/hero-avatar.jpg')}
-              alt=""
-            />
-          </a>
+          <div className="portfolioIdentity">
+            <button className="returnGatewayButton" type="button" onClick={() => navigateTo('gateway')}>
+              ← 入口
+            </button>
+            <a
+              className="brand"
+              href="#home"
+              aria-label="回到首页并恢复首屏图片"
+              onClick={() => setActiveWallpaper(defaultHeroWallpaper)}
+            >
+              <img
+                className="brandAvatar"
+                src={assetPath('assets/hero-avatar.jpg')}
+                alt=""
+              />
+            </a>
+          </div>
           <nav className="nav" aria-label="主导航">
             {navItems.map(([label, href]) => (
               <a key={href} href={`#${href}`}>

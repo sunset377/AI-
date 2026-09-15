@@ -1,0 +1,520 @@
+.gateway {
+  --gateway-bg: #f2f1f0;
+  --gateway-ink: #262c2f;
+  --gateway-muted: #6b7072;
+  --gateway-accent: #15bcdf;
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+  color: var(--gateway-ink);
+  background: var(--gateway-bg);
+  font-family: "Bahnschrift Condensed", "Arial Narrow", "Microsoft YaHei", sans-serif;
+  isolation: isolate;
+}
+
+.gateway::before {
+  content: "";
+  position: absolute;
+  inset: 0 31% 0 0;
+  z-index: -1;
+  background: linear-gradient(90deg, #f2f1f0 0%, #f2f1f0 72%, rgba(242, 241, 240, 0) 100%);
+  pointer-events: none;
+}
+
+.gatewayNoise {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  opacity: 0.035;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E");
+}
+
+.gateway button,
+.gateway a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gateway button:focus-visible,
+.gateway a:focus-visible {
+  outline: 3px solid rgba(21, 188, 223, 0.55);
+  outline-offset: 4px;
+}
+
+.gatewayHeader {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: clamp(20px, 4vw, 64px);
+  padding: clamp(20px, 2.6vw, 38px) clamp(20px, 3.8vw, 58px) 0;
+}
+
+.gatewayBrand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  color: #111;
+  background: transparent;
+  cursor: pointer;
+}
+
+.gatewayBrand img {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 50%;
+  filter: grayscale(0.2) contrast(1.05);
+}
+
+.gatewayBrand span {
+  display: grid;
+  text-align: left;
+}
+
+.gatewayBrand strong {
+  font-size: 25px;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+}
+
+.gatewayBrand small {
+  margin-top: 4px;
+  color: #62686a;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.gatewayNav {
+  display: flex;
+  align-items: center;
+  gap: clamp(22px, 3.2vw, 48px);
+}
+
+.gatewayNav button,
+.gatewayNav a {
+  padding: 8px 0;
+  border: 0;
+  color: #3a3f41;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: color 220ms ease, transform 220ms ease;
+}
+
+.gatewayNav button:hover,
+.gatewayNav a:hover {
+  color: #000;
+  transform: translateY(-2px);
+}
+
+.gatewayInterviewLink {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  color: #fff;
+  background: rgba(20, 26, 28, 0.34);
+  backdrop-filter: blur(18px);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 220ms ease, transform 220ms ease;
+}
+
+.gatewayInterviewLink:hover {
+  background: rgba(20, 26, 28, 0.56);
+  transform: translateY(-2px);
+}
+
+.gatewayHero {
+  display: grid;
+  grid-template-columns: minmax(520px, 0.9fr) minmax(520px, 1.1fr);
+  min-height: calc(100dvh - 130px);
+  align-items: center;
+  gap: 24px;
+  padding: clamp(26px, 4vh, 60px) 0 clamp(40px, 6vh, 76px) clamp(24px, 7.6vw, 118px);
+}
+
+.gatewayCopy {
+  position: relative;
+  z-index: 3;
+}
+
+.gatewayLabel {
+  margin: 0 0 clamp(24px, 4vh, 46px);
+  color: var(--gateway-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.gateway h1 {
+  display: grid;
+  margin: 0;
+  font-size: min(clamp(48px, 6.35vw, 100px), 10vh);
+  font-weight: 700;
+  line-height: 0.82;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
+}
+
+.gateway h1 span {
+  display: block;
+  width: fit-content;
+}
+
+.gateway h1 .isIndented {
+  margin-left: min(12vw, 190px);
+}
+
+.gateway h1 .isAccent {
+  color: var(--gateway-accent);
+}
+
+.gatewayActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: clamp(26px, 4vh, 48px) 0 0 min(12vw, 190px);
+}
+
+.gatewayPrimary,
+.gatewaySecondary {
+  min-height: 54px;
+  padding: 0 24px;
+  border: 1px solid #0fa3c2;
+  clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px));
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  cursor: pointer;
+  transition: transform 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.gatewayPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  color: #112023;
+  background: var(--gateway-accent);
+  box-shadow: 0 14px 38px -18px rgba(15, 163, 194, 0.75);
+}
+
+.gatewayPrimary span {
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: #112023;
+}
+
+.gatewaySecondary {
+  color: #31383a;
+  border-color: rgba(38, 44, 47, 0.2);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.gatewayPrimary:hover,
+.gatewaySecondary:hover {
+  transform: translateY(-3px);
+}
+
+.gatewayPrimary:hover {
+  background: #3fd0ef;
+  box-shadow: 0 18px 42px -16px rgba(15, 163, 194, 0.82);
+}
+
+.gatewayPrimary:active,
+.gatewaySecondary:active,
+.gatewayInterviewLink:active {
+  transform: translateY(1px) scale(0.985);
+}
+
+.gatewayMedia {
+  position: relative;
+  align-self: stretch;
+  min-height: 620px;
+}
+
+.gatewayMediaFrame {
+  position: absolute;
+  inset: -86px 0 -34px 7%;
+  overflow: hidden;
+  background: #283134;
+  clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%, 0 12%);
+}
+
+.gatewayMediaMain {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(0.86) contrast(1.04);
+  animation: gatewayDrift 12s ease-in-out infinite alternate;
+}
+
+.gatewayMediaTint {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(105deg, rgba(21, 188, 223, 0.08), transparent 42%),
+    linear-gradient(180deg, transparent 55%, rgba(12, 18, 20, 0.52));
+  mix-blend-mode: screen;
+}
+
+.gatewayMediaFrame > p {
+  position: absolute;
+  right: 28px;
+  bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.gatewayMediaFrame > p span {
+  color: var(--gateway-accent);
+  font-size: 18px;
+}
+
+.gatewayMediaCard {
+  position: absolute;
+  left: -5%;
+  bottom: 1%;
+  width: clamp(190px, 17vw, 290px);
+  margin: 0;
+  padding: 8px;
+  color: #fff;
+  background: rgba(24, 30, 32, 0.82);
+  box-shadow: 0 30px 80px rgba(26, 34, 36, 0.28);
+  backdrop-filter: blur(12px);
+  transform: rotate(-2deg);
+  animation: gatewayFloat 6s ease-in-out infinite;
+}
+
+.gatewayMediaCard img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.gatewayMediaCard figcaption {
+  padding: 11px 7px 5px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.gatewayOrbit {
+  position: absolute;
+  top: 16%;
+  left: -3%;
+  display: grid;
+  place-items: center;
+  width: 132px;
+  height: 132px;
+  border: 1px solid rgba(38, 44, 47, 0.24);
+  border-radius: 50%;
+  color: #242a2d;
+  background: rgba(242, 241, 240, 0.78);
+  backdrop-filter: blur(16px);
+}
+
+.gatewayOrbit::after {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1px dashed rgba(38, 44, 47, 0.24);
+  border-radius: inherit;
+  animation: gatewaySpin 18s linear infinite;
+}
+
+.gatewayOrbit span {
+  margin-top: 20px;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 0.8;
+}
+
+.gatewayOrbit small {
+  margin-top: -14px;
+  color: #697073;
+  font-size: 8px;
+  line-height: 1.25;
+  letter-spacing: 0.12em;
+  text-align: center;
+}
+
+.gatewayFooter {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  padding: 14px clamp(20px, 3.8vw, 58px);
+  color: #6a7072;
+  border-top: 1px solid rgba(38, 44, 47, 0.12);
+  background: rgba(242, 241, 240, 0.78);
+  backdrop-filter: blur(14px);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+@keyframes gatewayDrift {
+  from { transform: scale(1.03) translate3d(-0.8%, -0.5%, 0); }
+  to { transform: scale(1.1) translate3d(1.2%, 0.8%, 0); }
+}
+
+@keyframes gatewayFloat {
+  0%, 100% { transform: rotate(-2deg) translateY(0); }
+  50% { transform: rotate(-1deg) translateY(-10px); }
+}
+
+@keyframes gatewaySpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1080px) {
+  .gatewayHero {
+    grid-template-columns: 0.95fr 1.05fr;
+    padding-left: 32px;
+  }
+
+  .gateway h1 {
+    font-size: min(7vw, 78px);
+  }
+
+  .gateway h1 .isIndented,
+  .gatewayActions {
+    margin-left: 9vw;
+  }
+}
+
+@media (max-width: 760px) {
+  .gateway {
+    min-height: 100dvh;
+    overflow-y: auto;
+  }
+
+  .gateway::before {
+    inset: 0;
+    background: linear-gradient(180deg, rgba(242, 241, 240, 0) 0 31%, #f2f1f0 46%);
+  }
+
+  .gatewayHeader {
+    grid-template-columns: 1fr auto;
+    padding: 16px;
+  }
+
+  .gatewayNav {
+    display: none;
+  }
+
+  .gatewayInterviewLink {
+    min-height: 42px;
+    color: #22292b;
+    border-color: rgba(38, 44, 47, 0.18);
+    background: rgba(255, 255, 255, 0.6);
+  }
+
+  .gatewayHero {
+    display: flex;
+    min-height: auto;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 0;
+    padding: 12px 16px 78px;
+  }
+
+  .gatewayMedia {
+    min-height: 40svh;
+    margin: 0 -16px 28px;
+  }
+
+  .gatewayMediaFrame {
+    inset: 0;
+    clip-path: polygon(0 0, 100% 0, 100% 88%, 88% 100%, 0 100%);
+  }
+
+  .gatewayMediaCard {
+    left: 18px;
+    bottom: -10px;
+    width: 150px;
+  }
+
+  .gatewayOrbit {
+    top: auto;
+    right: 16px;
+    bottom: -12px;
+    left: auto;
+    width: 104px;
+    height: 104px;
+  }
+
+  .gatewayOrbit span {
+    font-size: 30px;
+  }
+
+  .gatewayCopy {
+    padding-top: 8px;
+  }
+
+  .gatewayLabel {
+    margin-bottom: 18px;
+    font-size: 9px;
+  }
+
+  .gateway h1 {
+    font-size: clamp(45px, 14.5vw, 68px);
+    line-height: 0.83;
+  }
+
+  .gateway h1 .isIndented {
+    margin-left: 28vw;
+  }
+
+  .gatewayActions {
+    display: grid;
+    margin: 26px 0 0;
+  }
+
+  .gatewayPrimary,
+  .gatewaySecondary {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .gatewayFooter {
+    position: relative;
+    gap: 10px;
+  }
+
+  .gatewayFooter span:nth-child(2) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gatewayMediaMain,
+  .gatewayMediaCard,
+  .gatewayOrbit::after {
+    animation: none;
+  }
+}

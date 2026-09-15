@@ -114,6 +114,46 @@ video {
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
+.portfolioIdentity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.returnGatewayButton {
+  min-height: 38px;
+  padding: 0 14px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 12px;
+  background: rgba(4, 8, 10, 0.24);
+  backdrop-filter: blur(14px);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 220ms ease, background 220ms ease;
+}
+
+.returnGatewayButton:hover {
+  background: rgba(4, 8, 10, 0.44);
+  transform: translateY(-2px);
+}
+
+.returnGatewayButton:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.62);
+  outline-offset: 3px;
+}
+
+.interviewPending {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  gap: 20px;
+  color: #242a2d;
+  background: #f2f1f0;
+  text-align: center;
+}
+
 .brand:hover {
   transform: translateY(-2px) scale(1.025);
   box-shadow: 0 20px 54px rgba(7, 28, 43, 0.3);

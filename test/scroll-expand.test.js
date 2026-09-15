@@ -12,7 +12,7 @@ test('portfolio renders a scroll-expanding entrance into the image gallery', asy
 
   try {
     const { default: App } = await vite.ssrLoadModule('/src/App.jsx')
-    const html = renderToStaticMarkup(React.createElement(App))
+    const html = renderToStaticMarkup(React.createElement(App, { initialView: 'portfolio' }))
 
     assert.match(html, /class="scroll-expand/)
     assert.match(html, /进入视觉档案/)

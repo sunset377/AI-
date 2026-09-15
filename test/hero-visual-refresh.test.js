@@ -4,7 +4,7 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { createServer } from 'vite'
 
-test('hero opens on the supplied portrait artwork without central promotional copy', async () => {
+test('portfolio view preserves the supplied portrait artwork without central promotional copy', async () => {
   const vite = await createServer({
     appType: 'custom',
     server: { middlewareMode: true, hmr: false },
@@ -12,7 +12,7 @@ test('hero opens on the supplied portrait artwork without central promotional co
 
   try {
     const { default: App } = await vite.ssrLoadModule('/src/App.jsx')
-    const html = renderToStaticMarkup(React.createElement(App))
+    const html = renderToStaticMarkup(React.createElement(App, { initialView: 'portfolio' }))
 
     assert.match(html, /assets\/hero-avatar\.jpg/)
     assert.match(html, /assets\/hero-field-portrait\.jpg/)
