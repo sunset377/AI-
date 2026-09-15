@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import ScrollExpand from './components/ScrollExpand/ScrollExpand'
 import Gateway from './components/Gateway/Gateway'
+import InterviewExperience from './components/Interview/InterviewExperience'
 import { readView, writeView } from './navigation'
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`
@@ -264,10 +265,11 @@ function App({ initialView }) {
 
   if (view === 'interview') {
     return (
-      <main className="interviewPending">
-        <button type="button" onClick={() => navigateTo('gateway')}>返回入口</button>
-        <p>AI 面试体验正在接入。</p>
-      </main>
+      <InterviewExperience
+        assetPath={assetPath}
+        onBack={() => navigateTo('gateway')}
+        onOpenPortfolio={() => navigateTo('portfolio')}
+      />
     )
   }
 
