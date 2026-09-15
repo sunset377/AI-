@@ -4,7 +4,7 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { createServer } from 'vite'
 
-test('portfolio view preserves the supplied portrait artwork without central promotional copy', async () => {
+test('portfolio route preserves the supplied artwork and offers a return to the new gateway', async () => {
   const vite = await createServer({
     appType: 'custom',
     server: { middlewareMode: true, hmr: false },
@@ -18,6 +18,7 @@ test('portfolio view preserves the supplied portrait artwork without central pro
     assert.match(html, /assets\/hero-field-portrait\.jpg/)
     assert.match(html, /class="nav"/)
     assert.match(html, /class="wallpaperSwitch"/)
+    assert.match(html, /← 入口/)
     assert.doesNotMatch(html, /class="heroCopy"/)
     assert.doesNotMatch(html, /查看作品|复制邮箱/)
   } finally {

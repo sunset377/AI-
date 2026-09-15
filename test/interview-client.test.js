@@ -51,6 +51,21 @@ test('streamInterview surfaces the server error message', async () => {
   )
 })
 
+test('streamInterview rejects a static-host HTML fallback instead of showing an empty answer', async () => {
+  await assert.rejects(
+    streamInterview({
+      messages: [{ role: 'user', content: '你好' }],
+      sessionId: 'session-12345678',
+      onToken() {},
+      fetchImpl: async () => new Response('<!doctype html><title>Portfolio</title>', {
+        status: 200,
+        headers: { 'content-type': 'text/html; charset=utf-8' },
+      }),
+    }),
+    /尚未连接 AI 服务/,
+  )
+})
+
 test('interview view explains the AI identity and offers starter questions', async () => {
   const vite = await createServer({
     appType: 'custom',

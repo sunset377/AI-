@@ -1,20 +1,28 @@
 # Design QA
 
-Source visual: `codex-clipboard-ab2550f6-509e-4577-bdaf-9b8c2fce5790.png`
+参考来源：MotionSites MCP 返回的 `Scaling Platform` 模板。只提取浅灰底、阶梯窄体标题、青色强调、右侧媒体舞台和斜切按钮等设计语言；未复制模板品牌、原文案或媒体。
 
-Latest prototype: `http://localhost:5173/`
+本地生产预览：`http://127.0.0.1:4187/`
 
-## Checked
+## 已检查
 
-- Hero uses a full-bleed bright visual with lightweight white haze instead of dark overlays.
-- Navigation uses translucent glass styling.
-- Main content areas use ivory / white page background with glass cards.
-- Existing core interactions still work: wallpaper switch and project filters.
-- Browser page errors: none observed.
+- 桌面双入口（1440 × 900）：标题、两个入口和右侧作品视觉均在首屏；无横向溢出。
+- 桌面 AI 面试（1440 × 900）：身份摘要、推荐问题和输入框同屏可用；页面宽高均未溢出。
+- 手机双入口（360 × 800）：媒体优先、标题阶梯和两个全宽入口正确换行；无横向溢出。
+- 手机 AI 面试（360 × 800）：顶部图标按钮边界清晰并保留完整无障碍名称；内容按单列排列；无横向溢出。
+- 路由：默认双入口、`?view=portfolio`、`?view=interview`、刷新恢复和浏览器返回均正常。
+- 作品集回归：5 个精选项目、107 件视觉作品、23 件“人像实验”筛选结果、灯箱打开/关闭和三星堆入口均保留。
+- 对话状态：预设问题、用户消息、流式等待、重试、清空和输入区可用；普通静态预览不会再把 HTML 回退页误当成空白 AI 回答。
+- 云端边界：浏览器只请求同源 `/api/interview`；模型、公开资料提示和限流均在 Worker 内；前端无 token 或 API Key。
 
-## Follow-up polish
+## 自动验证
 
-- When the user provides brighter floral / sky wallpapers, replace the current water-blade assets for a closer match to the reference.
-- The current hero remains based on the supplied martial-arts wallpapers, so the mood is brightened but not fully floral / travel-like.
+- `npm.cmd run test:deployment`：通过。
+- `npm.cmd run build -- --base=/AI-/`：通过，兼容 GitHub Pages 子路径。
+- `npm exec --offline -- wrangler deploy --dry-run`：通过，识别静态资源、AI 与限流 bindings。
 
-Final result: passed
+## 发布说明
+
+当前完成的是可部署版本，尚未执行公开发布。真实 AI 对话需要在已登录的 Cloudflare 账户中运行 `npm.cmd run deploy`，并会使用该账户的 Workers AI 配额。
+
+最终结果：通过。

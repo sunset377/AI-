@@ -32,6 +32,11 @@ export async function streamInterview({
     throw new Error(payload?.error ?? 'AI 面试服务暂时不可用，请稍后再试。')
   }
 
+  const contentType = response.headers.get('content-type') ?? ''
+  if (!contentType.toLowerCase().includes('text/event-stream')) {
+    throw new Error('当前预览尚未连接 AI 服务，请使用 Cloudflare 本地预览或部署后的公网版本。')
+  }
+
   if (!response.body) throw new Error('AI 面试服务没有返回内容，请稍后再试。')
 
   const reader = response.body.getReader()

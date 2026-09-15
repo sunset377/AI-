@@ -98,13 +98,15 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
   return (
     <main className="interviewExperience">
       <header className="interviewHeader">
-        <button className="interviewBack" type="button" onClick={onBack}>← 返回入口</button>
+        <button className="interviewBack" type="button" onClick={onBack} aria-label="返回双入口首页">
+          <span aria-hidden="true">←</span><span className="interviewNavLabel">返回入口</span>
+        </button>
         <div className="interviewIdentity">
           <img src={assetPath('assets/hero-avatar.jpg')} alt="刘耀华" />
           <span><strong>辞.</strong><small>AI INTERVIEW / ONLINE</small></span>
         </div>
-        <button className="interviewPortfolioLink" type="button" onClick={onOpenPortfolio}>
-          查看作品集 ↗
+        <button className="interviewPortfolioLink" type="button" onClick={onOpenPortfolio} aria-label="查看作品集">
+          <span className="interviewNavLabel">查看作品集</span><span aria-hidden="true">↗</span>
         </button>
       </header>
 
