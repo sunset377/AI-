@@ -1,10 +1,26 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ai",
+  "main": "src/worker.js",
   "compatibility_date": "2026-08-12",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
     "not_found_handling": "single-page-application"
   },
+  "ai": {
+    "binding": "AI"
+  },
+  "ratelimits": [
+    {
+      "name": "INTERVIEW_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 6,
+        "period": 60
+      }
+    }
+  ],
   "preview_urls": true
 }
