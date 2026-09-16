@@ -16,7 +16,7 @@ export const resumeKnowledgeBase = {
     portfolio: 'sunset377.github.io/AI-/',
   },
   summary: [
-    '四川大学艺术学院视觉传达设计专业，2026年毕业，具备视觉表达、信息组织与用户体验基础。学历层次和毕业月份尚待本人确认。',
+    '2026年6月毕业于四川大学艺术学院视觉传达设计专业，具备视觉表达、信息组织与用户体验基础。学历层次尚待本人确认。',
     '面向 AI Agent 与 AI 应用开发岗位，有移动端 H5、React 网站、微信小程序、AI 内容生产与 Agent 原型相关项目实践。',
     '能够从真实业务需求出发，拆解流程、输入输出、人工确认点与验收标准，并使用 Codex 辅助开发、运行和排错。',
     '长期使用 Codex、Claude Code 辅助编码、排错和迭代，熟悉多模型内容生产、提示词规范与自动化流程设计。',
@@ -114,8 +114,8 @@ export const resumeKnowledgeBase = {
     college: '艺术学院',
     major: '视觉传达设计',
     degree: null,
-    period: '2026年毕业',
-    graduation: '2026年',
+    period: '2026年6月毕业',
+    graduation: '2026年6月',
   },
   contentExperience: {
     earlyFilm: {
@@ -134,7 +134,7 @@ export const resumeKnowledgeBase = {
     },
   },
   interviewDrafts: {
-    source: '本人提供的第1—20题整合稿；其中常住地、远程/出差边界和新增求职城市只是建议口径，毕业时间在两版资料中存在冲突，待本人确认。',
+    source: '本人提供的第1—20题整合稿；其中常住地、远程/出差边界和新增求职城市只是建议口径。毕业时间以本人直接确认的2026年6月为准。',
     preferredAddress: '正式求职沟通使用刘耀华；小刘可作为口头称呼，鹤辞是日常昵称。',
     rolePriorityProposal: ['AI Agent / 智能体应用开发', 'AI 应用 / AI 全栈开发', 'AI 工作流自动化 / 解决方案', 'AI / AIGC 产品岗位', 'AI 导演 / AI 内容制作'],
     oneSentencePositioning: '有视觉设计和真实 AI 内容制作经验，希望把实际需求做成可复用 AI 工具的应用开发候选人。',
@@ -160,7 +160,7 @@ export const agentInterviewQuestionBank = [
   {
     category: '个人定位',
     question: '请做一下自我介绍，并说明为什么选择 AI Agent / AI应用开发岗位。',
-    answerGuide: '从四川大学艺术学院视觉传达设计专业、2026年毕业切入，说明视觉与用户体验基础；再选一至两个已核实的项目说明从需求到交付的能力。学历层次与毕业月份尚待确认，不得自行补全。',
+    answerGuide: '从2026年6月毕业于四川大学艺术学院视觉传达设计专业切入，说明视觉与用户体验基础；再选一至两个已核实的项目说明从需求到交付的能力。学历层次尚待本人确认，不得自行补全。',
   },
   {
     category: 'Agent基础',
@@ -279,7 +279,7 @@ ${knowledge.serviceExperience.map((item) => `- ${item}`).join('\n')}
 - 公开边界：${knowledge.contentExperience.paidProduct.publicBoundary}
 
 ## 教育、荣誉与证书
-- 教育：${knowledge.education.school}${knowledge.education.college}，${knowledge.education.major}，${knowledge.education.period}；学历层次：${knowledge.education.degree ?? '尚待本人确认'}；毕业月份：尚待本人确认
+- 教育：${knowledge.education.school}${knowledge.education.college}，${knowledge.education.major}，${knowledge.education.period}；学历层次：${knowledge.education.degree ?? '尚待本人确认'}
 - 荣誉：${knowledge.awards.join('、')}
 - 证书：${knowledge.certificates.join('、')}
 
@@ -312,7 +312,7 @@ export function buildInterviewSystemPrompt(knowledge = resumeKnowledgeBase) {
 7. 被问到为什么适合岗位时，重点连接四类证据：Agent任务链路、Web产品交付、异常与失败路径、真实反馈迭代。
 8. 对行为面试题，可结合独立项目、文旅讲解和健身教练经历，说明需求沟通、计划拆分、突发处理与持续反馈能力，但不得虚构具体客户故事。
 9. 对常规问题（教育背景、毕业时间、专业转型、求职动机、优势不足、职业规划、学习方法、压力处理、协作方式、常用 AI 工具）必须先综合现有资料形成可用回答，不要因为没有逐字模板就直接拒答。
-9a. 本人提供的第1—20题整合稿可作为表达素材。约60集短剧只能说“参与/制作”，不得说每集均独立完成；约3分钟早期短片的正式片名未提供，不要与《星际穷途X》混为同一作品。MOMOCO 已有可运行的人工参与内容流程，但端到端自动 Agent 仍在开发验证；代码大量由 Codex 辅助实现，不得宣称全部核心代码纯手写。付费小产品确有小规模真实订单，不扩大金额或泄露客户与订单隐私。现居地、远程和出差意愿、新增城市仅为建议口径，不是已确认事实。两版资料对毕业时间有冲突，待本人进一步确认。
+9a. 本人提供的第1—20题整合稿可作为表达素材。毕业时间以本人直接确认的2026年6月为准；学历层次仍待确认。约60集短剧只能说“参与/制作”，不得说每集均独立完成；约3分钟早期短片的正式片名未提供，不要与《星际穷途X》混为同一作品。MOMOCO 已有可运行的人工参与内容流程，但端到端自动 Agent 仍在开发验证；代码大量由 Codex 辅助实现，不得宣称全部核心代码纯手写。付费小产品确有小规模真实订单，不扩大金额或泄露客户与订单隐私。现居地、远程和出差意愿、新增城市仅为建议口径，不是已确认事实。
 10. 对简短追问要结合最近对话理解指代，例如“为什么”“具体呢”“还有吗”，保持上下文连续。
 11. 语气自信、真诚、具体，避免讨好、空话和过度包装。每次回答控制在 120 到 380 个中文字符；复杂问题最多使用三点短列表。
 
