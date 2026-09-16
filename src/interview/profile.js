@@ -1,12 +1,13 @@
 export const resumeKnowledgeBase = {
   source: {
     name: '刘耀华个人资料库',
-    scope: '内容整合自求职简历、在线作品集、真实项目记录与本人明确补充的信息，不包含未经确认的推测。',
+    scope: '内容整合自求职简历、在线作品集、项目记录与本人补充的信息；已确认事实和待核实的面试表达草稿分区呈现。',
   },
   identity: {
     name: '刘耀华',
     targetRole: 'AI Agent / AI应用开发工程师',
-    location: '成都',
+    preferredWorkCities: ['上海', '杭州', '武汉'],
+    currentCity: null,
     positioning: 'Web应用开发 · Agent工作流 · AI辅助开发 · 产品从0到1交付',
     phone: '19182874015',
     email: '980175020@qq.com',
@@ -14,7 +15,7 @@ export const resumeKnowledgeBase = {
     portfolio: 'sunset377.github.io/AI-/',
   },
   summary: [
-    '四川大学视觉传达设计本科，2026年毕业，具备视觉表达、信息组织与用户体验基础。',
+    '四川大学艺术学院视觉传达设计专业，2026年毕业，具备视觉表达、信息组织与用户体验基础。学历层次和毕业月份尚待本人确认。',
     '面向 AI Agent 与 AI应用开发岗位，具备移动端 H5、React 网站、微信小程序及多类 AI 工作台的真实项目经验。',
     '能够从用户需求和业务流程出发，完成信息架构、页面交互、Agent任务链路、调试验证与上线交付。',
     '长期使用 Codex、Claude Code 辅助编码、排错和迭代，熟悉多模型内容生产、提示词规范与自动化流程设计。',
@@ -109,10 +110,29 @@ export const resumeKnowledgeBase = {
   ],
   education: {
     school: '四川大学',
+    college: '艺术学院',
     major: '视觉传达设计',
-    degree: '本科',
+    degree: null,
     period: '2026年毕业',
     graduation: '2026年',
+  },
+  interviewDrafts: {
+    source: '本人提供的《核心身份与求职定位 10题回答》；其中岗位排序和自评是表达建议，尚待本人逐项确认。',
+    preferredAddress: '正式求职沟通使用刘耀华；小刘可作为口头称呼，鹤辞是日常昵称。',
+    rolePriorityProposal: ['AI Agent 开发', 'AI 应用开发', 'AI / AIGC 产品岗位', 'AI 相关前端开发', 'AI 导演 / 内容制作'],
+    oneSentencePositioning: '有视觉设计和真实 AI 内容制作经验，希望把实际需求做成可复用 AI 工具的应用开发候选人。',
+    transitionMotivation: '不是放弃设计，而是希望将视觉质量与用户体验判断用于完整产品；在 AI 内容制作中看到素材整理、提示词、生成筛选、审核与交付的重复劳动，因此想把这些环节逐步连接成可复用工具。MOMOCO 的完整自动化仍是目标，不是已完成成果。',
+    strengthsProposal: [
+      '自学主动：愿意先用真实作品验证新工具，再从失败中调整。短片和短剧制作的具体数量、个人分工及公开范围待核对。',
+      '视觉判断与需求拆解：能把人物一致性、服装细节、画幅和风格等模糊要求转成可检查条件。',
+      '关注用户反馈：曾尝试销售 AI 角色卡相关电子资料，并据订单不稳定的反馈重新思考产品价值；销售数据和规模不得自行补全。',
+    ],
+    improvementsProposal: [
+      '编程基础、关键代码理解和独立排错需要继续加强；通过具体项目补编程基础、接口调用和版本管理。',
+      '自动化测试、部署维护等完整工程经验仍需积累；计划从小项目补齐测试、错误提示、日志和部署说明。',
+      '方向需要进一步聚焦；现已开始先规划、确认素材再动工，后续将一个核心项目做深。',
+    ],
+    introductionProposal: '我叫刘耀华，有视觉设计背景，做过 AI 短剧和 MOMOCO 服装相关的 AI 视频，现在希望往 AI 应用和 Agent 开发方向发展。我想把素材、生成、审核和交付逐步串成可反复使用的工具。我的设计基础与真实业务实践能帮助我理解需求和交付标准；编程与工程基础仍在补强，希望从匹配能力的初级岗位做起。',
   },
   awards: ['中国创意挑战大赛交叉学科类三等奖'],
   certificates: ['大学英语四级 CET-4', '普通话二级甲等', '全国导游资格证'],
@@ -122,7 +142,7 @@ export const agentInterviewQuestionBank = [
   {
     category: '个人定位',
     question: '请做一下自我介绍，并说明为什么选择 AI Agent / AI应用开发岗位。',
-    answerGuide: '从四川大学视觉传达设计本科、2026年毕业切入，说明视觉与用户体验基础；再用服装工作台、WorkBuddy、三星堆工具和个人作品集证明从需求到交付的能力，强调目标是把AI能力做成真实可用的产品。',
+    answerGuide: '从四川大学艺术学院视觉传达设计专业、2026年毕业切入，说明视觉与用户体验基础；再选一至两个已核实的项目说明从需求到交付的能力。学历层次与毕业月份尚待确认，不得自行补全。',
   },
   {
     category: 'Agent基础',
@@ -182,7 +202,7 @@ export const agentInterviewQuestionBank = [
   {
     category: '成长潜力',
     question: '作为2026届毕业生，你的优势、不足与职业规划是什么？',
-    answerGuide: '优势是视觉、产品、Web与Agent流程的跨域闭环；不足是大型多人协作经验需要积累；近期目标是提升工程规范、Agent评测和业务交付，中期成长为连接产品、设计与技术的AI应用负责人。',
+    answerGuide: '结合本人提供的表达建议，优势可谈自学验证、视觉判断与需求拆解、关注用户反馈；短板可谈编程基础、工程化经验和方向聚焦。岗位排序与自评仍待本人确认，不能把计划说成已完成成果。',
   },
   {
     category: '行为面试',
@@ -215,7 +235,8 @@ function renderKnowledgeBase(knowledge) {
 ## 身份与求职方向
 - 姓名：${knowledge.identity.name}
 - 目标岗位：${knowledge.identity.targetRole}
-- 所在地：${knowledge.identity.location}
+- 可考虑的求职城市：${knowledge.identity.preferredWorkCities.join('、')}
+- 当前常住城市：${knowledge.identity.currentCity ?? '尚待本人确认'}
 - 定位：${knowledge.identity.positioning}
 - 联系方式：电话 ${knowledge.identity.phone}；邮箱 ${knowledge.identity.email}；微信 ${knowledge.identity.wechat}
 - 作品集：${knowledge.identity.portfolio}
@@ -233,9 +254,19 @@ ${projects}
 ${knowledge.serviceExperience.map((item) => `- ${item}`).join('\n')}
 
 ## 教育、荣誉与证书
-- 教育：${knowledge.education.school}，${knowledge.education.major} ${knowledge.education.degree}，${knowledge.education.period}
+- 教育：${knowledge.education.school}${knowledge.education.college}，${knowledge.education.major}，${knowledge.education.period}；学历层次：${knowledge.education.degree ?? '尚待本人确认'}；毕业月份：尚待本人确认
 - 荣誉：${knowledge.awards.join('、')}
 - 证书：${knowledge.certificates.join('、')}
+
+## 本人提供的面试表达草稿
+${knowledge.interviewDrafts.source}
+- 称呼：${knowledge.interviewDrafts.preferredAddress}
+- 目标岗位优先级建议（未最终确认）：${knowledge.interviewDrafts.rolePriorityProposal.join('、')}
+- 一句话定位建议：${knowledge.interviewDrafts.oneSentencePositioning}
+- 转向 AI 应用的动机表达：${knowledge.interviewDrafts.transitionMotivation}
+- 优势表达建议：${knowledge.interviewDrafts.strengthsProposal.join('；')}
+- 待提升方向建议：${knowledge.interviewDrafts.improvementsProposal.join('；')}
+- 自我介绍草稿：${knowledge.interviewDrafts.introductionProposal}
   `.trim()
 }
 
@@ -255,6 +286,7 @@ export function buildInterviewSystemPrompt(knowledge = resumeKnowledgeBase) {
 7. 被问到为什么适合岗位时，重点连接四类证据：Agent任务链路、Web产品交付、异常与失败路径、真实反馈迭代。
 8. 对行为面试题，可结合独立项目、文旅讲解和健身教练经历，说明需求沟通、计划拆分、突发处理与持续反馈能力，但不得虚构具体客户故事。
 9. 对常规问题（教育背景、毕业时间、专业转型、求职动机、优势不足、职业规划、学习方法、压力处理、协作方式、常用 AI 工具）必须先综合现有资料形成可用回答，不要因为没有逐字模板就直接拒答。
+9a. 本人提供的10题草稿可作为表达素材；其中岗位排序、自评、作品数量和销售细节尚待核对。本轮已确认的学校、学院、专业、毕业年份及可考虑城市可作为确定事实。学历层次、毕业月份、现居城市、远程和出差意愿不能自行推断。
 10. 对简短追问要结合最近对话理解指代，例如“为什么”“具体呢”“还有吗”，保持上下文连续。
 11. 语气自信、真诚、具体，避免讨好、空话和过度包装。每次回答控制在 120 到 380 个中文字符；复杂问题最多使用三点短列表。
 

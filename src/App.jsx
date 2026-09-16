@@ -322,7 +322,7 @@ function App({ initialView }) {
 
         <div className="heroInner shell">
           <div className="heroAside">
-            <span>成都 / 可合作</span>
+            <span>上海 · 杭州 · 武汉 / 可沟通</span>
             <span>AI Film · Brand · Visual</span>
             <span>2026 Portfolio</span>
           </div>
@@ -350,13 +350,13 @@ function App({ initialView }) {
             <img src={assetPath('assets/portfolio-gallery/gallery-001.webp')} alt="辞的视觉风格人物图" />
             <div className="portraitCaption">
               <span>刘耀华</span>
-              <span>23 岁 / 成都</span>
+              <span>视觉传达设计 / 2026 届</span>
             </div>
           </div>
           <div className="aboutContent">
             <h2>把 AI 生成的不确定性，变成可导演、可复盘、可交付的视觉系统。</h2>
             <p>
-              我就读于四川大学视觉传达设计本科，2026 年毕业，深耕 AIGC 仿真人短剧全流程制作。熟悉美术资产、人物设定、分镜设计、AI
+              我就读于四川大学艺术学院视觉传达设计专业，2026 年毕业，深耕 AIGC 仿真人短剧全流程制作。熟悉美术资产、人物设定、分镜设计、AI
               生成、后期剪辑、配音字幕与成片交付的完整闭环。
             </p>
             <p>
