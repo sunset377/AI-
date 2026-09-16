@@ -77,3 +77,7 @@ test('portfolio gallery publishes every selected desktop image', async () => {
 test('About section publishes the supplied personal portrait', async () => {
   assert.equal(await fileExists('dist/assets/liu-yaohua-portrait.png'), true)
 })
+
+test('portfolio hero publishes the selected desert portrait', async () => {
+  assert.equal(await fileExists('dist/assets/hero-desert-portrait.jpg'), true)
+})

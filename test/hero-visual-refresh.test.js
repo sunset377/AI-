@@ -15,7 +15,8 @@ test('portfolio route preserves the supplied artwork and offers a return to the 
     const html = renderToStaticMarkup(React.createElement(App, { initialView: 'portfolio' }))
 
     assert.match(html, /assets\/hero-avatar\.jpg/)
-    assert.match(html, /assets\/hero-field-portrait\.jpg/)
+    assert.match(html, /assets\/hero-desert-portrait\.jpg/)
+    assert.doesNotMatch(html, /assets\/hero-field-portrait\.jpg/)
     assert.match(html, /assets\/liu-yaohua-portrait\.png/)
     assert.match(html, /alt="刘耀华的个人照片"/)
     assert.match(html, /class="nav"/)

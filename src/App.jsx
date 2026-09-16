@@ -7,9 +7,9 @@ import { readView, writeView } from './navigation'
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`
 
 const defaultHeroWallpaper = {
-  id: 'field-portrait',
-  src: assetPath('assets/hero-field-portrait.jpg'),
-  position: 'center 61%',
+  id: 'desert-portrait',
+  src: assetPath('assets/hero-desert-portrait.jpg'),
+  position: '32% center',
 }
 
 const wallpapers = [
