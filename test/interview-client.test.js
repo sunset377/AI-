@@ -81,6 +81,9 @@ test('interview view explains the AI identity and offers starter questions', asy
     assert.match(html, /讲讲你最完整的 AI 项目/)
     assert.match(html, /Shift \+ Enter 换行/)
     assert.match(html, /查看作品集/)
+    assert.match(html, /联系本人/)
+    assert.match(html, /href="tel:19182874015"/)
+    assert.match(html, /href="mailto:980175020@qq.com"/)
   } finally {
     await vite.close()
   }

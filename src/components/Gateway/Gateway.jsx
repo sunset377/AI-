@@ -23,8 +23,8 @@ function Gateway({ assetPath, onEnterPortfolio, onEnterInterview }) {
         </button>
 
         <nav className="gatewayNav" aria-label="双入口导航">
-          <button type="button" onClick={onEnterPortfolio}>PORTFOLIO</button>
           <button type="button" onClick={onEnterInterview}>AI INTERVIEW</button>
+          <button type="button" onClick={onEnterPortfolio}>PORTFOLIO</button>
           <a href="mailto:980175020@qq.com">CONTACT</a>
         </nav>
 
@@ -49,11 +49,11 @@ function Gateway({ assetPath, onEnterPortfolio, onEnterInterview }) {
           </h1>
 
           <div className="gatewayActions">
-            <button className="gatewayPrimary" type="button" onClick={onEnterPortfolio}>
-              进入作品集 <span aria-hidden="true" />
-            </button>
-            <button className="gatewaySecondary" type="button" onClick={onEnterInterview}>
+            <button className="gatewayPrimary" type="button" onClick={onEnterInterview}>
               开始 AI 面试 <span aria-hidden="true">↗</span>
+            </button>
+            <button className="gatewaySecondary" type="button" onClick={onEnterPortfolio}>
+              查看现有作品
             </button>
           </div>
         </div>
@@ -83,7 +83,7 @@ function Gateway({ assetPath, onEnterPortfolio, onEnterInterview }) {
       </section>
 
       <footer className="gatewayFooter">
-        <span>PORTFOLIO / AI INTERVIEW</span>
+        <span>AI INTERVIEW / PORTFOLIO</span>
         <span>SCROLL-FREE ENTRY</span>
         <span>© 2026 CI.</span>
       </footer>

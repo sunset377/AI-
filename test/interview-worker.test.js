@@ -38,6 +38,9 @@ function environment({ allowed = true } = {}) {
           && input.messages[0].content.includes('刘耀华')
           && input.messages[0].content.includes('不要编造')
         if (!hasPersona) throw new Error('missing persona guard')
+        if (input.chat_template_kwargs?.enable_thinking !== false) {
+          throw new Error('thinking must be disabled for concise interview answers')
+        }
         return streamFrom('这是经过事实约束的回答。')
       },
     },

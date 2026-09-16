@@ -97,6 +97,9 @@ async function handleInterview(request, env) {
       temperature: 0.3,
       max_tokens: 500,
       stream: true,
+      chat_template_kwargs: {
+        enable_thinking: false,
+      },
     })
     const body = result instanceof Response ? result.body : result
 

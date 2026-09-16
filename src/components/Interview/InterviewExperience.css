@@ -209,6 +209,31 @@
   line-height: 1.65;
 }
 
+.interviewContact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 14px 0 0 min(4vw, 64px);
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 10px;
+}
+
+.interviewContact span {
+  color: #858a8c;
+  letter-spacing: 0.08em;
+}
+
+.interviewContact a {
+  color: #343b3e;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(37, 43, 46, 0.24);
+}
+
+.interviewContact a:hover {
+  color: #0f9cba;
+  border-color: currentColor;
+}
+
 .interviewConsole {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -527,7 +552,8 @@
   .interviewProfile h1 span,
   .interviewIntro,
   .interviewFacts,
-  .interviewDisclosure {
+  .interviewDisclosure,
+  .interviewContact {
     margin-left: 20vw;
   }
 

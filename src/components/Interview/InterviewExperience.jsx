@@ -127,6 +127,11 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
             <div><dt>状态</dt><dd><span /> AI 面试助手在线</dd></div>
           </dl>
           <p className="interviewDisclosure">AI 回答仅用于了解本人经历，不代表新的承诺或未公开信息。</p>
+          <p className="interviewContact">
+            <span>联系本人</span>
+            <a href="tel:19182874015">电话 / 微信</a>
+            <a href="mailto:980175020@qq.com">邮箱</a>
+          </p>
         </aside>
 
         <section className="interviewConsole" aria-label="AI 面试对话">
