@@ -22,14 +22,15 @@ test('the default render makes AI interview the primary destination while retain
     const { default: App } = await vite.ssrLoadModule('/src/App.jsx')
     const html = renderToStaticMarkup(React.createElement(App))
 
-    assert.match(html, /看我的/)
+    assert.match(html, /看作品/)
     assert.match(html, /数字版/)
     assert.match(html, /查看现有作品/)
     assert.match(html, /开始 AI 面试/)
     assert.match(html, /class="gatewayPrimary"[^>]*>开始 AI 面试/)
     assert.ok(html.indexOf('开始 AI 面试') < html.indexOf('查看现有作品'))
     assert.match(html, /assets\/hero-avatar\.jpg/)
-    assert.match(html, /assets\/style-gallery\/future-garden-hero\.jpg/)
+    assert.match(html, /assets\/portfolio-gallery\/gallery-003\.webp/)
+    assert.match(html, />82<\/span><small>WORKS/)
   } finally {
     await vite.close()
   }

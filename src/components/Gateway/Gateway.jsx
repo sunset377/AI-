@@ -1,12 +1,9 @@
 import './Gateway.css'
 
 const headline = [
-  ['看我的', false],
-  ['作品', false],
-  ['也和', false],
-  ['数字版', true],
-  ['的我', true],
-  ['对话', true, true],
+  ['看作品，', false],
+  ['也和数字版的我', false],
+  ['聊聊。', false, true],
 ]
 
 function Gateway({ assetPath, onEnterPortfolio, onEnterInterview }) {
@@ -62,21 +59,21 @@ function Gateway({ assetPath, onEnterPortfolio, onEnterInterview }) {
           <div className="gatewayMediaFrame">
             <img
               className="gatewayMediaMain"
-              src={assetPath('assets/style-gallery/future-garden-hero.jpg')}
-              alt="未来花园视觉作品"
+              src={assetPath('assets/portfolio-gallery/gallery-003.webp')}
+              alt="超现实花园视觉作品"
             />
             <div className="gatewayMediaTint" aria-hidden="true" />
             <p><span>01</span> SELECTED VISUAL / 2026</p>
           </div>
           <figure className="gatewayMediaCard">
             <img
-              src={assetPath('assets/style-gallery/electric-portrait-wide.jpg')}
-              alt="电光人物视觉作品"
+              src={assetPath('assets/portfolio-gallery/gallery-029.webp')}
+              alt="夜景人物视觉作品"
             />
             <figcaption>AI FILM / BRAND / VISUAL</figcaption>
           </figure>
           <div className="gatewayOrbit" aria-hidden="true">
-            <span>107</span>
+            <span>82</span>
             <small>WORKS<br />ONLINE</small>
           </div>
         </div>

@@ -1,23 +1,29 @@
 .gateway {
-  --gateway-bg: #f2f1f0;
-  --gateway-ink: #262c2f;
-  --gateway-muted: #6b7072;
-  --gateway-accent: #15bcdf;
+  --gateway-bg: #101112;
+  --gateway-light: #f2efe9;
+  --gateway-muted: #999792;
+  --gateway-accent: #c97a5d;
   position: relative;
   min-height: 100dvh;
   overflow: hidden;
-  color: var(--gateway-ink);
-  background: var(--gateway-bg);
-  font-family: "Bahnschrift Condensed", "Arial Narrow", "Microsoft YaHei", sans-serif;
+  color: var(--gateway-light);
+  background:
+    radial-gradient(circle at 68% 58%, rgba(173, 88, 57, 0.2), transparent 23rem),
+    radial-gradient(circle at 89% 12%, rgba(111, 79, 75, 0.18), transparent 26rem),
+    var(--gateway-bg);
+  font-family: "HarmonyOS Sans SC", "MiSans", "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
   isolation: isolate;
 }
 
 .gateway::before {
   content: "";
   position: absolute;
-  inset: 0 31% 0 0;
+  inset: 11% 3.5% 8%;
   z-index: -1;
-  background: linear-gradient(90deg, #f2f1f0 0%, #f2f1f0 72%, rgba(242, 241, 240, 0) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at 22% 78%, rgba(198, 116, 83, 0.13), transparent 24rem),
+    linear-gradient(112deg, rgba(255, 255, 255, 0.04), transparent 44%);
   pointer-events: none;
 }
 
@@ -25,9 +31,9 @@
   position: fixed;
   inset: 0;
   z-index: 20;
-  opacity: 0.035;
+  opacity: 0.025;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E");
 }
 
 .gateway button,
@@ -37,7 +43,7 @@
 
 .gateway button:focus-visible,
 .gateway a:focus-visible {
-  outline: 3px solid rgba(21, 188, 223, 0.55);
+  outline: 2px solid var(--gateway-accent);
   outline-offset: 4px;
 }
 
@@ -47,8 +53,11 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: clamp(20px, 4vw, 64px);
-  padding: clamp(20px, 2.6vw, 38px) clamp(20px, 3.8vw, 58px) 0;
+  gap: clamp(22px, 4vw, 68px);
+  width: min(calc(100% - 64px), 1540px);
+  min-height: 92px;
+  margin-inline: auto;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .gatewayBrand {
@@ -58,7 +67,7 @@
   width: fit-content;
   padding: 0;
   border: 0;
-  color: #111;
+  color: var(--gateway-light);
   background: transparent;
   cursor: pointer;
 }
@@ -67,8 +76,8 @@
   width: 42px;
   height: 42px;
   object-fit: cover;
-  border-radius: 50%;
-  filter: grayscale(0.2) contrast(1.05);
+  border-radius: 12px;
+  filter: saturate(0.75) contrast(1.04);
 }
 
 .gatewayBrand span {
@@ -77,41 +86,42 @@
 }
 
 .gatewayBrand strong {
-  font-size: 25px;
-  line-height: 0.9;
-  letter-spacing: -0.05em;
+  font-size: 23px;
+  font-weight: 650;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
 }
 
 .gatewayBrand small {
-  margin-top: 4px;
-  color: #62686a;
+  margin-top: 5px;
+  color: var(--gateway-muted);
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.16em;
 }
 
 .gatewayNav {
   display: flex;
   align-items: center;
-  gap: clamp(22px, 3.2vw, 48px);
+  gap: clamp(24px, 3.2vw, 52px);
 }
 
 .gatewayNav button,
 .gatewayNav a {
-  padding: 8px 0;
+  padding: 9px 0;
   border: 0;
-  color: #3a3f41;
+  color: #aaa7a1;
   background: transparent;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
   cursor: pointer;
   transition: color 220ms ease, transform 220ms ease;
 }
 
 .gatewayNav button:hover,
 .gatewayNav a:hover {
-  color: #000;
+  color: #fff;
   transform: translateY(-2px);
 }
 
@@ -119,33 +129,34 @@
   justify-self: end;
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  min-height: 46px;
-  padding: 0 18px;
-  border: 1px solid rgba(255, 255, 255, 0.62);
-  color: #fff;
-  background: rgba(20, 26, 28, 0.34);
-  backdrop-filter: blur(18px);
-  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  gap: 18px;
+  min-height: 44px;
+  padding: 0 17px;
+  color: var(--gateway-light);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
   font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 220ms ease, transform 220ms ease;
+  transition: background 220ms ease, border-color 220ms ease, transform 220ms ease;
 }
 
 .gatewayInterviewLink:hover {
-  background: rgba(20, 26, 28, 0.56);
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.09);
   transform: translateY(-2px);
 }
 
 .gatewayHero {
   display: grid;
-  grid-template-columns: minmax(520px, 0.9fr) minmax(520px, 1.1fr);
-  min-height: calc(100dvh - 130px);
+  grid-template-columns: minmax(430px, 0.92fr) minmax(520px, 1.08fr);
+  width: min(calc(100% - 64px), 1540px);
+  min-height: calc(100dvh - 146px);
   align-items: center;
-  gap: 24px;
-  padding: clamp(26px, 4vh, 60px) 0 clamp(40px, 6vh, 76px) clamp(24px, 7.6vw, 118px);
+  gap: clamp(50px, 7vw, 120px);
+  margin-inline: auto;
+  padding: clamp(50px, 7vh, 92px) 0 clamp(78px, 9vh, 112px);
 }
 
 .gatewayCopy {
@@ -154,30 +165,28 @@
 }
 
 .gatewayLabel {
-  margin: 0 0 clamp(24px, 4vh, 46px);
+  margin: 0 0 clamp(26px, 4vh, 44px);
   color: var(--gateway-muted);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.18em;
 }
 
 .gateway h1 {
   display: grid;
+  gap: 0.08em;
+  max-width: 760px;
   margin: 0;
-  font-size: min(clamp(48px, 6.35vw, 100px), 10vh);
-  font-weight: 700;
-  line-height: 0.82;
+  font-size: clamp(52px, 5.4vw, 86px);
+  font-weight: 640;
+  line-height: 1.02;
   letter-spacing: -0.055em;
-  text-transform: uppercase;
+  text-wrap: balance;
 }
 
 .gateway h1 span {
   display: block;
   width: fit-content;
-}
-
-.gateway h1 .isIndented {
-  margin-left: min(12vw, 190px);
 }
 
 .gateway h1 .isAccent {
@@ -187,43 +196,38 @@
 .gatewayActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin: clamp(26px, 4vh, 48px) 0 0 min(12vw, 190px);
+  gap: 10px;
+  margin-top: clamp(32px, 5vh, 52px);
 }
 
 .gatewayPrimary,
 .gatewaySecondary {
-  min-height: 54px;
-  padding: 0 24px;
-  border: 1px solid #0fa3c2;
-  clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px));
+  min-height: 50px;
+  padding: 0 21px;
+  border-radius: 5px;
   font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
+  font-weight: 650;
   cursor: pointer;
-  transition: transform 220ms ease, background 220ms ease, box-shadow 220ms ease;
+  transition: transform 220ms ease, background 220ms ease, border-color 220ms ease;
 }
 
 .gatewayPrimary {
   display: inline-flex;
   align-items: center;
-  gap: 18px;
-  color: #112023;
-  background: var(--gateway-accent);
-  box-shadow: 0 14px 38px -18px rgba(15, 163, 194, 0.75);
+  gap: 20px;
+  color: #191716;
+  border: 1px solid #d08a70;
+  background: #d08a70;
 }
 
 .gatewayPrimary span {
-  display: block;
-  width: 24px;
-  height: 1px;
-  background: #112023;
+  font-size: 17px;
 }
 
 .gatewaySecondary {
-  color: #31383a;
-  border-color: rgba(38, 44, 47, 0.2);
-  background: rgba(255, 255, 255, 0.4);
+  color: #e8e3dc;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
 }
 
 .gatewayPrimary:hover,
@@ -232,8 +236,12 @@
 }
 
 .gatewayPrimary:hover {
-  background: #3fd0ef;
-  box-shadow: 0 18px 42px -16px rgba(15, 163, 194, 0.82);
+  background: #df9b80;
+}
+
+.gatewaySecondary:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .gatewayPrimary:active,
@@ -244,119 +252,122 @@
 
 .gatewayMedia {
   position: relative;
-  align-self: stretch;
-  min-height: 620px;
+  min-height: clamp(500px, 65vh, 720px);
 }
 
 .gatewayMediaFrame {
   position: absolute;
-  inset: -86px 0 -34px 7%;
+  inset: 0 0 0 9%;
   overflow: hidden;
-  background: #283134;
-  clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%, 0 12%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  background: #252323;
+  box-shadow: 0 42px 110px rgba(0, 0, 0, 0.38);
 }
 
 .gatewayMediaMain {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
-  filter: saturate(0.86) contrast(1.04);
-  animation: gatewayDrift 12s ease-in-out infinite alternate;
+  filter: saturate(0.72) contrast(1.04) brightness(0.78);
+  animation: gatewayDrift 14s ease-in-out infinite alternate;
 }
 
 .gatewayMediaTint {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(105deg, rgba(21, 188, 223, 0.08), transparent 42%),
-    linear-gradient(180deg, transparent 55%, rgba(12, 18, 20, 0.52));
-  mix-blend-mode: screen;
+    radial-gradient(circle at 68% 68%, rgba(201, 122, 93, 0.32), transparent 18rem),
+    linear-gradient(180deg, rgba(12, 12, 12, 0.05), rgba(12, 12, 12, 0.58));
 }
 
 .gatewayMediaFrame > p {
   position: absolute;
-  right: 28px;
+  right: 24px;
   bottom: 22px;
   display: flex;
   align-items: center;
   gap: 12px;
   margin: 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.68);
   font-size: 10px;
-  letter-spacing: 0.16em;
+  font-weight: 600;
+  letter-spacing: 0.15em;
 }
 
 .gatewayMediaFrame > p span {
-  color: var(--gateway-accent);
-  font-size: 18px;
+  color: #e2a58c;
+  font-size: 17px;
 }
 
 .gatewayMediaCard {
   position: absolute;
-  left: -5%;
-  bottom: 1%;
-  width: clamp(190px, 17vw, 290px);
+  left: 0;
+  bottom: 8%;
+  width: clamp(185px, 16vw, 270px);
   margin: 0;
-  padding: 8px;
-  color: #fff;
-  background: rgba(24, 30, 32, 0.82);
-  box-shadow: 0 30px 80px rgba(26, 34, 36, 0.28);
-  backdrop-filter: blur(12px);
-  transform: rotate(-2deg);
-  animation: gatewayFloat 6s ease-in-out infinite;
+  padding: 7px;
+  color: #e8e3dc;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+  background: rgba(23, 22, 22, 0.84);
+  box-shadow: 0 28px 74px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(14px);
+  animation: gatewayFloat 7s ease-in-out infinite;
 }
 
 .gatewayMediaCard img {
   width: 100%;
   aspect-ratio: 4 / 3;
+  border-radius: 5px;
   object-fit: cover;
+  filter: saturate(0.78);
 }
 
 .gatewayMediaCard figcaption {
-  padding: 11px 7px 5px;
+  padding: 11px 6px 5px;
+  color: #aaa7a1;
   font-size: 9px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.13em;
 }
 
 .gatewayOrbit {
   position: absolute;
-  top: 16%;
-  left: -3%;
+  top: 8%;
+  left: 0;
   display: grid;
-  place-items: center;
-  width: 132px;
-  height: 132px;
-  border: 1px solid rgba(38, 44, 47, 0.24);
+  align-content: center;
+  width: 118px;
+  height: 118px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 50%;
-  color: #242a2d;
-  background: rgba(242, 241, 240, 0.78);
+  color: #f0ece5;
+  background: rgba(16, 17, 18, 0.78);
   backdrop-filter: blur(16px);
 }
 
 .gatewayOrbit::after {
   content: "";
   position: absolute;
-  inset: 9px;
-  border: 1px dashed rgba(38, 44, 47, 0.24);
+  inset: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
   border-radius: inherit;
-  animation: gatewaySpin 18s linear infinite;
+  animation: gatewaySpin 20s linear infinite;
 }
 
 .gatewayOrbit span {
-  margin-top: 20px;
-  font-size: 38px;
-  font-weight: 700;
-  line-height: 0.8;
+  font-size: 31px;
+  font-weight: 620;
+  line-height: 0.9;
 }
 
 .gatewayOrbit small {
-  margin-top: -14px;
-  color: #697073;
+  margin-top: 6px;
+  color: #9d9a94;
   font-size: 8px;
   line-height: 1.25;
   letter-spacing: 0.12em;
-  text-align: center;
 }
 
 .gatewayFooter {
@@ -367,60 +378,65 @@
   z-index: 4;
   display: flex;
   justify-content: space-between;
-  padding: 14px clamp(20px, 3.8vw, 58px);
-  color: #6a7072;
-  border-top: 1px solid rgba(38, 44, 47, 0.12);
-  background: rgba(242, 241, 240, 0.78);
-  backdrop-filter: blur(14px);
+  width: min(calc(100% - 64px), 1540px);
+  margin-inline: auto;
+  padding: 15px 0;
+  color: #787672;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.14em;
 }
 
 @keyframes gatewayDrift {
-  from { transform: scale(1.03) translate3d(-0.8%, -0.5%, 0); }
-  to { transform: scale(1.1) translate3d(1.2%, 0.8%, 0); }
+  from { transform: scale(1.02) translate3d(-0.7%, -0.4%, 0); }
+  to { transform: scale(1.08) translate3d(1%, 0.7%, 0); }
 }
 
 @keyframes gatewayFloat {
-  0%, 100% { transform: rotate(-2deg) translateY(0); }
-  50% { transform: rotate(-1deg) translateY(-10px); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
 }
 
 @keyframes gatewaySpin {
   to { transform: rotate(360deg); }
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1040px) {
+  .gatewayHeader,
+  .gatewayHero,
+  .gatewayFooter {
+    width: min(calc(100% - 40px), 1540px);
+  }
+
   .gatewayHero {
-    grid-template-columns: 0.95fr 1.05fr;
-    padding-left: 32px;
+    grid-template-columns: minmax(370px, 0.9fr) minmax(430px, 1.1fr);
+    gap: 34px;
   }
 
   .gateway h1 {
-    font-size: min(7vw, 78px);
-  }
-
-  .gateway h1 .isIndented,
-  .gatewayActions {
-    margin-left: 9vw;
+    font-size: clamp(50px, 6.8vw, 72px);
   }
 }
 
 @media (max-width: 760px) {
   .gateway {
-    min-height: 100dvh;
     overflow-y: auto;
   }
 
   .gateway::before {
-    inset: 0;
-    background: linear-gradient(180deg, rgba(242, 241, 240, 0) 0 31%, #f2f1f0 46%);
+    inset: 76px 12px 58px;
+  }
+
+  .gatewayHeader,
+  .gatewayHero,
+  .gatewayFooter {
+    width: calc(100% - 32px);
   }
 
   .gatewayHeader {
     grid-template-columns: 1fr auto;
-    padding: 16px;
+    min-height: 76px;
   }
 
   .gatewayNav {
@@ -428,10 +444,8 @@
   }
 
   .gatewayInterviewLink {
-    min-height: 42px;
-    color: #22292b;
-    border-color: rgba(38, 44, 47, 0.18);
-    background: rgba(255, 255, 255, 0.6);
+    min-height: 40px;
+    padding: 0 13px;
   }
 
   .gatewayHero {
@@ -439,60 +453,52 @@
     min-height: auto;
     flex-direction: column-reverse;
     align-items: stretch;
-    gap: 0;
-    padding: 12px 16px 78px;
+    gap: 34px;
+    padding: 24px 0 82px;
   }
 
   .gatewayMedia {
-    min-height: 40svh;
-    margin: 0 -16px 28px;
+    min-height: 42svh;
   }
 
   .gatewayMediaFrame {
     inset: 0;
-    clip-path: polygon(0 0, 100% 0, 100% 88%, 88% 100%, 0 100%);
   }
 
   .gatewayMediaCard {
-    left: 18px;
-    bottom: -10px;
-    width: 150px;
+    left: 12px;
+    bottom: -14px;
+    width: 142px;
   }
 
   .gatewayOrbit {
-    top: auto;
-    right: 16px;
-    bottom: -12px;
+    top: 14px;
+    right: 12px;
     left: auto;
-    width: 104px;
-    height: 104px;
+    width: 96px;
+    height: 96px;
+    padding: 16px;
   }
 
   .gatewayOrbit span {
-    font-size: 30px;
-  }
-
-  .gatewayCopy {
-    padding-top: 8px;
+    font-size: 26px;
   }
 
   .gatewayLabel {
-    margin-bottom: 18px;
+    margin-bottom: 20px;
     font-size: 9px;
   }
 
   .gateway h1 {
-    font-size: clamp(45px, 14.5vw, 68px);
-    line-height: 0.83;
-  }
-
-  .gateway h1 .isIndented {
-    margin-left: 28vw;
+    max-width: 100%;
+    font-size: clamp(40px, 12vw, 54px);
+    line-height: 1.06;
+    letter-spacing: -0.05em;
   }
 
   .gatewayActions {
     display: grid;
-    margin: 26px 0 0;
+    margin-top: 28px;
   }
 
   .gatewayPrimary,

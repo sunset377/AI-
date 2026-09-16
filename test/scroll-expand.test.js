@@ -16,9 +16,9 @@ test('portfolio renders a scroll-expanding entrance into the image gallery', asy
 
     assert.match(html, /class="scroll-expand/)
     assert.match(html, /进入视觉档案/)
-    assert.match(html, /107 件作品/)
-    assert.match(html, /5 种视觉方向/)
-    assert.match(html, /assets\/portfolio-gallery\/world-01\.webp/)
+    assert.match(html, /82 件作品/)
+    assert.match(html, /本次重新精选/)
+    assert.match(html, /assets\/portfolio-gallery\/gallery-003\.webp/)
   } finally {
     await vite.close()
   }

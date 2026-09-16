@@ -65,14 +65,11 @@ test('GitHub Pages build publishes the Sanxingdui tool as a self-contained inter
   assert.match(toolHtml, /\.\/assets\/experience\.js/)
 })
 
-test('portfolio gallery publishes every optimized image', async () => {
+test('portfolio gallery publishes every selected desktop image', async () => {
   const galleryDirectory = 'dist/assets/portfolio-gallery'
   const galleryFiles = (await readdir(galleryDirectory)).filter((file) => file.endsWith('.webp'))
 
-  assert.equal(galleryFiles.length, 107)
-  assert.equal(galleryFiles.filter((file) => file.startsWith('world-')).length, 33)
-  assert.equal(galleryFiles.filter((file) => file.startsWith('portrait-')).length, 23)
-  assert.equal(galleryFiles.filter((file) => file.startsWith('illustration-')).length, 14)
-  assert.equal(galleryFiles.filter((file) => file.startsWith('brand-')).length, 13)
-  assert.equal(galleryFiles.filter((file) => file.startsWith('fashion-')).length, 24)
+  assert.equal(galleryFiles.length, 82)
+  assert.equal(galleryFiles[0], 'gallery-001.webp')
+  assert.equal(galleryFiles.at(-1), 'gallery-082.webp')
 })

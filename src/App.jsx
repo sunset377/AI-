@@ -16,20 +16,20 @@ const wallpapers = [
   {
     id: 'electric',
     label: 'Style 01',
-    title: 'Electric Portrait',
-    src: 'assets/style-gallery/electric-portrait-wide.jpg',
+    title: 'Dream Garden',
+    src: 'assets/portfolio-gallery/gallery-003.webp',
   },
   {
     id: 'garden',
     label: 'Style 02',
-    title: 'Future Garden',
-    src: 'assets/style-gallery/future-garden-hero.jpg',
+    title: 'Night Portrait',
+    src: 'assets/portfolio-gallery/gallery-029.webp',
   },
   {
     id: 'surreal',
     label: 'Style 03',
-    title: 'Surreal Vision',
-    src: 'assets/style-gallery/surreal-eye-garden.jpg',
+    title: 'Golden World',
+    src: 'assets/portfolio-gallery/gallery-022.webp',
   },
 ].map((wallpaper) => ({ ...wallpaper, src: assetPath(wallpaper.src) }))
 
@@ -65,7 +65,7 @@ const projects = [
     title: 'AI 抽卡实验室',
     subtitle: '角色设定、提示词与视觉筛选流程',
     type: 'image',
-    image: 'assets/style-gallery/electric-portrait-wide.jpg',
+    image: 'assets/portfolio-gallery/gallery-004.webp',
     meta: 'Midjourney / Liblib / 即梦 / 审美筛选',
     description:
       '围绕角色一致性、镜头张力和商业可用度进行批量出图、筛选、复盘与风格收敛，形成稳定可复用的抽卡方法。',
@@ -89,49 +89,46 @@ const projects = [
 
 const galleryGroups = [
   {
-    id: 'world',
-    label: '梦幻世界',
-    count: 33,
-    description: '梦核场景、神话人物与电影感世界观',
-  },
-  {
     id: 'portrait',
-    label: '人像实验',
-    count: 23,
-    description: '情绪肖像、胶片摄影与角色气质探索',
+    label: '竖幅作品',
+    count: 54,
+    description: '人物、角色、服装与叙事型竖幅视觉',
   },
   {
-    id: 'illustration',
-    label: '插画手作',
-    count: 14,
-    description: '绘画、拼贴、童话与训练手账视觉',
+    id: 'landscape',
+    label: '横幅作品',
+    count: 21,
+    description: '世界观、角色设定与宽幅视觉方案',
   },
   {
-    id: 'brand',
-    label: '商业创意',
-    count: 13,
-    description: '角色资产、产品表达与广告视觉方案',
-  },
-  {
-    id: 'fashion',
-    label: '服装造型',
-    count: 24,
-    description: '服装设定、造型组合与人物一致性测试',
+    id: 'square',
+    label: '方形作品',
+    count: 7,
+    description: '肖像、插画与方形构图实验',
   },
 ]
 
-const styleShots = galleryGroups.flatMap((group) =>
-  Array.from({ length: group.count }, (_, index) => ({
-    id: `${group.id}-${String(index + 1).padStart(2, '0')}`,
-    title: `${group.label} · ${String(index + 1).padStart(2, '0')}`,
+const landscapeShots = new Set([4, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 25, 29, 45, 46, 50, 51, 52, 53, 54, 55])
+const squareShots = new Set([1, 2, 3, 28, 63, 66, 78])
+
+const styleShots = Array.from({ length: 82 }, (_, index) => {
+  const number = index + 1
+  const categoryId = landscapeShots.has(number)
+    ? 'landscape'
+    : squareShots.has(number)
+      ? 'square'
+      : 'portrait'
+  const group = galleryGroups.find((item) => item.id === categoryId)
+
+  return {
+    id: `selected-${String(number).padStart(3, '0')}`,
+    title: `视觉作品 · ${String(number).padStart(2, '0')}`,
     category: group.label,
-    categoryId: group.id,
+    categoryId,
     description: group.description,
-    src: assetPath(
-      `assets/portfolio-gallery/${group.id}-${String(index + 1).padStart(2, '0')}.webp`,
-    ),
-  })),
-)
+    src: assetPath(`assets/portfolio-gallery/gallery-${String(number).padStart(3, '0')}.webp`),
+  }
+})
 
 const strengths = [
   {
@@ -343,7 +340,7 @@ function App({ initialView }) {
         <div className="sectionKicker">03 / ABOUT</div>
         <div className="aboutGrid">
           <div className="portraitCard">
-            <img src={assetPath('assets/style-gallery/porcelain-close.jpg')} alt="辞的视觉风格人物图" />
+            <img src={assetPath('assets/portfolio-gallery/gallery-001.webp')} alt="辞的视觉风格人物图" />
             <div className="portraitCaption">
               <span>刘耀华</span>
               <span>23 岁 / 成都</span>
@@ -429,8 +426,8 @@ function App({ initialView }) {
 
       <section className="galleryPortalSection" id="gallery-intro" aria-label="进入视觉作品库">
         <ScrollExpand
-          src={assetPath('assets/portfolio-gallery/world-01.webp')}
-          alt="超现实花园中的巨型眼睛与旅行者"
+          src={assetPath('assets/portfolio-gallery/gallery-003.webp')}
+          alt="超现实花园视觉作品"
           title="进入视觉档案"
           scrollHint="向下滚动，展开作品"
           startWidth={48}
@@ -446,11 +443,11 @@ function App({ initialView }) {
           <div className="galleryPortalCopy">
             <p>VISUAL ARCHIVE / 2026</p>
             <h2>
-              107 件作品
-              <span>5 种视觉方向</span>
+              82 件作品
+              <span>本次重新精选</span>
             </h2>
             <p className="galleryPortalLead">
-              梦幻世界、人像实验、插画手作、商业创意与服装造型。
+              仅收录本次重新筛选的桌面视觉作品，旧图库已全部替换。
             </p>
             <a href="#style">进入双列图库 <span aria-hidden="true">↓</span></a>
           </div>
@@ -465,7 +462,7 @@ function App({ initialView }) {
               <h2>风格创意库</h2>
             </div>
             <p>
-              从桌面壁纸、AI 绘画到角色与服装设定，共收录 107 件视觉作品。像浏览小红书一样向下滑动，点击图片可查看完整大图。
+              本次重新收录 82 件视觉作品，覆盖人物、插画、服装设定与世界观探索。向下浏览，点击图片可查看完整大图。
             </p>
           </div>
 
@@ -603,7 +600,7 @@ function App({ initialView }) {
         <div
           className="closingMedia"
           aria-hidden="true"
-          style={{ backgroundImage: `url(${assetPath('assets/style-gallery/future-garden-hero.jpg')})` }}
+          style={{ backgroundImage: `url(${assetPath('assets/portfolio-gallery/gallery-022.webp')})` }}
         />
         <div className="closingInner shell">
           <p className="eyebrow">05 / CONTACT</p>
