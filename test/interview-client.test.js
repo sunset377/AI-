@@ -77,8 +77,10 @@ test('interview view explains the AI identity and offers starter questions', asy
     const html = renderToStaticMarkup(React.createElement(App, { initialView: 'interview' }))
 
     assert.match(html, /AI 面试助手/)
+    assert.match(html, /AI Agent \/ AI应用开发工程师/)
     assert.match(html, /请做一下自我介绍/)
-    assert.match(html, /讲讲你最完整的 AI 项目/)
+    assert.match(html, /为什么适合 AI Agent 岗位/)
+    assert.match(html, /你如何设计可靠的 Agent 工作流/)
     assert.match(html, /Shift \+ Enter 换行/)
     assert.match(html, /查看作品集/)
     assert.match(html, /联系本人/)

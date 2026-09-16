@@ -4,14 +4,14 @@ import './InterviewExperience.css'
 
 const starterQuestions = [
   '请做一下自我介绍',
-  '讲讲你最完整的 AI 项目',
-  '你如何保证角色一致性',
-  '为什么适合这个岗位',
+  '为什么适合 AI Agent 岗位',
+  '你如何设计可靠的 Agent 工作流',
+  '讲讲你从0到1交付的项目',
 ]
 
 const welcomeMessage = {
   role: 'assistant',
-  content: '你好，我是刘耀华的 AI 面试助手。你可以直接问我的经历、项目方法和岗位匹配度。',
+  content: '你好，我是刘耀华的 AI 面试助手。我的回答以他的求职简历为事实基础，并会用更适合面试的方式说明项目证据与岗位价值。',
 }
 
 function createSessionId() {
@@ -119,11 +119,11 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
             <span className="interviewAccent">真实项目</span>
           </h1>
           <p className="interviewIntro">
-            这里的回答基于刘耀华公开的作品与经历。适合快速了解他的项目方法、视觉判断和岗位匹配度。
+            这里的回答以刘耀华的求职简历为事实基础，适合快速了解他的 Agent 工作流、Web 产品交付和岗位匹配度。
           </p>
           <dl className="interviewFacts">
-            <div><dt>定位</dt><dd>AI 漫剧导演 / 视觉设计</dd></div>
-            <div><dt>能力</dt><dd>分镜 · 生成 · 剪辑 · 品牌</dd></div>
+            <div><dt>定位</dt><dd>AI Agent / AI应用开发工程师</dd></div>
+            <div><dt>能力</dt><dd>Agent工作流 · Web开发 · 产品交付</dd></div>
             <div><dt>状态</dt><dd><span /> AI 面试助手在线</dd></div>
           </dl>
           <p className="interviewDisclosure">AI 回答仅用于了解本人经历，不代表新的承诺或未公开信息。</p>
@@ -139,7 +139,7 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
             <div>
               <span className="interviewLiveDot" aria-hidden="true" />
               <strong>AI 面试助手</strong>
-              <small>基于真实作品档案</small>
+              <small>基于求职简历知识库</small>
             </div>
             <button type="button" onClick={clearConversation}>清空对话</button>
           </div>
@@ -189,7 +189,7 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
               value={draft}
               maxLength={800}
               rows={3}
-              placeholder="例如：你在《星际穷途 X》中具体负责什么？"
+              placeholder="例如：你如何把一个 AI 想法做成可交付的产品？"
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && !event.shiftKey) {
