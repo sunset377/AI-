@@ -4,6 +4,7 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { createServer } from 'vite'
 import { parseSseLine, streamInterview } from '../src/interview/client.js'
+import { buildResumeFallbackAnswer } from '../src/interview/fallback.js'
 
 test('parseSseLine reads Workers AI and OpenAI-compatible token shapes', () => {
   assert.deepEqual(parseSseLine('data: {"response":"你好"}'), { response: '你好' })
@@ -51,19 +52,27 @@ test('streamInterview surfaces the server error message', async () => {
   )
 })
 
-test('streamInterview rejects a static-host HTML fallback instead of showing an empty answer', async () => {
-  await assert.rejects(
-    streamInterview({
-      messages: [{ role: 'user', content: '你好' }],
-      sessionId: 'session-12345678',
-      onToken() {},
-      fetchImpl: async () => new Response('<!doctype html><title>Portfolio</title>', {
-        status: 200,
-        headers: { 'content-type': 'text/html; charset=utf-8' },
-      }),
+test('resume fallback optimizes common interview questions without inventing facts', () => {
+  assert.match(buildResumeFallbackAnswer('为什么适合 AI Agent 岗位'), /服装一键复刻爆款视频工作台/)
+  assert.match(buildResumeFallbackAnswer('说说你的不足'), /简历资料没有记录/)
+  assert.match(buildResumeFallbackAnswer('你有几年大厂经验'), /暂未收录/)
+})
+
+test('streamInterview uses the labelled resume demo when a static host has no API route', async () => {
+  const tokens = []
+  const result = await streamInterview({
+    messages: [{ role: 'user', content: '为什么适合 AI Agent 岗位' }],
+    sessionId: 'session-12345678',
+    onToken: (token) => tokens.push(token),
+    fetchImpl: async () => new Response('static host has no API route', {
+      status: 404,
+      headers: { 'content-type': 'text/plain; charset=utf-8' },
     }),
-    /尚未连接 AI 服务/,
-  )
+  })
+
+  assert.equal(result.mode, 'resume-fallback')
+  assert.match(tokens.join(''), /简历知识库演示/)
+  assert.match(tokens.join(''), /岗位价值/)
 })
 
 test('interview view explains the AI identity and offers starter questions', async () => {

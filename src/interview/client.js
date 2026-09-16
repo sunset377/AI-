@@ -1,3 +1,5 @@
+import { buildResumeFallbackAnswer } from './fallback.js'
+
 export function parseSseLine(line) {
   if (!line.startsWith('data:')) return null
 
@@ -27,13 +29,22 @@ export async function streamInterview({
     signal,
   })
 
+  const contentType = response.headers.get('content-type') ?? ''
+  const normalizedContentType = contentType.toLowerCase()
+  const isStaticHostFallback = normalizedContentType.includes('text/html')
+    || (response.status === 404 && !normalizedContentType.includes('application/json'))
+
+  if (isStaticHostFallback) {
+    onToken(buildResumeFallbackAnswer(messages.at(-1)?.content))
+    return { mode: 'resume-fallback' }
+  }
+
   if (!response.ok) {
     const payload = await response.json().catch(() => null)
     throw new Error(payload?.error ?? 'AI 面试服务暂时不可用，请稍后再试。')
   }
 
-  const contentType = response.headers.get('content-type') ?? ''
-  if (!contentType.toLowerCase().includes('text/event-stream')) {
+  if (!normalizedContentType.includes('text/event-stream')) {
     throw new Error('当前预览尚未连接 AI 服务，请使用 Cloudflare 本地预览或部署后的公网版本。')
   }
 
@@ -62,4 +73,6 @@ export async function streamInterview({
 
   buffer += decoder.decode()
   if (buffer) emitLines([buffer])
+
+  return { mode: 'workers-ai' }
 }
