@@ -87,7 +87,7 @@ test('interview view explains the AI identity and offers starter questions', asy
     const html = renderToStaticMarkup(React.createElement(App, { initialView: 'interview' }))
 
     assert.match(html, /AI 面试助手/)
-    assert.match(html, /基于求职简历知识库/)
+    assert.doesNotMatch(html, /基于求职简历知识库/)
     assert.doesNotMatch(html, /简历知识库演示模式/)
     assert.match(html, /AI Agent \/ AI应用开发工程师/)
     assert.match(html, /请做一下自我介绍/)

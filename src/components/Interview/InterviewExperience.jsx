@@ -139,7 +139,6 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
             <div>
               <span className="interviewLiveDot" aria-hidden="true" />
               <strong>AI 面试助手</strong>
-              <small>基于求职简历知识库</small>
             </div>
             <button type="button" onClick={clearConversation}>清空对话</button>
           </div>
