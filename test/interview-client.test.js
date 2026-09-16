@@ -77,6 +77,17 @@ test('static fallback keeps short follow-up questions connected to recent contex
   assert.match(answer, /Codex、Claude Code/)
 })
 
+test('static fallback prioritizes a new explicit question over older conversation topics', () => {
+  const answer = buildResumeFallbackAnswer([
+    { role: 'user', content: '你的优势与不足是什么' },
+    { role: 'assistant', content: '上一轮回答' },
+    { role: 'user', content: '你毕业于哪个学校' },
+  ])
+
+  assert.match(answer, /四川大学视觉传达设计本科，2026年毕业/)
+  assert.doesNotMatch(answer, /大型多人协作经验仍需积累/)
+})
+
 test('streamInterview uses resume knowledge when a static host has no API route', async () => {
   const tokens = []
   const result = await streamInterview({

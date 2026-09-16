@@ -154,15 +154,25 @@ const answers = [
 ]
 
 export function buildResumeFallbackAnswer(question) {
-  const normalized = Array.isArray(question)
+  const userQuestions = Array.isArray(question)
     ? question
       .slice(-6)
       .filter((message) => message?.role === 'user')
       .map((message) => String(message.content ?? '').trim())
       .filter(Boolean)
-      .join('；')
-    : String(question ?? '').trim()
-  const match = answers.find((item) => item.pattern.test(normalized))
+    : [String(question ?? '').trim()].filter(Boolean)
+  const currentQuestion = userQuestions.at(-1) ?? ''
+  const isShortFollowUp = /^(为什么|具体.*|还有.*|然后呢|怎么做的|怎么用的|能.*展开|举.*例|再说说.*|什么意思)[？?。.！!\s]*$/.test(currentQuestion)
+  let match = answers.find((item) => item.pattern.test(currentQuestion))
+
+  if (!match && isShortFollowUp) {
+    match = userQuestions
+      .slice(0, -1)
+      .reverse()
+      .map((previousQuestion) => answers.find((item) => item.pattern.test(previousQuestion)))
+      .find(Boolean)
+  }
+
   const answer = match?.answer
     ?? '综合现有教育、作品集与项目资料，刘耀华最稳定的能力是把模糊需求拆成可执行流程，再通过页面交互、任务状态、异常处理和交付验证做成可用结果。服装工作台、三星堆互动工具、个人作品集与多模型短片分别证明了他的产品拆解、Web实现、视觉判断和持续迭代能力。若需要某段经历的具体数字或未公开事实，建议再向本人确认。'
 
