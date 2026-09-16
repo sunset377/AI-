@@ -53,7 +53,7 @@ test('streamInterview surfaces the server error message', async () => {
 })
 
 test('resume fallback optimizes common interview questions without inventing facts', () => {
-  assert.match(buildResumeFallbackAnswer('为什么适合 AI Agent 岗位'), /服装一键复刻爆款视频工作台/)
+  assert.match(buildResumeFallbackAnswer('为什么适合 AI Agent 岗位'), /MOMOCO/)
   assert.match(buildResumeFallbackAnswer('说说你的不足'), /编程基础/)
   assert.match(buildResumeFallbackAnswer('你有几年大厂经验'), /暂未收录/)
   assert.doesNotMatch(buildResumeFallbackAnswer('请做一下自我介绍'), /简历知识库演示/)
@@ -61,8 +61,13 @@ test('resume fallback optimizes common interview questions without inventing fac
   assert.match(buildResumeFallbackAnswer('他是本科生吗'), /学历层次.*尚待本人确认/)
   assert.match(buildResumeFallbackAnswer('面试时怎么称呼你'), /刘耀华/)
   assert.match(buildResumeFallbackAnswer('可以考虑哪些求职城市'), /上海、杭州和武汉/)
-  assert.match(buildResumeFallbackAnswer('你现在住在哪个城市'), /常住城市.*尚未确认/)
-  assert.match(buildResumeFallbackAnswer('你的目标岗位优先级是什么'), /排序仍待本人最终确认/)
+  assert.match(buildResumeFallbackAnswer('你现在住在哪个城市'), /当前常住城市.*尚未获本人明确确认/)
+  assert.match(buildResumeFallbackAnswer('你的目标岗位优先级是什么'), /AI 工作流自动化/)
+  assert.match(buildResumeFallbackAnswer('你做过多少集 AI 短剧'), /约 60 集/)
+  assert.match(buildResumeFallbackAnswer('那部三分钟的短片叫什么'), /正式片名尚未提供/)
+  assert.match(buildResumeFallbackAnswer('MOMOCO 工作流哪些已经可用'), /端到端自动 Agent 串联/)
+  assert.match(buildResumeFallbackAnswer('角色卡有付费订单吗'), /小规模真实付费订单/)
+  assert.match(buildResumeFallbackAnswer('项目代码都是你独立手写的吗'), /Codex 辅助实现/)
   assert.match(buildResumeFallbackAnswer('你为什么从视觉设计转向 AI 应用'), /完整自动化/)
   assert.match(buildResumeFallbackAnswer('你现在都会哪些AI工具'), /Codex、Claude Code/)
   assert.match(buildResumeFallbackAnswer('为什么从视觉设计转向 AI 应用'), /不是完全割裂的转行/)
@@ -108,7 +113,7 @@ test('streamInterview uses resume knowledge when a static host has no API route'
 
   assert.equal(result.mode, 'resume-fallback')
   assert.doesNotMatch(tokens.join(''), /简历知识库演示/)
-  assert.match(tokens.join(''), /岗位价值/)
+  assert.match(tokens.join(''), /岗位的匹配点/)
 })
 
 test('interview view explains the AI identity and offers starter questions', async () => {

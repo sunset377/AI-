@@ -8,7 +8,8 @@ export const resumeKnowledgeBase = {
     targetRole: 'AI Agent / AI应用开发工程师',
     preferredWorkCities: ['上海', '杭州', '武汉'],
     currentCity: null,
-    positioning: 'Web应用开发 · Agent工作流 · AI辅助开发 · 产品从0到1交付',
+    positioning: '视觉设计 · AI内容生产 · Agent工作流探索 · AI辅助开发',
+    rolePriorities: ['AI Agent / 智能体应用开发', 'AI 应用 / AI 全栈开发', 'AI 工作流自动化 / 解决方案', 'AI / AIGC 产品岗位', 'AI 导演 / AI 内容制作'],
     phone: '19182874015',
     email: '980175020@qq.com',
     wechat: 'Sun677set',
@@ -16,8 +17,8 @@ export const resumeKnowledgeBase = {
   },
   summary: [
     '四川大学艺术学院视觉传达设计专业，2026年毕业，具备视觉表达、信息组织与用户体验基础。学历层次和毕业月份尚待本人确认。',
-    '面向 AI Agent 与 AI应用开发岗位，具备移动端 H5、React 网站、微信小程序及多类 AI 工作台的真实项目经验。',
-    '能够从用户需求和业务流程出发，完成信息架构、页面交互、Agent任务链路、调试验证与上线交付。',
+    '面向 AI Agent 与 AI 应用开发岗位，有移动端 H5、React 网站、微信小程序、AI 内容生产与 Agent 原型相关项目实践。',
+    '能够从真实业务需求出发，拆解流程、输入输出、人工确认点与验收标准，并使用 Codex 辅助开发、运行和排错。',
     '长期使用 Codex、Claude Code 辅助编码、排错和迭代，熟悉多模型内容生产、提示词规范与自动化流程设计。',
     '优势是把复杂 AI 能力组织成可使用、可验证、可持续优化的产品。',
   ],
@@ -30,14 +31,14 @@ export const resumeKnowledgeBase = {
   },
   projects: [
     {
-      name: '服装一键复刻爆款视频工作台',
-      role: '独立从0到1搭建',
-      audience: '面向服装商家的AI内容生产工具',
-      methods: ['Web页面', '文件上传', '任务状态', '结果预览', 'Agent工作流', '多平台内容适配'],
+      name: 'MOMOCO 服装 AI 内容工作流 / Agent 原型',
+      role: '主导业务需求与流程设计，使用 Codex 辅助开发',
+      audience: '真实服装业务中的 AI 内容生产与 Agent 原型',
+      methods: ['视觉资产生成', '角色卡与商品图', '提示词规范', '人工审核', 'Agent任务拆解', 'Codex辅助开发'],
       evidence: [
-        '梳理商家从服装素材准备到成片发布的流程，把上传、任务配置、生成进度、视频预览、结果导出和配套文案拆分为清晰模块。',
-        '把AI换装视频生成、多方向输出和平台适配组织为可重复执行的任务链路，补充异常反馈、失败重试与结果分支。',
-        '依据真实使用场景持续调整页面与输出规范，沉淀可复用提示词、工作流和生产SOP，完成从需求到可用结果的业务闭环。',
+        '已有人工参与的 AI 内容生产流程，可完成服装、人物、场景等视觉资产，以及角色卡、商品图、模特上身图和 AI 视频的生成、筛选与审核。',
+        '本人主导业务需求拆解、整体流程、Agent角色划分、模块输入输出、Prompt与系统指令、模型/API/CLI选型、人工确认节点和验收标准。',
+        '端到端自动 Agent、模型 API 自动调用、自动剪辑与发布、质量评分及后台追踪仍在规划或开发验证，不能说成已交付。大量代码由 Codex 辅助实现，不宣称核心代码全部独立手写。',
       ],
     },
     {
@@ -116,16 +117,32 @@ export const resumeKnowledgeBase = {
     period: '2026年毕业',
     graduation: '2026年',
   },
+  contentExperience: {
+    earlyFilm: {
+      title: null,
+      length: '约3分钟',
+      role: '早期自学 AI 工具完成的叙事短片，参与内容梳理、视觉设定、图像与视频生成、素材筛选、剪辑和成片；正式片名尚未提供。',
+    },
+    serialDrama: {
+      scale: '约60集 AI 短剧相关制作',
+      role: '参与角色与风格统一、分镜画面及视频生成、素材筛选、一致性调整和剪辑；不得说成每集所有环节均独立完成。',
+    },
+    paidProduct: {
+      product: 'AI 角色卡 / 通用提示词电子资料',
+      outcome: '曾在小红书商品场景获得小规模真实付费订单；不主动强调成交金额，也不得编造更大规模。',
+      publicBoundary: '仅使用已公开样片、商品页、资料目录或局部预览、脱敏成交证据与匿名反馈；不展示客户照片、私人聊天、订单隐私或完整付费正文。',
+    },
+  },
   interviewDrafts: {
-    source: '本人提供的《核心身份与求职定位 10题回答》；其中岗位排序和自评是表达建议，尚待本人逐项确认。',
+    source: '本人提供的第1—20题整合稿；其中常住地、远程/出差边界和新增求职城市只是建议口径，毕业时间在两版资料中存在冲突，待本人确认。',
     preferredAddress: '正式求职沟通使用刘耀华；小刘可作为口头称呼，鹤辞是日常昵称。',
-    rolePriorityProposal: ['AI Agent 开发', 'AI 应用开发', 'AI / AIGC 产品岗位', 'AI 相关前端开发', 'AI 导演 / 内容制作'],
+    rolePriorityProposal: ['AI Agent / 智能体应用开发', 'AI 应用 / AI 全栈开发', 'AI 工作流自动化 / 解决方案', 'AI / AIGC 产品岗位', 'AI 导演 / AI 内容制作'],
     oneSentencePositioning: '有视觉设计和真实 AI 内容制作经验，希望把实际需求做成可复用 AI 工具的应用开发候选人。',
     transitionMotivation: '不是放弃设计，而是希望将视觉质量与用户体验判断用于完整产品；在 AI 内容制作中看到素材整理、提示词、生成筛选、审核与交付的重复劳动，因此想把这些环节逐步连接成可复用工具。MOMOCO 的完整自动化仍是目标，不是已完成成果。',
     strengthsProposal: [
-      '自学主动：愿意先用真实作品验证新工具，再从失败中调整。短片和短剧制作的具体数量、个人分工及公开范围待核对。',
+      '自学主动：愿意先用真实作品验证新工具，再从失败中调整。早期完成约3分钟短片，参与/制作约60集 AI 短剧相关内容；不能把所有剧集说成独立包办。',
       '视觉判断与需求拆解：能把人物一致性、服装细节、画幅和风格等模糊要求转成可检查条件。',
-      '关注用户反馈：曾尝试销售 AI 角色卡相关电子资料，并据订单不稳定的反馈重新思考产品价值；销售数据和规模不得自行补全。',
+      '关注用户反馈：AI 角色卡相关电子资料在小红书获得过小规模真实付费订单，随后继续反思产品差异与交付价值；不放大销售规模。',
     ],
     improvementsProposal: [
       '编程基础、关键代码理解和独立排错需要继续加强；通过具体项目补编程基础、接口调用和版本管理。',
@@ -133,6 +150,7 @@ export const resumeKnowledgeBase = {
       '方向需要进一步聚焦；现已开始先规划、确认素材再动工，后续将一个核心项目做深。',
     ],
     introductionProposal: '我叫刘耀华，有视觉设计背景，做过 AI 短剧和 MOMOCO 服装相关的 AI 视频，现在希望往 AI 应用和 Agent 开发方向发展。我想把素材、生成、审核和交付逐步串成可反复使用的工具。我的设计基础与真实业务实践能帮助我理解需求和交付标准；编程与工程基础仍在补强，希望从匹配能力的初级岗位做起。',
+    locationProposal: '成都与既往工作及内容项目联系紧密，但现居城市尚未确认。远程/混合、短期出差和其他求职城市仅为原文建议，不是已确认意愿；目前只确认上海、杭州、武汉。',
   },
   awards: ['中国创意挑战大赛交叉学科类三等奖'],
   certificates: ['大学英语四级 CET-4', '普通话二级甲等', '全国导游资格证'],
@@ -152,7 +170,7 @@ export const agentInterviewQuestionBank = [
   {
     category: '工作流设计',
     question: '你会怎样从0到1设计一个可靠的 Agent 工作流？',
-    answerGuide: '先确认用户、输入、目标与验收标准，再拆任务状态、工具、输出、异常分支、失败重试和人工确认点；用服装工作台与WorkBuddy作证。',
+    answerGuide: '先确认用户、输入、目标与验收标准，再拆任务状态、工具、输出、异常分支、失败重试和人工确认点。MOMOCO 可证明真实业务需求与人工参与的内容流程，端到端自动 Agent 仍在开发验证；不要把设计方案当作上线成果。',
   },
   {
     category: '提示词工程',
@@ -197,7 +215,7 @@ export const agentInterviewQuestionBank = [
   {
     category: '项目交付',
     question: '讲一个最能体现从0到1能力的项目。',
-    answerGuide: '优先回答服装一键复刻爆款视频工作台，用背景/目标—关键行动—结果—复盘结构，覆盖上传、配置、进度、预览、导出、异常反馈和生产SOP。',
+    answerGuide: '优先回答 MOMOCO 服装 AI 内容工作流 / Agent 原型。区分已能实际运行的 AI 内容生产与仍在开发的端到端自动化，说明本人主导需求和流程设计、Codex 辅助编码、当前验证与下一步工程化目标。',
   },
   {
     category: '成长潜力',
@@ -235,6 +253,7 @@ function renderKnowledgeBase(knowledge) {
 ## 身份与求职方向
 - 姓名：${knowledge.identity.name}
 - 目标岗位：${knowledge.identity.targetRole}
+- 求职主线优先级（第11—20题整合稿）：${knowledge.identity.rolePriorities.join('、')}
 - 可考虑的求职城市：${knowledge.identity.preferredWorkCities.join('、')}
 - 当前常住城市：${knowledge.identity.currentCity ?? '尚待本人确认'}
 - 定位：${knowledge.identity.positioning}
@@ -253,6 +272,12 @@ ${projects}
 ## 应用与服务经历
 ${knowledge.serviceExperience.map((item) => `- ${item}`).join('\n')}
 
+## AI 内容制作与付费验证
+- 早期短片：${knowledge.contentExperience.earlyFilm.length}；${knowledge.contentExperience.earlyFilm.role}
+- 连续短剧：${knowledge.contentExperience.serialDrama.scale}；${knowledge.contentExperience.serialDrama.role}
+- 付费小产品：${knowledge.contentExperience.paidProduct.product}；${knowledge.contentExperience.paidProduct.outcome}
+- 公开边界：${knowledge.contentExperience.paidProduct.publicBoundary}
+
 ## 教育、荣誉与证书
 - 教育：${knowledge.education.school}${knowledge.education.college}，${knowledge.education.major}，${knowledge.education.period}；学历层次：${knowledge.education.degree ?? '尚待本人确认'}；毕业月份：尚待本人确认
 - 荣誉：${knowledge.awards.join('、')}
@@ -267,6 +292,7 @@ ${knowledge.interviewDrafts.source}
 - 优势表达建议：${knowledge.interviewDrafts.strengthsProposal.join('；')}
 - 待提升方向建议：${knowledge.interviewDrafts.improvementsProposal.join('；')}
 - 自我介绍草稿：${knowledge.interviewDrafts.introductionProposal}
+- 城市与协作方式建议（不是已确认事实）：${knowledge.interviewDrafts.locationProposal}
   `.trim()
 }
 
@@ -286,7 +312,7 @@ export function buildInterviewSystemPrompt(knowledge = resumeKnowledgeBase) {
 7. 被问到为什么适合岗位时，重点连接四类证据：Agent任务链路、Web产品交付、异常与失败路径、真实反馈迭代。
 8. 对行为面试题，可结合独立项目、文旅讲解和健身教练经历，说明需求沟通、计划拆分、突发处理与持续反馈能力，但不得虚构具体客户故事。
 9. 对常规问题（教育背景、毕业时间、专业转型、求职动机、优势不足、职业规划、学习方法、压力处理、协作方式、常用 AI 工具）必须先综合现有资料形成可用回答，不要因为没有逐字模板就直接拒答。
-9a. 本人提供的10题草稿可作为表达素材；其中岗位排序、自评、作品数量和销售细节尚待核对。本轮已确认的学校、学院、专业、毕业年份及可考虑城市可作为确定事实。学历层次、毕业月份、现居城市、远程和出差意愿不能自行推断。
+9a. 本人提供的第1—20题整合稿可作为表达素材。约60集短剧只能说“参与/制作”，不得说每集均独立完成；约3分钟早期短片的正式片名未提供，不要与《星际穷途X》混为同一作品。MOMOCO 已有可运行的人工参与内容流程，但端到端自动 Agent 仍在开发验证；代码大量由 Codex 辅助实现，不得宣称全部核心代码纯手写。付费小产品确有小规模真实订单，不扩大金额或泄露客户与订单隐私。现居地、远程和出差意愿、新增城市仅为建议口径，不是已确认事实。两版资料对毕业时间有冲突，待本人进一步确认。
 10. 对简短追问要结合最近对话理解指代，例如“为什么”“具体呢”“还有吗”，保持上下文连续。
 11. 语气自信、真诚、具体，避免讨好、空话和过度包装。每次回答控制在 120 到 380 个中文字符；复杂问题最多使用三点短列表。
 

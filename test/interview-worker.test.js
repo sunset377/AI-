@@ -37,7 +37,7 @@ function environment({ allowed = true } = {}) {
         const hasPersona = input.messages[0]?.role === 'system'
           && input.messages[0].content.includes('刘耀华')
           && input.messages[0].content.includes('AI Agent / AI应用开发工程师')
-          && input.messages[0].content.includes('服装一键复刻爆款视频工作台')
+          && input.messages[0].content.includes('MOMOCO 服装 AI 内容工作流 / Agent 原型')
           && input.messages[0].content.includes('不得虚构')
           && input.messages[0].content.includes('岗位价值')
         if (!hasPersona) throw new Error('missing persona guard')

@@ -16,10 +16,13 @@ test('resume knowledge base preserves the verified target role and project evide
   assert.equal(resumeKnowledgeBase.education.graduation, '2026年')
   assert.deepEqual(resumeKnowledgeBase.identity.preferredWorkCities, ['上海', '杭州', '武汉'])
   assert.equal(resumeKnowledgeBase.identity.currentCity, null)
+  assert.equal(resumeKnowledgeBase.identity.rolePriorities[0], 'AI Agent / 智能体应用开发')
+  assert.equal(resumeKnowledgeBase.contentExperience.earlyFilm.title, null)
+  assert.match(resumeKnowledgeBase.contentExperience.serialDrama.role, /不得说成每集所有环节均独立完成/)
 
   const projectNames = resumeKnowledgeBase.projects.map((project) => project.name)
   assert.deepEqual(projectNames, [
-    '服装一键复刻爆款视频工作台',
+    'MOMOCO 服装 AI 内容工作流 / Agent 原型',
     '《小刘带你挖三星堆》互动考古工具',
     'WorkBuddy 私人AI智能体工作台',
     '个人作品集网站',
@@ -43,8 +46,11 @@ test('interview prompt optimizes truthful answers for hiring conversations', () 
   assert.match(interviewSystemPrompt, /2分52秒/)
   assert.match(interviewSystemPrompt, /四川大学艺术学院/)
   assert.match(interviewSystemPrompt, /上海、杭州、武汉/)
-  assert.match(interviewSystemPrompt, /岗位排序、自评、作品数量和销售细节尚待核对/)
+  assert.match(interviewSystemPrompt, /约60集短剧只能说“参与\/制作”/)
   assert.match(interviewSystemPrompt, /MOMOCO 的完整自动化仍是目标/)
+  assert.match(interviewSystemPrompt, /端到端自动 Agent、模型 API 自动调用/)
+  assert.match(interviewSystemPrompt, /曾在小红书商品场景获得小规模真实付费订单/)
+  assert.match(interviewSystemPrompt, /两版资料对毕业时间有冲突/)
   assert.doesNotMatch(interviewSystemPrompt, /四川大学视觉传达设计本科/)
   assert.doesNotMatch(interviewSystemPrompt, /23 岁/)
   assert.doesNotMatch(interviewSystemPrompt, /人物一致性 95%/)
