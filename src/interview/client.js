@@ -35,7 +35,7 @@ export async function streamInterview({
     || ([404, 405].includes(response.status) && !normalizedContentType.includes('application/json'))
 
   if (isStaticHostFallback) {
-    onToken(buildResumeFallbackAnswer(messages.at(-1)?.content))
+    onToken(buildResumeFallbackAnswer(messages))
     return { mode: 'resume-fallback' }
   }
 

@@ -20,9 +20,9 @@ function Gateway({ assetPath, onEnterPortfolio, onEnterInterview }) {
         </button>
 
         <nav className="gatewayNav" aria-label="双入口导航">
-          <button type="button" onClick={onEnterInterview}>AI INTERVIEW</button>
-          <button type="button" onClick={onEnterPortfolio}>PORTFOLIO</button>
-          <a href="mailto:980175020@qq.com">CONTACT</a>
+          <button type="button" onClick={onEnterInterview}>AI 面试</button>
+          <button type="button" onClick={onEnterPortfolio}>作品集</button>
+          <button type="button" onClick={onEnterPortfolio}>联系</button>
         </nav>
 
         <button className="gatewayInterviewLink" type="button" onClick={onEnterInterview}>

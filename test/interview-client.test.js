@@ -54,9 +54,27 @@ test('streamInterview surfaces the server error message', async () => {
 
 test('resume fallback optimizes common interview questions without inventing facts', () => {
   assert.match(buildResumeFallbackAnswer('为什么适合 AI Agent 岗位'), /服装一键复刻爆款视频工作台/)
-  assert.match(buildResumeFallbackAnswer('说说你的不足'), /简历资料没有记录/)
+  assert.match(buildResumeFallbackAnswer('说说你的不足'), /大型多人协作经验仍需积累/)
   assert.match(buildResumeFallbackAnswer('你有几年大厂经验'), /暂未收录/)
   assert.doesNotMatch(buildResumeFallbackAnswer('请做一下自我介绍'), /简历知识库演示/)
+  assert.match(buildResumeFallbackAnswer('他是本科生吗'), /四川大学视觉传达设计本科，2026年毕业/)
+  assert.match(buildResumeFallbackAnswer('你现在都会哪些AI工具'), /Codex、Claude Code/)
+  assert.match(buildResumeFallbackAnswer('为什么从视觉设计转向 AI 应用'), /不是完全割裂的转行/)
+  assert.match(buildResumeFallbackAnswer('Agent 和普通聊天机器人有什么区别'), /受约束的工作流/)
+  assert.match(buildResumeFallbackAnswer('怎么降低 Agent 幻觉'), /结构化输入/)
+  assert.match(buildResumeFallbackAnswer('如何评测一个 Agent'), /任务成功率/)
+  assert.match(buildResumeFallbackAnswer('没有正式实习怎么证明自己'), /2026届/)
+  assert.doesNotMatch(buildResumeFallbackAnswer('说说你平时怎样推进事情'), /没有足够信息/)
+})
+
+test('static fallback keeps short follow-up questions connected to recent context', () => {
+  const answer = buildResumeFallbackAnswer([
+    { role: 'user', content: '你现在都会哪些AI工具' },
+    { role: 'assistant', content: '上一轮回答' },
+    { role: 'user', content: '具体怎么用的？' },
+  ])
+
+  assert.match(answer, /Codex、Claude Code/)
 })
 
 test('streamInterview uses resume knowledge when a static host has no API route', async () => {
@@ -92,12 +110,15 @@ test('interview view explains the AI identity and offers starter questions', asy
     assert.match(html, /AI Agent \/ AI应用开发工程师/)
     assert.match(html, /请做一下自我介绍/)
     assert.match(html, /为什么适合 AI Agent 岗位/)
-    assert.match(html, /你如何设计可靠的 Agent 工作流/)
+    assert.match(html, /你常用哪些 AI 工具/)
+    assert.match(html, /为什么从视觉设计转向 AI 应用/)
     assert.match(html, /Shift \+ Enter 换行/)
     assert.match(html, /查看作品集/)
     assert.match(html, /联系本人/)
-    assert.match(html, /href="tel:19182874015"/)
-    assert.match(html, /href="mailto:980175020@qq.com"/)
+    assert.match(html, /<b>电话<\/b> 19182874015/)
+    assert.match(html, /<b>微信<\/b> Sun677set/)
+    assert.doesNotMatch(html, /href="tel:19182874015"/)
+    assert.doesNotMatch(html, /href="mailto:980175020@qq.com"/)
   } finally {
     await vite.close()
   }

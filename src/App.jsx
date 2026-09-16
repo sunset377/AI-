@@ -171,11 +171,11 @@ const stats = [
 ]
 
 const navItems = [
-  ['01 / Works', 'works'],
-  ['02 / Style', 'gallery-intro'],
-  ['03 / About', 'about'],
-  ['04 / Strengths', 'strengths'],
-  ['05 / Contact', 'contact'],
+  ['01 / 作品', 'works'],
+  ['02 / 风格', 'gallery-intro'],
+  ['03 / 关于', 'about'],
+  ['04 / 优势', 'strengths'],
+  ['05 / 联系', 'contact'],
 ]
 
 function App({ initialView }) {
@@ -308,9 +308,16 @@ function App({ initialView }) {
               </a>
             ))}
           </nav>
-          <a className="headerCta" href="mailto:980175020@qq.com">
-            联系我
-          </a>
+          <div className="headerContact" aria-label="联系方式">
+            <span>
+              <b>电话</b>
+              19182874015
+            </span>
+            <span>
+              <b>微信</b>
+              Sun677set
+            </span>
+          </div>
         </header>
 
         <div className="heroInner shell">
@@ -349,7 +356,7 @@ function App({ initialView }) {
           <div className="aboutContent">
             <h2>把 AI 生成的不确定性，变成可导演、可复盘、可交付的视觉系统。</h2>
             <p>
-              我本科毕业于视觉传达设计，深耕 AIGC 仿真人短剧全流程制作。熟悉美术资产、人物设定、分镜设计、AI
+              我就读于四川大学视觉传达设计本科，2026 年毕业，深耕 AIGC 仿真人短剧全流程制作。熟悉美术资产、人物设定、分镜设计、AI
               生成、后期剪辑、配音字幕与成片交付的完整闭环。
             </p>
             <p>
@@ -357,8 +364,8 @@ function App({ initialView }) {
             </p>
 
             <div className="contactStrip">
-              <a href="tel:19182874015">电话 / 微信：19182874015</a>
-              <a href="mailto:980175020@qq.com">邮箱：980175020@qq.com</a>
+              <span><b>电话</b> 19182874015</span>
+              <span><b>微信</b> Sun677set</span>
             </div>
 
             <div className="statsGrid" aria-label="项目数据">
@@ -608,13 +615,9 @@ function App({ initialView }) {
           <p>
             如果你正在做 AI 漫剧、品牌视觉、AIGC 影像或小程序视觉方向，我们可以从一个角色、一支片子或一套视觉系统开始。
           </p>
-          <div className="closingActions">
-            <a className="primaryBtn" href="mailto:980175020@qq.com">
-              发送邮件
-            </a>
-            <a className="ghostBtn linkBtn" href="tel:19182874015">
-              电话 / 微信：19182874015
-            </a>
+          <div className="closingContact" aria-label="联系信息">
+            <span><b>电话</b> 19182874015</span>
+            <span><b>微信</b> Sun677set</span>
           </div>
         </div>
       </section>

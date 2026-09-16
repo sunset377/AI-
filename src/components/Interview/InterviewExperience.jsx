@@ -5,13 +5,15 @@ import './InterviewExperience.css'
 const starterQuestions = [
   '请做一下自我介绍',
   '为什么适合 AI Agent 岗位',
-  '你如何设计可靠的 Agent 工作流',
+  '你常用哪些 AI 工具',
   '讲讲你从0到1交付的项目',
+  '为什么从视觉设计转向 AI 应用',
+  '你的优势与不足是什么',
 ]
 
 const welcomeMessage = {
   role: 'assistant',
-  content: '你好，我是刘耀华的 AI 面试助手。我的回答以他的求职简历为事实基础，并会用更适合面试的方式说明项目证据与岗位价值。',
+  content: '你好，我是刘耀华的 AI 面试助手。我会综合他的教育背景、作品集、真实项目与求职资料，主动关联最相关的经历，用适合面试的方式说明能力证据与岗位价值。',
 }
 
 function createSessionId() {
@@ -119,7 +121,7 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
             <span className="interviewAccent">真实项目</span>
           </h1>
           <p className="interviewIntro">
-            这里的回答以刘耀华的求职简历为事实基础，适合快速了解他的 Agent 工作流、Web 产品交付和岗位匹配度。
+            回答会综合刘耀华的教育背景、作品集与真实项目，并主动关联 Agent 工作流、Web 产品交付和岗位匹配度。
           </p>
           <dl className="interviewFacts">
             <div><dt>定位</dt><dd>AI Agent / AI应用开发工程师</dd></div>
@@ -129,8 +131,8 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
           <p className="interviewDisclosure">AI 回答仅用于了解本人经历，不代表新的承诺或未公开信息。</p>
           <p className="interviewContact">
             <span>联系本人</span>
-            <a href="tel:19182874015">电话 / 微信</a>
-            <a href="mailto:980175020@qq.com">邮箱</a>
+            <span><b>电话</b> 19182874015</span>
+            <span><b>微信</b> Sun677set</span>
           </p>
         </aside>
 

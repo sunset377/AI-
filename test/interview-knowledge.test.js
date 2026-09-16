@@ -1,12 +1,16 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { interviewSystemPrompt, resumeKnowledgeBase } from '../src/interview/profile.js'
+import {
+  agentInterviewQuestionBank,
+  interviewSystemPrompt,
+  resumeKnowledgeBase,
+} from '../src/interview/profile.js'
 
 test('resume knowledge base preserves the verified target role and project evidence', () => {
   assert.equal(resumeKnowledgeBase.identity.name, '刘耀华')
   assert.equal(resumeKnowledgeBase.identity.targetRole, 'AI Agent / AI应用开发工程师')
-  assert.equal(resumeKnowledgeBase.education.school, '四川大学锦江学院')
-  assert.equal(resumeKnowledgeBase.education.graduation, '2027.07（预计）')
+  assert.equal(resumeKnowledgeBase.education.school, '四川大学')
+  assert.equal(resumeKnowledgeBase.education.graduation, '2026年')
 
   const projectNames = resumeKnowledgeBase.projects.map((project) => project.name)
   assert.deepEqual(projectNames, [
@@ -21,7 +25,9 @@ test('resume knowledge base preserves the verified target role and project evide
 })
 
 test('interview prompt optimizes truthful answers for hiring conversations', () => {
-  assert.match(interviewSystemPrompt, /先给结论，再用简历中的具体项目或经历作证/)
+  assert.match(interviewSystemPrompt, /主动检索、关联和归纳/)
+  assert.match(interviewSystemPrompt, /教育背景、作品集、真实项目/)
+  assert.match(interviewSystemPrompt, /常规问题/)
   assert.match(interviewSystemPrompt, /岗位价值/)
   assert.match(interviewSystemPrompt, /不足|短板/)
   assert.match(interviewSystemPrompt, /不得虚构/)
@@ -32,4 +38,16 @@ test('interview prompt optimizes truthful answers for hiring conversations', () 
   assert.match(interviewSystemPrompt, /2分52秒/)
   assert.doesNotMatch(interviewSystemPrompt, /23 岁/)
   assert.doesNotMatch(interviewSystemPrompt, /人物一致性 95%/)
+})
+
+test('agent interview database covers common technical and behavioral topics', () => {
+  assert.ok(agentInterviewQuestionBank.length >= 14)
+
+  const database = agentInterviewQuestionBank
+    .map((item) => `${item.category} ${item.question} ${item.answerGuide}`)
+    .join('\n')
+
+  for (const topic of ['工作流', '提示词', 'RAG', '记忆', 'MCP', '幻觉', '评估', '前端', '排错', '职业规划']) {
+    assert.match(database, new RegExp(topic))
+  }
 })

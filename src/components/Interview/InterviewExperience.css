@@ -227,26 +227,27 @@
 }
 
 .interviewContact {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px 17px;
+  display: grid;
+  gap: 7px;
   margin: 15px 0 0;
   font-size: 11px;
 }
 
-.interviewContact span {
+.interviewContact > span:first-child {
   color: #7f7d78;
+  margin-bottom: 2px;
 }
 
-.interviewContact a {
+.interviewContact > span:not(:first-child) {
+  display: flex;
+  gap: 10px;
   color: #d8d4cd;
-  text-decoration: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
 }
 
-.interviewContact a:hover {
-  color: #e2a58c;
-  border-color: currentColor;
+.interviewContact b {
+  min-width: 28px;
+  color: #7f7d78;
+  font-weight: 500;
 }
 
 .interviewConsole {

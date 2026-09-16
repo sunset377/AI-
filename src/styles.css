@@ -193,14 +193,31 @@ video {
   color: #fff;
 }
 
-.headerCta {
+.headerContact {
   justify-self: end;
-  padding: 15px 25px;
-  color: #111;
-  border-radius: 999px;
-  background: #fff;
-  font-weight: 800;
-  box-shadow: 0 16px 50px rgba(255, 255, 255, 0.18);
+  display: grid;
+  gap: 4px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: 0.035em;
+  text-align: right;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.34);
+}
+
+.headerContact > span {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.headerContact b {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
 }
 
 .heroInner {
@@ -420,12 +437,21 @@ video {
   margin: 30px 0 36px;
 }
 
-.contactStrip a {
+.contactStrip > span {
   padding: 14px 18px;
   border: 1px solid var(--line);
   border-radius: 999px;
   color: rgba(255, 255, 255, 0.78);
   background: rgba(255, 255, 255, 0.055);
+}
+
+.contactStrip b,
+.closingContact b {
+  margin-right: 8px;
+  color: var(--gold);
+  font-size: 0.78em;
+  font-weight: 650;
+  letter-spacing: 0.1em;
 }
 
 .statsGrid {
@@ -1082,8 +1108,9 @@ video {
     display: none;
   }
 
-  .headerCta {
-    padding: 12px 18px;
+  .headerContact {
+    gap: 3px;
+    font-size: 10px;
   }
 
   .heroInner {
@@ -1302,12 +1329,6 @@ body::selection {
   color: #fff;
 }
 
-.headerCta {
-  color: #171713;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 18px 55px rgba(255, 255, 255, 0.24);
-}
-
 .heroAside {
   color: rgba(255, 255, 255, 0.82);
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.24);
@@ -1412,7 +1433,7 @@ body::selection {
   color: #171713;
 }
 
-.contactStrip a {
+.contactStrip > span {
   color: rgba(23, 23, 19, 0.72);
   border-color: rgba(23, 23, 19, 0.12);
   background: rgba(255, 255, 255, 0.58);
@@ -1591,8 +1612,7 @@ body::selection {
 }
 
 .returnGatewayButton,
-.nav,
-.headerCta {
+.nav {
   border-radius: 7px;
 }
 
@@ -1618,11 +1638,9 @@ body::selection {
   letter-spacing: 0.08em;
 }
 
-.headerCta {
-  min-height: 42px;
-  padding: 0 17px;
-  font-size: 13px;
-  font-weight: 650;
+.headerContact {
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .heroAside {
@@ -1735,7 +1753,7 @@ body::selection {
   border-bottom: 1px solid var(--line);
 }
 
-.contactStrip a {
+.contactStrip > span {
   padding: 0;
   color: #55524d;
   border: 0;
@@ -2056,6 +2074,17 @@ body::selection {
   color: rgba(242, 239, 233, 0.72);
   font-size: 17px;
   line-height: 1.75;
+}
+
+.closingContact {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px 30px;
+  margin-top: 28px;
+  color: #f2efe9;
+  font-size: 15px;
+  font-weight: 560;
 }
 
 .closing .primaryBtn,
