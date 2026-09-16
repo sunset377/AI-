@@ -133,33 +133,33 @@ const styleShots = Array.from({ length: 82 }, (_, index) => {
 const strengths = [
   {
     index: '01',
-    title: 'AI 漫剧导演统筹',
-    text: '能从美术资产、人物设定、分镜、生成、剪辑到交付形成闭环，以导演视角控制成片质感。',
+    title: 'Agent 工作流设计',
+    text: '以 MOMOCO 服装内容流程为例，拆分素材、生成、审核与交付环节，明确输入输出和人工确认点。',
   },
   {
     index: '02',
-    title: '影视分镜叙事',
-    text: '熟悉分层分屏、人脸叠化、微距特写、史诗全景等镜头语言，能把故事节奏转译为画面节奏。',
+    title: 'AI 应用前端实现',
+    text: '使用 React、Vite 与原生 Web 技术搭建作品集和移动端 H5，处理响应式布局、交互状态与资源加载。',
   },
   {
     index: '03',
-    title: '提示词工程与抽卡',
-    text: '围绕模型能力、负面词库、角色一致性和画风统一建立提示词系统，提升出图出片稳定性。',
+    title: '模型与工具协作',
+    text: '围绕具体任务设计提示词、模型与工具的输入输出，保留人工审核，让生成结果更贴近业务要求。',
   },
   {
     index: '04',
-    title: '品牌视觉全案',
-    text: '具备视觉传达设计背景，能完成品牌定位、VI 系统、包装、门店视觉与商业落地延展。',
+    title: '任务状态与异常处理',
+    text: '在工作台原型中梳理任务状态、异常反馈与失败重试路径，让多步骤流程可检查、可恢复。',
   },
   {
     index: '05',
-    title: '后期剪辑调色',
-    text: '熟悉剪映专业版、PR、AE、达芬奇，能处理节奏、字幕、配音、调色与最终成片包装。',
+    title: '测试与上线验证',
+    text: '通过构建、移动端检查、资源路径验证与线上回归，持续迭代已上线网站和互动 H5。',
   },
   {
     index: '06',
-    title: '沟通与项目拆解',
-    text: '导游与教练经历带来客户沟通、需求洞察、路线规划与目标拆解能力，适合跨环节协作。',
+    title: 'AI 漫剧导演统筹',
+    text: '能从美术资产、人物设定、分镜、生成、剪辑到交付形成闭环，以导演视角控制成片质感。',
   },
 ]
 
@@ -437,7 +437,7 @@ function App({ initialView }) {
           src={assetPath('assets/portfolio-gallery/gallery-003.webp')}
           alt="超现实花园视觉作品"
           title="进入视觉档案"
-          scrollHint="向下滚动，展开作品"
+          scrollHint="继续向下探索"
           startWidth={48}
           startHeight={58}
           startRadius={32}
@@ -452,12 +452,12 @@ function App({ initialView }) {
             <p>VISUAL ARCHIVE / 2026</p>
             <h2>
               82 件作品
-              <span>本次重新精选</span>
+              <span>视觉创作档案</span>
             </h2>
             <p className="galleryPortalLead">
-              仅收录本次重新筛选的桌面视觉作品，旧图库已全部替换。
+              从人物设定、服装到幻想场景，呈现不同题材里的风格、构图与叙事。
             </p>
-            <a href="#style">进入双列图库 <span aria-hidden="true">↓</span></a>
+            <a href="#style">浏览视觉作品 <span aria-hidden="true">↓</span></a>
           </div>
         </ScrollExpand>
       </section>
@@ -470,7 +470,7 @@ function App({ initialView }) {
               <h2>风格创意库</h2>
             </div>
             <p>
-              本次重新收录 82 件视觉作品，覆盖人物、插画、服装设定与世界观探索。向下浏览，点击图片可查看完整大图。
+              人物、插画、服装设定与世界观探索：用不同画幅呈现角色气质、色彩关系和场景叙事。
             </p>
           </div>
 
@@ -585,11 +585,11 @@ function App({ initialView }) {
       <section className="strengths section shell" id="strengths">
         <div className="sectionHead">
           <div>
-            <div className="sectionKicker">04 / SERVICES</div>
+            <div className="sectionKicker">04 / 能力</div>
             <h2>个人优势</h2>
           </div>
           <p>
-            从审美判断到工具链落地，我的能力更像一条制片管线：先建立风格，再控制变量，最后交付稳定结果。
+            从真实业务需求出发，把任务拆成流程、状态、工具与验收点；视觉制作经验也帮助我判断最终输出是否可用。
           </p>
         </div>
 
