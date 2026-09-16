@@ -35,3 +35,24 @@ test('the default render makes AI interview the primary destination while retain
     await vite.close()
   }
 })
+
+test('portfolio exposes the partnership product and the silent project preview', async () => {
+  const vite = await createServer({
+    appType: 'custom',
+    server: { middlewareMode: true, hmr: false },
+  })
+
+  try {
+    const { default: App } = await vite.ssrLoadModule('/src/App.jsx')
+    const html = renderToStaticMarkup(React.createElement(App, { initialView: 'portfolio' }))
+
+    assert.match(html, /AIGC Hub · AI 创作中转站/)
+    assert.match(html, /与伙伴联合从 0 到 1 搭建/)
+    assert.match(html, /href="https:\/\/aigchub\.token6688\.com\/signup\?ref=07996c9e"/)
+    assert.match(html, /assets\/starry-preview-113-130\.mp4/)
+    assert.match(html, /<video[^>]*muted=""[^>]*playsInline=""/)
+    assert.match(html, />产品<\/button>/)
+  } finally {
+    await vite.close()
+  }
+})

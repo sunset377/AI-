@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ScrollExpand from './components/ScrollExpand/ScrollExpand'
 import Gateway from './components/Gateway/Gateway'
 import InterviewExperience from './components/Interview/InterviewExperience'
@@ -39,9 +39,21 @@ const projects = [
     subtitle: 'S 级仿真人科幻短剧 · 项目负责人',
     type: 'video',
     image: 'assets/starry-destitute-cover.jpg',
-    meta: '2 分 52 秒 / Grok3.5 + Seedance2.0 / 人物一致性 95%+',
+    preview: 'assets/starry-preview-113-130.mp4',
+    meta: '17 秒精选预览 / Grok3.5 + Seedance2.0 / 人物一致性 95%+',
     description:
       '统筹美术资产、分镜设计、AI 生成、后期剪辑、配音字幕与最终交付，建立双模型提示词体系与导演级审美校准标准。',
+  },
+  {
+    title: 'AIGC Hub · AI 创作中转站',
+    subtitle: '与伙伴联合从 0 到 1 搭建的 AI 产品',
+    type: 'product',
+    image: 'assets/aigc-hub-product.png',
+    meta: '多模型对话 / 图像 / 视频 / 创作工具',
+    description:
+      '与伙伴共同搭建并推广的 AI 创作平台，整合多模型对话、图像与视频工具，让创作者从一个入口完成探索与使用。可通过公开邀请页了解产品并注册体验。',
+    href: 'https://aigchub.token6688.com/signup?ref=07996c9e',
+    actionLabel: '访问产品 / 注册体验',
   },
   {
     title: '江南水乡港口小镇 FPV',
@@ -84,7 +96,8 @@ const projects = [
 ].map((project) => ({
   ...project,
   image: assetPath(project.image),
-  href: project.href ? assetPath(project.href) : undefined,
+  preview: project.preview ? assetPath(project.preview) : undefined,
+  href: project.href?.startsWith('https://') ? project.href : project.href ? assetPath(project.href) : undefined,
 }))
 
 const galleryGroups = [
@@ -177,6 +190,53 @@ const navItems = [
   ['04 / 优势', 'strengths'],
   ['05 / 联系', 'contact'],
 ]
+
+function AutoPlayProjectMedia({ poster, preview, title }) {
+  const containerRef = useRef(null)
+  const videoRef = useRef(null)
+  const [playing, setPlaying] = useState(false)
+
+  useEffect(() => {
+    const container = containerRef.current
+    const video = videoRef.current
+    if (!container || !video || typeof IntersectionObserver === 'undefined') return undefined
+
+    let delayId
+    let visible = false
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting && entry.intersectionRatio >= 0.4
+      window.clearTimeout(delayId)
+
+      if (visible) {
+        delayId = window.setTimeout(() => {
+          if (!visible) return
+          video.play().then(() => {
+            if (visible) setPlaying(true)
+          }).catch(() => setPlaying(false))
+        }, 1000)
+      } else {
+        video.pause()
+        video.currentTime = 0
+        setPlaying(false)
+      }
+    }, { threshold: [0, 0.4, 0.7] })
+
+    observer.observe(container)
+    return () => {
+      visible = false
+      window.clearTimeout(delayId)
+      observer.disconnect()
+      video.pause()
+    }
+  }, [])
+
+  return (
+    <div className={`projectPreviewMedia${playing ? ' isPlaying' : ''}`} ref={containerRef}>
+      <img src={poster} alt={`${title} 项目视觉`} />
+      <video ref={videoRef} src={preview} muted playsInline loop preload="metadata" aria-label={`${title} 17 秒精选预览`} />
+    </div>
+  )
+}
 
 function App({ initialView }) {
   const [view, setView] = useState(() => {
@@ -392,6 +452,7 @@ function App({ initialView }) {
               ['all', '全部'],
               ['image', '图片'],
               ['video', '视频'],
+              ['product', '产品'],
               ['mini', '小程序'],
             ].map(([value, label]) => (
               <button
@@ -408,8 +469,12 @@ function App({ initialView }) {
 
         <div className="projectGrid">
           {visibleProjects.map((project, index) => (
-            <article className="projectCard" key={project.title}>
-              <img src={project.image} alt={`${project.title} 项目视觉`} />
+            <article className={`projectCard${project.type === 'product' ? ' projectCard--product' : ''}`} key={project.title}>
+              {project.preview ? (
+                <AutoPlayProjectMedia poster={project.image} preview={project.preview} title={project.title} />
+              ) : (
+                <img src={project.image} alt={`${project.title} 项目视觉`} />
+              )}
               <div className="projectOverlay">
                 <div className="projectIndex">{String(index + 1).padStart(2, '0')}</div>
                 <div>

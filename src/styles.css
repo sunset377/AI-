@@ -1918,6 +1918,37 @@ body::selection {
   border-radius: 5px;
 }
 
+.projectPreviewMedia {
+  position: absolute;
+  inset: 0;
+}
+
+.projectPreviewMedia video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 350ms ease;
+}
+
+.projectPreviewMedia img {
+  transition: opacity 350ms ease, transform 650ms ease, filter 650ms ease;
+}
+
+.projectPreviewMedia.isPlaying video {
+  opacity: 1;
+}
+
+.projectPreviewMedia.isPlaying img {
+  opacity: 0;
+}
+
+.projectCard--product > img {
+  object-position: 20% center;
+}
+
 .galleryPortalSection,
 .galleryPortalSection .scroll-expand__stage {
   background:

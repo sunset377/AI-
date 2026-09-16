@@ -81,3 +81,8 @@ test('About section publishes the supplied personal portrait', async () => {
 test('portfolio hero publishes the selected desert portrait', async () => {
   assert.equal(await fileExists('dist/assets/hero-desert-portrait.jpg'), true)
 })
+
+test('portfolio publishes the AIGC Hub visual and the short video preview', async () => {
+  assert.equal(await fileExists('dist/assets/aigc-hub-product.png'), true)
+  assert.equal(await fileExists('dist/assets/starry-preview-113-130.mp4'), true)
+})
