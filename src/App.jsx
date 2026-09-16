@@ -347,14 +347,15 @@ function App({ initialView }) {
         <div className="sectionKicker">03 / ABOUT</div>
         <div className="aboutGrid">
           <div className="portraitCard">
-            <img src={assetPath('assets/portfolio-gallery/gallery-001.webp')} alt="辞的视觉风格人物图" />
+            <img src={assetPath('assets/liu-yaohua-portrait.png')} alt="刘耀华的个人照片" loading="lazy" />
             <div className="portraitCaption">
               <span>刘耀华</span>
               <span>视觉传达设计 / 2026 届</span>
             </div>
           </div>
           <div className="aboutContent">
-            <h2>把 AI 生成的不确定性，变成可导演、可复盘、可交付的视觉系统。</h2>
+            <p className="aboutIdentity">刘耀华 <span aria-hidden="true">/</span> 视觉传达设计 · AI 内容创作</p>
+            <h2>把 AI 的不确定性，<br />变成可交付的作品。</h2>
             <p>
               我于 2026 年 6 月毕业于四川大学艺术学院视觉传达设计专业，深耕 AIGC 仿真人短剧全流程制作。熟悉美术资产、人物设定、分镜设计、AI
               生成、后期剪辑、配音字幕与成片交付的完整闭环。

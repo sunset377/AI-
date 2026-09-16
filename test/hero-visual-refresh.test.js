@@ -16,6 +16,8 @@ test('portfolio route preserves the supplied artwork and offers a return to the 
 
     assert.match(html, /assets\/hero-avatar\.jpg/)
     assert.match(html, /assets\/hero-field-portrait\.jpg/)
+    assert.match(html, /assets\/liu-yaohua-portrait\.png/)
+    assert.match(html, /alt="刘耀华的个人照片"/)
     assert.match(html, /class="nav"/)
     assert.match(html, /class="wallpaperSwitch"/)
     assert.match(html, /← 入口/)
