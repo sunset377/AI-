@@ -32,7 +32,7 @@ export async function streamInterview({
   const contentType = response.headers.get('content-type') ?? ''
   const normalizedContentType = contentType.toLowerCase()
   const isStaticHostFallback = normalizedContentType.includes('text/html')
-    || (response.status === 404 && !normalizedContentType.includes('application/json'))
+    || ([404, 405].includes(response.status) && !normalizedContentType.includes('application/json'))
 
   if (isStaticHostFallback) {
     onToken(buildResumeFallbackAnswer(messages.at(-1)?.content))

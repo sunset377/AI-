@@ -65,7 +65,7 @@ test('streamInterview uses the labelled resume demo when a static host has no AP
     sessionId: 'session-12345678',
     onToken: (token) => tokens.push(token),
     fetchImpl: async () => new Response('static host has no API route', {
-      status: 404,
+      status: 405,
       headers: { 'content-type': 'text/plain; charset=utf-8' },
     }),
   })
