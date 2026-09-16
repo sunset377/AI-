@@ -1904,11 +1904,13 @@ body::selection {
   max-width: 400px;
   padding: 18px;
   border-radius: 7px;
-  background: rgba(19, 18, 18, 0.68);
+  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(19, 18, 18, 0.88);
 }
 
 .projectInfo p {
-  font-size: 13px;
+  color: #f7f1ec;
+  font-size: 14px;
   line-height: 1.7;
 }
 

@@ -50,7 +50,7 @@ function Gateway({ assetPath, onEnterPortfolio, onEnterInterview }) {
               开始 AI 面试 <span aria-hidden="true">↗</span>
             </button>
             <button className="gatewaySecondary" type="button" onClick={onEnterPortfolio}>
-              查看现有作品
+              查看我的作品集
             </button>
           </div>
         </div>

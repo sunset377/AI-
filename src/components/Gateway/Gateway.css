@@ -453,12 +453,12 @@
     min-height: auto;
     flex-direction: column-reverse;
     align-items: stretch;
-    gap: 34px;
-    padding: 24px 0 82px;
+    gap: 20px;
+    padding: 12px 0 28px;
   }
 
   .gatewayMedia {
-    min-height: 42svh;
+    min-height: clamp(180px, 29svh, 260px);
   }
 
   .gatewayMediaFrame {
@@ -485,26 +485,27 @@
   }
 
   .gatewayLabel {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     font-size: 9px;
   }
 
   .gateway h1 {
     max-width: 100%;
-    font-size: clamp(40px, 12vw, 54px);
-    line-height: 1.06;
+    font-size: clamp(35px, 10vw, 44px);
+    line-height: 1.02;
     letter-spacing: -0.05em;
   }
 
   .gatewayActions {
     display: grid;
-    margin-top: 28px;
+    margin-top: 18px;
   }
 
   .gatewayPrimary,
   .gatewaySecondary {
     width: 100%;
     justify-content: space-between;
+    min-height: 48px;
   }
 
   .gatewayFooter {
