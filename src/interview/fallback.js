@@ -1,5 +1,3 @@
-const prefix = '（简历知识库演示）'
-
 const answers = [
   {
     pattern: /大厂|公司任职|实习|薪资|年薪|团队规模|用户量|营收|工作年限|几年.*经验/,
@@ -73,5 +71,5 @@ export function buildResumeFallbackAnswer(question) {
   const answer = match?.answer
     ?? '这道问题在当前简历演示知识库中没有足够信息。可以继续询问刘耀华的自我介绍、AI Agent岗位匹配度、Agent工作流、Web技术栈、项目交付、沟通能力或具体项目；涉及未记录事实时，建议与本人确认。'
 
-  return `${prefix}${answer}`
+  return answer
 }

@@ -56,9 +56,10 @@ test('resume fallback optimizes common interview questions without inventing fac
   assert.match(buildResumeFallbackAnswer('为什么适合 AI Agent 岗位'), /服装一键复刻爆款视频工作台/)
   assert.match(buildResumeFallbackAnswer('说说你的不足'), /简历资料没有记录/)
   assert.match(buildResumeFallbackAnswer('你有几年大厂经验'), /暂未收录/)
+  assert.doesNotMatch(buildResumeFallbackAnswer('请做一下自我介绍'), /简历知识库演示/)
 })
 
-test('streamInterview uses the labelled resume demo when a static host has no API route', async () => {
+test('streamInterview uses resume knowledge when a static host has no API route', async () => {
   const tokens = []
   const result = await streamInterview({
     messages: [{ role: 'user', content: '为什么适合 AI Agent 岗位' }],
@@ -71,7 +72,7 @@ test('streamInterview uses the labelled resume demo when a static host has no AP
   })
 
   assert.equal(result.mode, 'resume-fallback')
-  assert.match(tokens.join(''), /简历知识库演示/)
+  assert.doesNotMatch(tokens.join(''), /简历知识库演示/)
   assert.match(tokens.join(''), /岗位价值/)
 })
 
@@ -86,6 +87,8 @@ test('interview view explains the AI identity and offers starter questions', asy
     const html = renderToStaticMarkup(React.createElement(App, { initialView: 'interview' }))
 
     assert.match(html, /AI 面试助手/)
+    assert.match(html, /基于求职简历知识库/)
+    assert.doesNotMatch(html, /简历知识库演示模式/)
     assert.match(html, /AI Agent \/ AI应用开发工程师/)
     assert.match(html, /请做一下自我介绍/)
     assert.match(html, /为什么适合 AI Agent 岗位/)

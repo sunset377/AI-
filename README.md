@@ -31,9 +31,9 @@ npm.cmd run dev
 npm.cmd run dev:cloudflare
 ```
 
-`npm run dev` 只启动 Vite 界面，不提供真实 AI 接口；首次提问后会切换到明确标注的简历知识库演示模式。`dev:cloudflare` 需要当前电脑已登录相应 Cloudflare 账户，并会使用该账户的 Workers AI 配额。
+`npm run dev` 只启动 Vite 界面，不提供真实 AI 接口；提问时会使用简历知识库回答。`dev:cloudflare` 需要当前电脑已登录相应 Cloudflare 账户，并会使用该账户的 Workers AI 配额。
 
-GitHub Pages 等纯静态托管无法运行 Workers AI 接口，因此页面会自动切换到明确标注的“简历知识库演示模式”，用于体验对话流程和常见面试回答。Cloudflare 接口可用时会自动使用流式 AI 回答。
+GitHub Pages 等纯静态托管无法运行 Workers AI 接口，因此页面会自动使用简历知识库回答常见面试问题。Cloudflare 接口可用时会自动使用流式 AI 回答。
 
 ## 测试与构建
 

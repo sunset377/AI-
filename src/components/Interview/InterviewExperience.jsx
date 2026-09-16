@@ -31,7 +31,6 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState('')
   const [lastQuestion, setLastQuestion] = useState('')
-  const [serviceMode, setServiceMode] = useState('resume')
   const sessionId = useRef(createSessionId())
   const transcriptRef = useRef(null)
   const controllerRef = useRef(null)
@@ -62,7 +61,7 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
     controllerRef.current = controller
 
     try {
-      const result = await streamInterview({
+      await streamInterview({
         messages: history,
         sessionId: sessionId.current,
         signal: controller.signal,
@@ -74,7 +73,6 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
           )))
         },
       })
-      setServiceMode(result?.mode ?? 'workers-ai')
     } catch (requestError) {
       if (requestError.name !== 'AbortError') {
         setError(requestError.message)
@@ -141,7 +139,7 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
             <div>
               <span className="interviewLiveDot" aria-hidden="true" />
               <strong>AI 面试助手</strong>
-              <small>{serviceMode === 'resume-fallback' ? '简历知识库演示模式' : '基于求职简历知识库'}</small>
+              <small>基于求职简历知识库</small>
             </div>
             <button type="button" onClick={clearConversation}>清空对话</button>
           </div>
