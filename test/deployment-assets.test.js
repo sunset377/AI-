@@ -74,6 +74,11 @@ test('portfolio gallery publishes every selected desktop image', async () => {
   assert.equal(galleryFiles.at(-1), 'gallery-082.webp')
 })
 
+test('portfolio publishes all six mirror sunset images without replacing the archive', async () => {
+  const files = (await readdir('dist/assets/mirror-sunset')).sort()
+  assert.deepEqual(files, Array.from({ length: 6 }, (_, index) => `scene-${String(index + 1).padStart(2, '0')}.jpg`))
+})
+
 test('About section publishes the supplied personal portrait', async () => {
   assert.equal(await fileExists('dist/assets/liu-yaohua-portrait.png'), true)
 })

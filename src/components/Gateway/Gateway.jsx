@@ -73,7 +73,7 @@ function Gateway({ assetPath, onEnterPortfolio, onEnterInterview }) {
             <figcaption>AI FILM / BRAND / VISUAL</figcaption>
           </figure>
           <div className="gatewayOrbit" aria-hidden="true">
-            <span>82</span>
+            <span>88</span>
             <small>WORKS<br />ONLINE</small>
           </div>
         </div>

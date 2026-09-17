@@ -56,6 +56,18 @@ const projects = [
     actionLabel: '访问产品 / 注册体验',
   },
   {
+    title: '镜面落日 · 六帧视觉系列',
+    subtitle: '落日 / 镜面水域 / 超现实宴席',
+    type: 'image',
+    image: 'assets/mirror-sunset/scene-01.jpg',
+    meta: '6 张组图 / 16:9 横幅 / 连续场景',
+    description:
+      '以落日、水面倒影与悬浮餐具贯穿六幅画面，呈现同一场景从对称全景到人物近景的视角变化。',
+    galleryGroup: 'mirrorSunset',
+    href: '#style',
+    actionLabel: '查看六张组图',
+  },
+  {
     title: '江南水乡港口小镇 FPV',
     subtitle: '第一视角 AI 视频 · 独立制作',
     type: 'video',
@@ -97,10 +109,18 @@ const projects = [
   ...project,
   image: assetPath(project.image),
   preview: project.preview ? assetPath(project.preview) : undefined,
-  href: project.href?.startsWith('https://') ? project.href : project.href ? assetPath(project.href) : undefined,
+  href: project.href?.startsWith('https://') || project.href?.startsWith('#')
+    ? project.href
+    : project.href ? assetPath(project.href) : undefined,
 }))
 
 const galleryGroups = [
+  {
+    id: 'mirrorSunset',
+    label: '镜面落日组图',
+    count: 6,
+    description: '落日、倒影与超现实宴席的连续画面',
+  },
   {
     id: 'portrait',
     label: '竖幅作品',
@@ -124,7 +144,7 @@ const galleryGroups = [
 const landscapeShots = new Set([4, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 25, 29, 45, 46, 50, 51, 52, 53, 54, 55])
 const squareShots = new Set([1, 2, 3, 28, 63, 66, 78])
 
-const styleShots = Array.from({ length: 82 }, (_, index) => {
+const archiveShots = Array.from({ length: 82 }, (_, index) => {
   const number = index + 1
   const categoryId = landscapeShots.has(number)
     ? 'landscape'
@@ -142,6 +162,27 @@ const styleShots = Array.from({ length: 82 }, (_, index) => {
     src: assetPath(`assets/portfolio-gallery/gallery-${String(number).padStart(3, '0')}.webp`),
   }
 })
+
+const mirrorSunsetTitles = [
+  '暮色长桌',
+  '临水而立',
+  '宴席延展',
+  '镜中来者',
+  '离席时刻',
+  '余晖回望',
+]
+
+const styleShots = [
+  ...archiveShots,
+  ...mirrorSunsetTitles.map((title, index) => ({
+    id: `mirror-sunset-${String(index + 1).padStart(2, '0')}`,
+    title: `镜面落日 · ${title}`,
+    category: '镜面落日组图',
+    categoryId: 'mirrorSunset',
+    description: '落日、倒影与超现实宴席的连续画面',
+    src: assetPath(`assets/mirror-sunset/scene-${String(index + 1).padStart(2, '0')}.jpg`),
+  })),
+]
 
 const strengths = [
   {
@@ -486,7 +527,16 @@ function App({ initialView }) {
               <div className="projectInfo">
                 <p>{project.description}</p>
                 {project.href ? (
-                  <a className="projectAction" href={project.href} target="_blank" rel="noreferrer">
+                  <a
+                    className="projectAction"
+                    href={project.href}
+                    target={project.galleryGroup ? undefined : '_blank'}
+                    rel={project.galleryGroup ? undefined : 'noreferrer'}
+                    onClick={project.galleryGroup ? () => {
+                      setStyleFilter(project.galleryGroup)
+                      setLightboxIndex(null)
+                    } : undefined}
+                  >
                     {project.actionLabel}
                     <span aria-hidden="true">↗</span>
                   </a>
@@ -516,7 +566,7 @@ function App({ initialView }) {
           <div className="galleryPortalCopy">
             <p>VISUAL ARCHIVE / 2026</p>
             <h2>
-              82 件作品
+              {styleShots.length} 件作品
               <span>视觉创作档案</span>
             </h2>
             <p className="galleryPortalLead">
