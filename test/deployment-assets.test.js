@@ -69,9 +69,9 @@ test('portfolio gallery publishes every selected desktop image', async () => {
   const galleryDirectory = 'dist/assets/portfolio-gallery'
   const galleryFiles = (await readdir(galleryDirectory)).filter((file) => file.endsWith('.webp'))
 
-  assert.equal(galleryFiles.length, 82)
+  assert.equal(galleryFiles.length, 83)
   assert.equal(galleryFiles[0], 'gallery-001.webp')
-  assert.equal(galleryFiles.at(-1), 'gallery-082.webp')
+  assert.equal(galleryFiles.at(-1), 'gallery-083.webp')
 })
 
 test('portfolio publishes all six mirror sunset images without replacing the archive', async () => {

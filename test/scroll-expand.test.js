@@ -16,7 +16,7 @@ test('portfolio renders a scroll-expanding entrance into the image gallery', asy
 
     assert.match(html, /class="scroll-expand/)
     assert.match(html, /进入视觉档案/)
-    assert.match(html, /88 件作品/)
+    assert.match(html, /89 件作品/)
     assert.match(html, /视觉创作档案/)
     assert.match(html, /浏览视觉作品/)
     assert.doesNotMatch(html, /本次重新精选|旧图库已全部替换|本次重新收录/)

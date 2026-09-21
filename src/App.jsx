@@ -158,7 +158,7 @@ const galleryGroups = [
 const landscapeShots = new Set([4, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 25, 29, 45, 46, 50, 51, 52, 53, 54, 55])
 const squareShots = new Set([1, 2, 3, 28, 63, 66, 78])
 
-const archiveShots = Array.from({ length: 82 }, (_, index) => {
+const archiveShots = Array.from({ length: 83 }, (_, index) => {
   const number = index + 1
   const categoryId = landscapeShots.has(number)
     ? 'landscape'

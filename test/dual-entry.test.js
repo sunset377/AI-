@@ -30,7 +30,7 @@ test('the default render makes AI interview the primary destination while retain
     assert.ok(html.indexOf('开始 AI 面试') < html.indexOf('查看我的作品集'))
     assert.match(html, /assets\/hero-avatar\.jpg/)
     assert.match(html, /assets\/portfolio-gallery\/gallery-003\.webp/)
-    assert.match(html, />88<\/span><small>WORKS/)
+    assert.match(html, />89<\/span><small>WORKS/)
   } finally {
     await vite.close()
   }
