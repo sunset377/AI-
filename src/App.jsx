@@ -40,9 +40,23 @@ const projects = [
     type: 'video',
     image: 'assets/starry-destitute-cover.jpg',
     preview: 'assets/starry-preview-113-130.mp4',
+    previewLabel: '17 秒精选预览',
     meta: '17 秒精选预览 / Grok3.5 + Seedance2.0 / 人物一致性 95%+',
     description:
       '统筹美术资产、分镜设计、AI 生成、后期剪辑、配音字幕与最终交付，建立双模型提示词体系与导演级审美校准标准。',
+  },
+  {
+    title: '品牌产品宣传片',
+    subtitle: '生活方式产品广告 · 10 秒精选',
+    type: 'video',
+    image: 'assets/brand-promo-preview-cover.jpg',
+    preview: 'assets/brand-promo-preview-37-47.mp4',
+    previewLabel: '10 秒精选预览',
+    meta: '居家 / 户外 / 通勤 / 1280×720',
+    description:
+      '通过居家品尝、户外分享与通勤场景，串联产品在不同生活节奏中的使用情境；本站展示原片 37—47 秒精选片段。',
+    href: 'assets/brand-promo-preview-37-47.mp4',
+    actionLabel: '打开 10 秒视频',
   },
   {
     title: 'AIGC Hub · AI 创作中转站',
@@ -232,7 +246,7 @@ const navItems = [
   ['05 / 联系', 'contact'],
 ]
 
-function AutoPlayProjectMedia({ poster, preview, title }) {
+function AutoPlayProjectMedia({ poster, preview, previewLabel, title }) {
   const containerRef = useRef(null)
   const videoRef = useRef(null)
   const [playing, setPlaying] = useState(false)
@@ -274,7 +288,7 @@ function AutoPlayProjectMedia({ poster, preview, title }) {
   return (
     <div className={`projectPreviewMedia${playing ? ' isPlaying' : ''}`} ref={containerRef}>
       <img src={poster} alt={`${title} 项目视觉`} />
-      <video ref={videoRef} src={preview} muted playsInline loop preload="metadata" aria-label={`${title} 17 秒精选预览`} />
+      <video ref={videoRef} src={preview} muted playsInline loop preload="metadata" aria-label={`${title} ${previewLabel}`} />
     </div>
   )
 }
@@ -512,7 +526,12 @@ function App({ initialView }) {
           {visibleProjects.map((project, index) => (
             <article className={`projectCard${project.type === 'product' ? ' projectCard--product' : ''}`} key={project.title}>
               {project.preview ? (
-                <AutoPlayProjectMedia poster={project.image} preview={project.preview} title={project.title} />
+                <AutoPlayProjectMedia
+                  poster={project.image}
+                  preview={project.preview}
+                  previewLabel={project.previewLabel}
+                  title={project.title}
+                />
               ) : (
                 <img src={project.image} alt={`${project.title} 项目视觉`} />
               )}
