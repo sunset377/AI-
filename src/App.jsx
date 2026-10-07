@@ -59,7 +59,7 @@ const projects = [
     actionLabel: '打开 10 秒视频',
   },
   {
-    title: 'AIGC Hub · AI 创作中转站',
+    title: 'AI创作聚合平台',
     subtitle: '与伙伴联合从 0 到 1 搭建的 AI 产品',
     type: 'product',
     image: 'assets/aigc-hub-product.png',
@@ -130,6 +130,24 @@ const projects = [
 
 const galleryGroups = [
   {
+    id: 'dailyLife',
+    label: '生活方式组图',
+    count: 6,
+    description: '围绕日常状态与情绪片段展开的连续视觉叙事',
+  },
+  {
+    id: 'characterSketch',
+    label: '角色设定草图',
+    count: 8,
+    description: '以同一角色为核心的造型、姿态与道具设定探索',
+  },
+  {
+    id: 'portraitStudy',
+    label: '人物肖像',
+    count: 2,
+    description: '自然光与生活感人物肖像练习',
+  },
+  {
     id: 'mirrorSunset',
     label: '镜面落日组图',
     count: 6,
@@ -138,7 +156,7 @@ const galleryGroups = [
   {
     id: 'portrait',
     label: '竖幅作品',
-    count: 54,
+    count: 49,
     description: '人物、角色、服装与叙事型竖幅视觉',
   },
   {
@@ -157,25 +175,27 @@ const galleryGroups = [
 
 const landscapeShots = new Set([4, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 25, 29, 45, 46, 50, 51, 52, 53, 54, 55])
 const squareShots = new Set([1, 2, 3, 28, 63, 66, 78])
+const excludedArchiveShots = new Set([31, 32, 33, 34, 35, 36])
 
-const archiveShots = Array.from({ length: 83 }, (_, index) => {
-  const number = index + 1
-  const categoryId = landscapeShots.has(number)
-    ? 'landscape'
-    : squareShots.has(number)
-      ? 'square'
-      : 'portrait'
-  const group = galleryGroups.find((item) => item.id === categoryId)
+const archiveShots = Array.from({ length: 83 }, (_, index) => index + 1)
+  .filter((number) => !excludedArchiveShots.has(number))
+  .map((number) => {
+    const categoryId = landscapeShots.has(number)
+      ? 'landscape'
+      : squareShots.has(number)
+        ? 'square'
+        : 'portrait'
+    const group = galleryGroups.find((item) => item.id === categoryId)
 
-  return {
-    id: `selected-${String(number).padStart(3, '0')}`,
-    title: `视觉作品 · ${String(number).padStart(2, '0')}`,
-    category: group.label,
-    categoryId,
-    description: group.description,
-    src: assetPath(`assets/portfolio-gallery/gallery-${String(number).padStart(3, '0')}.webp`),
-  }
-})
+    return {
+      id: `selected-${String(number).padStart(3, '0')}`,
+      title: `视觉作品 · ${String(number).padStart(2, '0')}`,
+      category: group.label,
+      categoryId,
+      description: group.description,
+      src: assetPath(`assets/portfolio-gallery/gallery-${String(number).padStart(3, '0')}.webp`),
+    }
+  })
 
 const mirrorSunsetTitles = [
   '暮色长桌',
@@ -185,6 +205,41 @@ const mirrorSunsetTitles = [
   '离席时刻',
   '余晖回望',
 ]
+
+const latestCreationGroups = [
+  {
+    categoryId: 'dailyLife',
+    category: '生活方式组图',
+    description: '围绕日常状态与情绪片段展开的连续视觉叙事',
+    prefix: 'daily',
+    titles: ['早安被窝', '自我护理', '蓝天下听歌', '深夜学习', '披萨治愈', '星空下做梦'],
+  },
+  {
+    categoryId: 'characterSketch',
+    category: '角色设定草图',
+    description: '以同一角色为核心的造型、姿态与道具设定探索',
+    prefix: 'character',
+    titles: ['角色动作设定', '滑板造型设定', '街头造型设定', '摄影角色设定', '服装轮廓设定', '道具互动设定', '音乐角色设定', '耳机造型设定'],
+  },
+  {
+    categoryId: 'portraitStudy',
+    category: '人物肖像',
+    description: '自然光与生活感人物肖像练习',
+    prefix: 'portrait',
+    titles: ['晨光饮品', '被窝与猫'],
+  },
+]
+
+const latestCreationShots = latestCreationGroups.flatMap((group) =>
+  group.titles.map((title, index) => ({
+    id: `${group.prefix}-${String(index + 1).padStart(2, '0')}`,
+    title,
+    category: group.category,
+    categoryId: group.categoryId,
+    description: group.description,
+    src: assetPath(`assets/latest-creations/${group.prefix}-${String(index + 1).padStart(2, '0')}.webp`),
+  })),
+)
 
 const styleShots = [
   ...archiveShots,
@@ -196,6 +251,7 @@ const styleShots = [
     description: '落日、倒影与超现实宴席的连续画面',
     src: assetPath(`assets/mirror-sunset/scene-${String(index + 1).padStart(2, '0')}.jpg`),
   })),
+  ...latestCreationShots,
 ]
 
 const strengths = [

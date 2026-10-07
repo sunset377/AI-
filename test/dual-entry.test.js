@@ -30,7 +30,7 @@ test('the default render makes AI interview the primary destination while retain
     assert.ok(html.indexOf('开始 AI 面试') < html.indexOf('查看我的作品集'))
     assert.match(html, /assets\/hero-avatar\.jpg/)
     assert.match(html, /assets\/portfolio-gallery\/gallery-003\.webp/)
-    assert.match(html, />89<\/span><small>WORKS/)
+    assert.match(html, />99<\/span><small>WORKS/)
   } finally {
     await vite.close()
   }
@@ -46,7 +46,7 @@ test('portfolio exposes the partnership product and the silent project preview',
     const { default: App } = await vite.ssrLoadModule('/src/App.jsx')
     const html = renderToStaticMarkup(React.createElement(App, { initialView: 'portfolio' }))
 
-    assert.match(html, /AIGC Hub · AI 创作中转站/)
+    assert.match(html, /AI创作聚合平台/)
     assert.match(html, /与伙伴联合从 0 到 1 搭建/)
     assert.match(html, /href="https:\/\/aigchub\.token6688\.com\/signup\?ref=07996c9e"/)
     assert.match(html, /assets\/starry-preview-113-130\.mp4/)
@@ -62,6 +62,10 @@ test('portfolio exposes the partnership product and the silent project preview',
     for (let index = 1; index <= 6; index += 1) {
       assert.match(html, new RegExp(`assets/mirror-sunset/scene-${String(index).padStart(2, '0')}\\.jpg`))
     }
+    assert.match(html, /生活方式组图 <span>6<\/span>/)
+    assert.match(html, /角色设定草图 <span>8<\/span>/)
+    assert.match(html, /人物肖像 <span>2<\/span>/)
+    assert.doesNotMatch(html, /assets\/portfolio-gallery\/gallery-03[1-6]\.webp/)
   } finally {
     await vite.close()
   }

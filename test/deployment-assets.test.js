@@ -65,13 +65,25 @@ test('GitHub Pages build publishes the Sanxingdui tool as a self-contained inter
   assert.match(toolHtml, /\.\/assets\/experience\.js/)
 })
 
-test('portfolio gallery publishes every selected desktop image', async () => {
+test('portfolio gallery removes the retired six-image set', async () => {
   const galleryDirectory = 'dist/assets/portfolio-gallery'
   const galleryFiles = (await readdir(galleryDirectory)).filter((file) => file.endsWith('.webp'))
 
-  assert.equal(galleryFiles.length, 83)
+  assert.equal(galleryFiles.length, 77)
   assert.equal(galleryFiles[0], 'gallery-001.webp')
   assert.equal(galleryFiles.at(-1), 'gallery-083.webp')
+  for (let index = 31; index <= 36; index += 1) {
+    assert.equal(galleryFiles.includes(`gallery-${String(index).padStart(3, '0')}.webp`), false)
+  }
+})
+
+test('portfolio publishes only the sixteen deduplicated latest creations', async () => {
+  const files = (await readdir('dist/assets/latest-creations')).sort()
+  assert.deepEqual(files, [
+    ...Array.from({ length: 8 }, (_, index) => `character-${String(index + 1).padStart(2, '0')}.webp`),
+    ...Array.from({ length: 6 }, (_, index) => `daily-${String(index + 1).padStart(2, '0')}.webp`),
+    ...Array.from({ length: 2 }, (_, index) => `portrait-${String(index + 1).padStart(2, '0')}.webp`),
+  ])
 })
 
 test('portfolio publishes all six mirror sunset images without replacing the archive', async () => {
@@ -87,7 +99,7 @@ test('portfolio hero publishes the selected desert portrait', async () => {
   assert.equal(await fileExists('dist/assets/hero-desert-portrait.jpg'), true)
 })
 
-test('portfolio publishes the AIGC Hub visual and the short video preview', async () => {
+test('portfolio publishes the AI creation platform visual and the short video preview', async () => {
   assert.equal(await fileExists('dist/assets/aigc-hub-product.png'), true)
   assert.equal(await fileExists('dist/assets/starry-preview-113-130.mp4'), true)
 })
