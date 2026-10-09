@@ -99,6 +99,13 @@ test('portfolio hero publishes the selected desert portrait', async () => {
   assert.equal(await fileExists('dist/assets/hero-desert-portrait.jpg'), true)
 })
 
+test('portfolio hero publishes the newly supplied landscape photo unchanged', async () => {
+  const photo = await readFile('public/assets/hero-desert-user-20261009.jpg')
+  assert.deepEqual(await readFile('dist/assets/hero-desert-user-20261009.jpg'), photo)
+  const app = await readFile('src/App.jsx', 'utf8')
+  assert.match(app, /assetPath\('assets\/hero-desert-user-20261009\.jpg'\)/)
+})
+
 test('portfolio publishes the AI creation platform visual and the short video preview', async () => {
   assert.equal(await fileExists('dist/assets/aigc-hub-product.png'), true)
   assert.equal(await fileExists('dist/assets/starry-preview-113-130.mp4'), true)

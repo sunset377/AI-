@@ -60,7 +60,7 @@ export default function ScriptDemo() {
       </div>
 
       <div className="scriptDemoGrid">
-        <div className="sdEditor">
+        <div className="sdEditor" id="script-input" tabIndex={-1}>
           <div className="sdPanelHead">
             <span className="sdStep">01</span>
             <strong>输入剧本</strong>

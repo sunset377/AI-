@@ -73,10 +73,8 @@ video {
 
 .heroWallpaper {
   z-index: 0;
-  background:
-    linear-gradient(90deg, #171817 0%, rgba(23, 24, 23, 0.94) 24%, transparent 72%),
-    radial-gradient(ellipse at 82% 24%, rgba(212, 210, 199, 0.24), transparent 54%),
-    linear-gradient(124deg, #343632 30%, #696b61 45%, #aaa99c 49%, #343632 57%, #171817 63%, #696b61 78%, #343632 85%, #171817 100%);
+  background-size: cover;
+  background-position: 42% center;
   opacity: 1;
 }
 
@@ -215,7 +213,7 @@ video {
 
 .headerContact b {
   color: rgba(255, 255, 255, 0.68);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.12em;
 }
@@ -335,7 +333,7 @@ video {
   border-radius: 6px;
   color: #f2efe9;
   background: rgba(15, 16, 16, 0.65);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .heroDemoActions a:focus-visible {
@@ -344,8 +342,15 @@ video {
 }
 
 #director,
-#script-demo {
+#script-demo,
+#script-input {
   scroll-margin-top: 100px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 .wallpaperSwitch button {
@@ -1327,8 +1332,8 @@ body::selection {
 .shade {
   z-index: 0;
   background:
-    linear-gradient(90deg, rgba(23, 24, 23, 0.16) 0%, transparent 48%, rgba(23, 24, 23, 0.2) 100%),
-    linear-gradient(180deg, rgba(23, 24, 23, 0.28) 0%, transparent 34%, rgba(23, 24, 23, 0.18) 100%);
+    linear-gradient(90deg, rgba(23, 24, 23, 0.58) 0%, rgba(23, 24, 23, 0.12) 52%, rgba(23, 24, 23, 0.18) 100%),
+    linear-gradient(180deg, rgba(23, 24, 23, 0.5) 0%, transparent 32%, rgba(23, 24, 23, 0.24) 100%);
 }
 
 .siteHeader {
@@ -1659,19 +1664,19 @@ body::selection {
 }
 
 .nav a {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.08em;
 }
 
 .headerContact {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .heroAside {
   gap: 8px;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.14em;
 }

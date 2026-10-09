@@ -461,7 +461,11 @@ function App({ initialView }) {
   return (
     <main>
       <section className="hero" id="home" aria-label="首页">
-        <div className="heroWallpaper" aria-hidden="true" />
+        <div
+          className="heroWallpaper"
+          style={{ backgroundImage: `url(${assetPath('assets/hero-desert-user-20261009.jpg')})` }}
+          aria-hidden="true"
+        />
         <div className="shade" aria-hidden="true" />
 
         <header className="siteHeader">
@@ -507,7 +511,7 @@ function App({ initialView }) {
             <span>2026 Portfolio</span>
             <div className="heroDemoActions">
               <a href="#director">运行流水线演示 ↓</a>
-              <a href="#script-demo">输入剧本生成分镜 ↓</a>
+              <a href="#script-input">输入剧本生成分镜 ↓</a>
             </div>
           </div>
         </div>
