@@ -73,11 +73,11 @@ video {
 
 .heroWallpaper {
   z-index: 0;
-  background-size: cover;
+  background:
+    linear-gradient(90deg, #171817 0%, rgba(23, 24, 23, 0.94) 24%, transparent 72%),
+    radial-gradient(ellipse at 82% 24%, rgba(212, 210, 199, 0.24), transparent 54%),
+    linear-gradient(124deg, #343632 30%, #696b61 45%, #aaa99c 49%, #343632 57%, #171817 63%, #696b61 78%, #343632 85%, #171817 100%);
   opacity: 1;
-  filter: saturate(1.04) contrast(1.02);
-  transform: scale(1.008);
-  transition: background-image 420ms ease, opacity 420ms ease;
 }
 
 .shade {
@@ -1315,21 +1315,20 @@ body::selection {
 }
 
 .hero {
-  background: #f7f1e5;
+  background: #171817;
   color: #fff;
 }
 
 .heroWallpaper {
   z-index: 0;
   opacity: 1;
-  filter: saturate(1.04) contrast(1.02) brightness(1.01);
 }
 
 .shade {
   z-index: 0;
   background:
-    linear-gradient(90deg, rgba(7, 27, 43, 0.16) 0%, transparent 48%, rgba(7, 27, 43, 0.2) 100%),
-    linear-gradient(180deg, rgba(7, 27, 43, 0.28) 0%, transparent 34%, rgba(7, 27, 43, 0.18) 100%);
+    linear-gradient(90deg, rgba(23, 24, 23, 0.16) 0%, transparent 48%, rgba(23, 24, 23, 0.2) 100%),
+    linear-gradient(180deg, rgba(23, 24, 23, 0.28) 0%, transparent 34%, rgba(23, 24, 23, 0.18) 100%);
 }
 
 .siteHeader {

@@ -8,12 +8,6 @@ import { readView, writeView } from './navigation'
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`
 
-const defaultHeroWallpaper = {
-  id: 'ai-network',
-  src: assetPath('assets/hero-ai-network.jpg'),
-  position: 'center',
-}
-
 const wallpapers = [
   {
     id: 'electric',
@@ -378,7 +372,6 @@ function App({ initialView }) {
     if (initialView) return initialView
     return typeof window === 'undefined' ? 'gateway' : readView(window.location)
   })
-  const [activeWallpaper, setActiveWallpaper] = useState(defaultHeroWallpaper)
   const [filter, setFilter] = useState('all')
   const [styleFilter, setStyleFilter] = useState('all')
   const [lightboxIndex, setLightboxIndex] = useState(null)
@@ -468,14 +461,7 @@ function App({ initialView }) {
   return (
     <main>
       <section className="hero" id="home" aria-label="首页">
-        <div
-          className="heroWallpaper"
-          style={{
-            backgroundImage: `url(${activeWallpaper.src})`,
-            backgroundPosition: activeWallpaper.position ?? 'center',
-          }}
-          aria-hidden="true"
-        />
+        <div className="heroWallpaper" aria-hidden="true" />
         <div className="shade" aria-hidden="true" />
 
         <header className="siteHeader">
@@ -486,8 +472,7 @@ function App({ initialView }) {
             <a
               className="brand"
               href="#home"
-              aria-label="回到首页并恢复首屏图片"
-              onClick={() => setActiveWallpaper(defaultHeroWallpaper)}
+              aria-label="回到首页"
             >
               <img
                 className="brandAvatar"
