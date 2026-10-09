@@ -358,13 +358,6 @@
   animation: interviewBlink 0.8s steps(2, end) infinite;
 }
 
-.interviewAnswerSource {
-  display: block;
-  margin-top: 10px;
-  color: var(--interview-muted);
-  font-size: 11px;
-}
-
 .interviewStarters {
   max-width: 780px;
   margin: 42px 0 0 69px;

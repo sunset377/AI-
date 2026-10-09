@@ -103,7 +103,7 @@ export default function DirectorDemo() {
       <div className="shell">
         <div className="demoHead">
           <div>
-            <div className="sectionKicker">06 / LIVE PREVIEW</div>
+            <div className="sectionKicker">WORKFLOW / 流水线演示</div>
             <h2>一段剧本，怎么变成一条可发布的短剧</h2>
             <p className="demoLead">
               下面是 <b>MOMOCO AIGC Director v2.0</b> 的真实流程示意（纯前端演示，不调用付费 API）。

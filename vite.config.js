@@ -10,7 +10,7 @@ export default defineConfig({
     host: '0.0.0.0',
     allowedHosts: ['terminal.local', 'localhost', '127.0.0.1'],
     proxy: {
-      '/api/interview': {
+      '/api': {
         target: 'https://ci-interview-api.980175020.workers.dev',
         changeOrigin: true,
         headers: { origin: 'https://sunset377.github.io' },

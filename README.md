@@ -29,13 +29,15 @@ npm.cmd run dev
 
 ```powershell
 npx.cmd wrangler deploy --config wrangler.interview.jsonc --dry-run
-node --test test/interview-worker.test.js test/deepseek-interview.test.js
+node --test test/interview-worker.test.js test/deepseek-interview.test.js test/storyboard.test.js
 node --test --test-name-pattern="parseSseLine|streamInterview" test/interview-client.test.js
 ```
 
-`npm run dev` 的 `/api/interview` 开发代理连接已部署接口，因此本地页面也可以实时提问。代理只在开发服务器中存在，不提供密钥；生产页面由 `VITE_INTERVIEW_API_URL` 直连接口，白名单只允许 `https://sunset377.github.io` 和 Worker 同源页面。
+`npm run dev` 的 `/api` 开发代理连接已部署接口，因此本地页面也可以实时提问和生成分镜。代理只在开发服务器中存在，不提供密钥；生产页面由 `VITE_INTERVIEW_API_URL` 直连接口，白名单只允许 `https://sunset377.github.io` 和 Worker 同源页面。
 
-接口流式转发 DeepSeek 的 `deepseek-flash` 非思考模式，每条最多 600 个输出 token，每个 IP 每分钟最多 6 次请求。聊天不持久化到数据库，日志不记录问题、回答或密钥。网络、余额或限流故障会回退到本地资料库，回答下方明确标注来源；取消提问不会产生兜底回复。
+接口流式转发 DeepSeek 的 `deepseek-flash` 非思考模式，每条最多 600 个输出 token，每个 IP 每分钟最多 6 次请求。聊天不持久化到数据库，日志不记录问题、回答或密钥。网络、余额或限流故障会回退到本地资料库；按本人要求，面试界面仅显示“AI助手时刻在线”，不显示模型名称或回答来源。取消提问不会产生兜底回复。
+
+作品集网络背景首屏之后紧接流水线演示与剧本分镜工具。首屏提供两个直达按钮。流水线仍是明确标注的纯前端状态演示，不实际生成视频；`/api/storyboard` 则通过同一安全 Worker 实时调用 DeepSeek，最多接受 2500 字剧本、输出 3000 token，并在服务端校验镜头/资产字段及总时长后返回页面。两种 AI 请求共享单 IP 限流，网页不持有密钥。分镜生成失败时不会伪造一份成功结果。
 
 ## 测试与构建
 

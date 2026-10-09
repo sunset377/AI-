@@ -7,54 +7,22 @@ const SAMPLE = `雨夜。旧楼电梯停在七层，林澈收到一张写着"00:
 监控画面忽然缺失七秒，电梯里的停止键自己亮起。
 许冬遥：我们还没有做决定，但录像里的你已经按下去了。`
 
-const DEEPSEEK_URL = 'https://api.deepseek.com/v1/chat/completions'
-const DEEPSEEK_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY || ''
-
-const DIRECTOR_SYSTEM = `你是一位AI短剧导演，正在把剧本文本拆解为专业分镜执行表。参照以下格式输出每个镜头：
-
-每个镜头必须包含：
-- number: 镜头编号（如"01"）
-- timeRange: 时间范围（如"0—5秒"）
-- duration: 时长秒数
-- scene: 场景描述
-- task: 镜头任务与剧情功能（这个镜头在叙事上做什么）
-- timing: 画面与时间分配（按0.000—X.XXX秒分段，写每段画面内容）
-- camera: 景别机位与镜头运动（具体到焦距如85mm/50mm、角度如高俯15°/平视/仰拍、运镜如固定/缓推/跟随、快门如1/60 30fps）
-- action: 人物动作与表演（具体到手势、表情、节奏）
-- audio: 台词声音与灯光（旁白内容、环境音、灯光氛围）
-- assets: 资产连接与生成控制（关联的角色母版C01、场景S01、道具A01等，模型参数如SD2.5 16:9 854×480，以及禁止项）
-
-要求：
-- 拆成4-8个镜头，每镜3-8秒
-- 景别要有变化：大全景→中景→近景→特写交替
-- 焦距、机位、运镜要具体，不要写"正常拍摄"
-- 资产用C开头=角色、S开头=场景、A开头=道具编号
-- 只输出JSON，不要markdown代码块，不要解释文字
-- 输出格式：{"shots":[...], "assets":[...], "totalDuration":数字}`
+const STORYBOARD_URL = import.meta.env?.VITE_INTERVIEW_API_URL
+  ? import.meta.env.VITE_INTERVIEW_API_URL.replace(/\/interview$/, '/storyboard')
+  : '/api/storyboard'
 
 async function generateStoryboard(scriptText) {
-  const response = await fetch(DEEPSEEK_URL, {
+  const response = await fetch(STORYBOARD_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${DEEPSEEK_KEY}`,
     },
     body: JSON.stringify({
-      model: 'deepseek-chat',
-      messages: [
-        { role: 'system', content: DIRECTOR_SYSTEM },
-        { role: 'user', content: `请把以下剧本拆解为专业分镜执行表：\n\n${scriptText}` },
-      ],
-      temperature: 0.7,
-      max_tokens: 3000,
+      script: scriptText,
     }),
   })
-  if (!response.ok) throw new Error(`API ${response.status}`)
-  const data = await response.json()
-  const raw = data.choices?.[0]?.message?.content ?? ''
-  // 清理可能的markdown包裹
-  const cleaned = raw.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim()
-  return JSON.parse(cleaned)
+  if (!response.ok) throw new Error('生成暂时不可用，请稍后重试。')
+  return response.json()
 }
 
 export default function ScriptDemo() {
@@ -72,8 +40,8 @@ export default function ScriptDemo() {
     try {
       const data = await generateStoryboard(t)
       setResult(data)
-    } catch (e) {
-      setError('生成失败：' + e.message + '。请检查网络或API Key。')
+    } catch {
+      setError('生成暂时不可用，请稍后重试。')
     } finally {
       setLoading(false)
     }
@@ -102,9 +70,11 @@ export default function ScriptDemo() {
             onChange={(e) => setText(e.target.value)}
             spellCheck={false}
             aria-label="剧本文本"
+            maxLength={2500}
+            disabled={loading}
           />
           <div className="sdEditorFoot">
-            <span>本地预览 · 调用DeepSeek生成</span>
+            <span>导演 Skill · {text.length}/2500</span>
             <button type="button" onClick={run} disabled={loading}>
               {loading ? '导演拆解中…' : '生成导演预案 ↗'}
             </button>

@@ -13,6 +13,9 @@ test('persona includes every current project and role without imposing a templat
   assert.match(interviewSystemPrompt, /不能把合理推测变成/)
   assert.match(interviewSystemPrompt, /AI 产品经理/)
   assert.match(interviewSystemPrompt, /团队产出不等于/)
+  assert.match(interviewSystemPrompt, /没有确认谁负责前端、后端或 API/)
+  assert.match(interviewSystemPrompt, /已知功能不能反推成个人实现经历/)
+  assert.match(interviewSystemPrompt, /历史 AI 回答可能错误/)
 })
 
 test('frontend only sends visitor history, never a provider key or system prompt', async () => {

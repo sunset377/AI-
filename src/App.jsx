@@ -520,9 +520,17 @@ function App({ initialView }) {
             <span>AI Agent · Workflow · Short-Drama System</span>
             <span>把片场重复劳动变成可调度流水线</span>
             <span>2026 Portfolio</span>
+            <div className="heroDemoActions">
+              <a href="#director">运行流水线演示 ↓</a>
+              <a href="#script-demo">输入剧本生成分镜 ↓</a>
+            </div>
           </div>
         </div>
       </section>
+
+      <DirectorDemo />
+
+      <ScriptDemo />
 
       <section className="about section shell" id="about">
         <div className="sectionKicker">03 / ABOUT</div>
@@ -639,10 +647,6 @@ function App({ initialView }) {
           ))}
         </div>
       </section>
-
-      <DirectorDemo />
-
-      <ScriptDemo />
 
       <section className="galleryPortalSection" id="gallery-intro" aria-label="进入视觉作品库">
         <ScrollExpand

@@ -321,6 +321,33 @@ video {
   gap: 12px;
 }
 
+.heroDemoActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+  letter-spacing: 0;
+}
+
+.heroDemoActions a {
+  padding: 12px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  color: #f2efe9;
+  background: rgba(15, 16, 16, 0.65);
+  font-size: 13px;
+}
+
+.heroDemoActions a:focus-visible {
+  outline: 2px solid #d08a70;
+  outline-offset: 3px;
+}
+
+#director,
+#script-demo {
+  scroll-margin-top: 100px;
+}
+
 .wallpaperSwitch button {
   text-align: left;
   padding: 18px 18px;
