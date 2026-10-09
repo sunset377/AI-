@@ -1,9 +1,7 @@
-node_modules/
+﻿node_modules/
 dist/
 .env
-.codex-run/
-tmp/
-.worktrees/
-source-materials/
+.env.local
+.env.*.local
 .DS_Store
-*.local
+*.log

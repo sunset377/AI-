@@ -2,14 +2,16 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import ScrollExpand from './components/ScrollExpand/ScrollExpand'
 import Gateway from './components/Gateway/Gateway'
 import InterviewExperience from './components/Interview/InterviewExperience'
+import DirectorDemo from './components/DirectorDemo/DirectorDemo'
+import ScriptDemo from './components/ScriptDemo/ScriptDemo'
 import { readView, writeView } from './navigation'
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`
 
 const defaultHeroWallpaper = {
-  id: 'desert-portrait',
-  src: assetPath('assets/hero-desert-portrait.jpg'),
-  position: '32% center',
+  id: 'ai-network',
+  src: assetPath('assets/hero-ai-network.jpg'),
+  position: 'center',
 }
 
 const wallpapers = [
@@ -35,15 +37,55 @@ const wallpapers = [
 
 const projects = [
   {
+    title: '预言 · 自动化成语短视频生产线',
+    subtitle: 'Vox 风格 · 每 2 小时自动跑一集 · 已上线 40+ 集',
+    type: 'product',
+    image: 'assets/production/cover-hualong.png',
+    meta: '主题自选→剧本→资产→动效→烧录字幕→配乐→卡点剪辑→发布文案',
+    description:
+      '一套已跑通三遍、挂在定时任务里的无人值守生产线：不给主题就自己挑一个没做过的成语，自动写剧本、生成人物/场景资产、加元素级动效、烧录带重点字词高亮的字幕、匹配账号专属 BGM、自动卡点剪辑，最终交付可直接发布的竖屏成片 + 标题文案 + 评论区互动。已量产塞翁失马、亡羊补牢、画龙点睛、愚公移山等 40+ 集——这就是上面那套状态机在真实业务里的样子。',
+  },
+  {
+    title: '量产样片 · 愚公移山',
+    subtitle: '同一条生产线 · 竖屏成片',
+    type: 'video',
+    image: 'assets/production/cover-yugong.png',
+    preview: 'assets/production/preview-yugong-30-40.mp4',
+    previewLabel: '10 秒自动预览',
+    meta: 'Vox 风格 / 9:16 / 全自动从主题到发布',
+    description:
+      '输入"愚公移山"主题，生产线自动完成剧本、人物与场景资产、动效、重点字词字幕、BGM 与卡点剪辑。封面即成片首帧，无人工修图。',
+  },
+  {
+    title: 'AI 漫剧导演工作流',
+    subtitle: 'MOMOCO AIGC Director · 开源 Agent 流水线 v2.0',
+    type: 'product',
+    image: 'assets/portfolio-gallery/gallery-004.webp',
+    meta: '剧本→资产→分镜→多平台API→后期→QC · 全程状态机',
+    description:
+      '把一段剧本推进为可发布成片：自动拆解人物/场景/道具/音色资产，统一调度 LibTV CLI、MiniMax H3、Seedance 2.x，经 QC 报告与授权闸门后交付。每步只记录真实状态，失败可对账、可重试、可复现——这是一个跑在短剧片场的小型 Agent Harness。',
+    href: '#script-demo',
+    actionLabel: '在线演示 · 粘贴剧本即出分镜',
+  },
+  {
+    title: 'WorkBuddy 私人 Agent 工作台',
+    subtitle: '面向 AIGC 创作者的多任务自动化台',
+    type: 'product',
+    image: 'assets/portfolio-gallery/gallery-005.webp',
+    meta: '任务分层 / 工具调度 / 失败恢复 / 多模型切换',
+    description:
+      '把素材生成、提示词管理、批量处理拆成独立模块，建立输入→执行状态→结果反馈闭环；用 Claude Code、Codex 辅助搭建与排错，持续解决多模型切换、素材统一与批量产出效率问题。',
+  },
+  {
     title: '《星际穷途 X》',
-    subtitle: 'S 级仿真人科幻短剧 · 项目负责人',
+    subtitle: 'S 级仿真人科幻短片 · 项目负责人 / AI 导演',
     type: 'video',
     image: 'assets/starry-destitute-cover.jpg',
     preview: 'assets/starry-preview-113-130.mp4',
     previewLabel: '17 秒精选预览',
-    meta: '17 秒精选预览 / Grok3.5 + Seedance2.0 / 人物一致性 95%+',
+    meta: '2′52″ 成片 / Grok3.5 + Seedance2.0 / 人物一致性 95%+',
     description:
-      '统筹美术资产、分镜设计、AI 生成、后期剪辑、配音字幕与最终交付，建立双模型提示词体系与导演级审美校准标准。',
+      '统筹世界观、美术资产、分镜、AI 生成与后期交付，建立双模型提示词体系、负面提示词库与版本记录；围绕角色与画面一致性多轮校准，验证复杂 AIGC 项目的全流程组织能力。',
   },
   {
     title: '品牌产品宣传片',
@@ -59,63 +101,44 @@ const projects = [
     actionLabel: '打开 10 秒视频',
   },
   {
+    title: '爆款视频复刻工作台',
+    subtitle: '参考视频 → 同款复刻的任务流',
+    type: 'product',
+    image: 'assets/portfolio-gallery/gallery-006.webp',
+    meta: '参考解析 / 分镜运镜拆解 / 人物替换 / 多方向生成',
+    description:
+      '把参考视频解析、分镜与节奏拆解、人物替换和多方向生成组织为可重复执行的任务流，把生成状态、失败重试与结果整理纳入统一流程，沉淀可复用的复刻生产 SOP。',
+  },
+  {
     title: 'AI创作聚合平台',
     subtitle: '与伙伴联合从 0 到 1 搭建的 AI 产品',
     type: 'product',
     image: 'assets/aigc-hub-product.png',
     meta: '多模型对话 / 图像 / 视频 / 创作工具',
     description:
-      '与伙伴共同搭建并推广的 AI 创作平台，整合多模型对话、图像与视频工具，让创作者从一个入口完成探索与使用。可通过公开邀请页了解产品并注册体验。',
+      '与伙伴共同搭建并推广的 AI 创作平台，整合多模型对话、图像与视频工具，让创作者从一个入口完成探索与使用。',
     href: 'https://aigchub.token6688.com/signup?ref=07996c9e',
     actionLabel: '访问产品 / 注册体验',
   },
   {
-    title: '镜面落日 · 六帧视觉系列',
-    subtitle: '落日 / 镜面水域 / 超现实宴席',
-    type: 'image',
-    image: 'assets/mirror-sunset/scene-01.jpg',
-    meta: '6 张组图 / 16:9 横幅 / 连续场景',
-    description:
-      '以落日、水面倒影与悬浮餐具贯穿六幅画面，呈现同一场景从对称全景到人物近景的视角变化。',
-    galleryGroup: 'mirrorSunset',
-    href: '#style',
-    actionLabel: '查看六张组图',
-  },
-  {
-    title: '江南水乡港口小镇 FPV',
-    subtitle: '第一视角 AI 视频 · 独立制作',
+    title: '《时光来信》· 屈臣氏 185 周年',
+    subtitle: 'AIGC 商业比赛 · 成片 + 海报系列',
     type: 'video',
-    image: 'assets/wallpaper-blade.png',
-    meta: '15 秒 / FPV 运镜 / 沉浸式写实画面',
+    image: 'assets/competition/shiguang-cover.png',
+    preview: 'assets/production/preview-shiguang-0-10.mp4',
+    previewLabel: '10 秒自动预览',
+    meta: '185 周年命题 / 民国药铺↔现代药房 / 竖屏成片 + A3 海报×3',
     description:
-      '完成场景概念规划与分镜设计，以 AI 生成无人机穿越视角动态视频，控制飞行节奏、景别变化与空间沉浸感。',
-  },
-  {
-    title: '「金蜀门咖」',
-    subtitle: '三星堆 × 金沙联名文博咖啡品牌 VI 全案',
-    type: 'image',
-    image: 'assets/wallpaper-ice.jpg',
-    meta: '品牌定位 / 包装系统 / 门店视觉',
-    description:
-      '将古蜀文化符号转译进现代咖啡消费场景，完成品牌识别、包装、延展物料与商业落地视觉体系。',
-  },
-  {
-    title: 'AI 抽卡实验室',
-    subtitle: '角色设定、提示词与视觉筛选流程',
-    type: 'image',
-    image: 'assets/portfolio-gallery/gallery-004.webp',
-    meta: 'Midjourney / Liblib / 即梦 / 审美筛选',
-    description:
-      '围绕角色一致性、镜头张力和商业可用度进行批量出图、筛选、复盘与风格收敛，形成稳定可复用的抽卡方法。',
+      '屈臣氏 185 周年命题比赛作品：以"一封跨越 185 年的信"为叙事，用 AI 生成民国药铺与现代药房跨时空对照的成片，配套《跨越/抵达/陪伴》三张 A3 海报与 AIGC 制作报告。从分镜、角色一致性到品牌氛围统一走完整链路。',
   },
   {
     title: '小刘带你挖三星堆',
     subtitle: '线上互动考古工具 · 小红书已发布',
     type: 'mini',
     image: 'assets/sanxingdui-tool-cover.jpg',
-    meta: 'H5 / 1927—今天 / 16 件文物互动探索',
+    meta: 'H5 / 1927—今天 / 16 件文物互动探索 / 离线可运行',
     description:
-      '将三年线下讲解中的提问、看展顺序与文物知识，转成可自己推进的互动考古体验：沿时间线发掘、看懂材质，并追踪文物从出土到展柜的旅程。',
+      '把线下讲解中的提问、看展顺序与文物知识，转成可自己推进的互动考古体验。迭代至第 16 版，检查 62 处图片引用与离线资源完整性后交付。',
     href: 'sanxingdui/',
     actionLabel: '打开互动工具',
   },
@@ -257,49 +280,50 @@ const styleShots = [
 const strengths = [
   {
     index: '01',
-    title: 'Agent 工作流设计',
-    text: '以 MOMOCO 服装内容流程为例，拆分素材、生成、审核与交付环节，明确输入输出和人工确认点。',
+    title: '多工具调度与长链状态管理',
+    text: '把剧本到成片拆成 8 个阶段、9 种状态，每步记录输入、输出与证据，支持 blocked_connector / blocked_approval 等异常分支。',
   },
   {
     index: '02',
-    title: 'AI 应用前端实现',
-    text: '使用 React、Vite 与原生 Web 技术搭建作品集和移动端 H5，处理响应式布局、交互状态与资源加载。',
+    title: '多模型 API 编排与成本闸门',
+    text: '统一抽象 LibTV CLI、MiniMax H3、Seedance 2.x 的 plan→submit→resume→download，付费前必须先估价并取得当次授权。',
   },
   {
     index: '03',
-    title: '模型与工具协作',
-    text: '围绕具体任务设计提示词、模型与工具的输入输出，保留人工审核，让生成结果更贴近业务要求。',
+    title: '确定性校验与可复现交付',
+    text: '用 ffprobe、QC 报告、SHA-256 校验产物，技术可解码不等于创意通过；run 目录隔离历史，不覆盖、不硬编码易变参数。',
   },
   {
     index: '04',
-    title: '任务状态与异常处理',
-    text: '在工作台原型中梳理任务状态、异常反馈与失败重试路径，让多步骤流程可检查、可恢复。',
+    title: '失败恢复与对账机制',
+    text: '网络超时进入 submission_uncertain 先对账不重提；单段失败只重做失败段；人工确认点与机器自动点严格分开。',
   },
   {
     index: '05',
-    title: '测试与上线验证',
-    text: '通过构建、移动端检查、资源路径验证与线上回归，持续迭代已上线网站和互动 H5。',
+    title: '短剧场景的质量评测直觉',
+    text: '60+ 集踩坑积累的 human baseline：人物身份锚不能被场景图覆盖、前后镜服装光影不能断、切镜要检查首中末帧。',
   },
   {
     index: '06',
-    title: 'AI 漫剧导演统筹',
-    text: '能从美术资产、人物设定、分镜、生成、剪辑到交付形成闭环，以导演视角控制成片质感。',
+    title: '视觉与产品闭环能力',
+    text: '视觉传达设计背景，能把模糊的"好看/像/能发"转成可检查条件，并用 React/Vite 做成真实可访问的产品。',
   },
 ]
 
 const stats = [
-  ['2′52″', 'S 级仿真人科幻短剧成片'],
-  ['95%+', '人物一致性校准目标'],
-  ['200+', '线下服务与讲解人次'],
-  ['98%+', '客户满意度'],
+  ['60+ 集', 'AI 短剧量产参与经验'],
+  ['8 阶段', '剧本 → 成片状态机'],
+  ['3+ 平台', 'LibTV / MiniMax / Seedance 统一调度'],
+  ['9 态', 'pending → complete，含 blocked / failed'],
 ]
 
 const navItems = [
   ['01 / 作品', 'works'],
-  ['02 / 风格', 'gallery-intro'],
-  ['03 / 关于', 'about'],
-  ['04 / 优势', 'strengths'],
-  ['05 / 联系', 'contact'],
+  ['02 / 流水线', 'director'],
+  ['03 / 视觉练习', 'gallery-intro'],
+  ['04 / 关于', 'about'],
+  ['05 / 优势', 'strengths'],
+  ['06 / 联系', 'contact'],
 ]
 
 function AutoPlayProjectMedia({ poster, preview, previewLabel, title }) {
@@ -493,23 +517,9 @@ function App({ initialView }) {
 
         <div className="heroInner shell">
           <div className="heroAside">
-            <span>上海 · 杭州 · 武汉 / 可沟通</span>
-            <span>AI Film · Brand · Visual</span>
+            <span>AI Agent · Workflow · Short-Drama System</span>
+            <span>把片场重复劳动变成可调度流水线</span>
             <span>2026 Portfolio</span>
-          </div>
-
-          <div className="wallpaperSwitch" aria-label="壁纸切换">
-            {wallpapers.map((wallpaper) => (
-              <button
-                key={wallpaper.id}
-                type="button"
-                className={activeWallpaper.id === wallpaper.id ? 'active' : ''}
-                onClick={() => setActiveWallpaper(wallpaper)}
-              >
-                <span>{wallpaper.label}</span>
-                {wallpaper.title}
-              </button>
-            ))}
           </div>
         </div>
       </section>
@@ -532,7 +542,15 @@ function App({ initialView }) {
               生成、后期剪辑、配音字幕与成片交付的完整闭环。
             </p>
             <p>
-              我更关注“结果是否像一个真正的作品”：画风统一、镜头有叙事意图、角色有连续性，品牌视觉也能被落地到真实商业场景。
+              我更关注”结果是否像一个真正的作品”：画风统一、镜头有叙事意图、角色有连续性，品牌视觉也能被落地到真实商业场景。
+            </p>
+            <p className="aboutHarnessNote">
+              我在做的事，是把创意生产里每一步的<b>输入、输出、失败模式、人工审核点</b>都变成结构化状态——这和给大模型搭
+              Agent Harness 要解决的"幻觉、长链断裂、工具调度"是同一个问题，只是它发生在短剧片场。我想做那个最懂片场、能定义"这一镜到底哪里不对"的人。
+            </p>
+
+            <p className="aboutHarnessNote">
+              对外：小红书 AI 创作者，已实现商业变现；交付过口红/粉底液等品牌 TVC、角色卡 Prompt 模板，项目按需求+预算+周期报价。
             </p>
 
             <div className="contactStrip">
@@ -622,11 +640,15 @@ function App({ initialView }) {
         </div>
       </section>
 
+      <DirectorDemo />
+
+      <ScriptDemo />
+
       <section className="galleryPortalSection" id="gallery-intro" aria-label="进入视觉作品库">
         <ScrollExpand
           src={assetPath('assets/portfolio-gallery/gallery-003.webp')}
           alt="超现实花园视觉作品"
-          title="进入视觉档案"
+          title="进入视觉练习"
           scrollHint="继续向下探索"
           startWidth={48}
           startHeight={58}
@@ -639,15 +661,15 @@ function App({ initialView }) {
           useWindowScroll
         >
           <div className="galleryPortalCopy">
-            <p>VISUAL ARCHIVE / 2026</p>
+            <p>VISUAL PRACTICE / 视觉练习</p>
             <h2>
-              {styleShots.length} 件作品
-              <span>视觉创作档案</span>
+              {styleShots.length} 件练习
+              <span>非业务项目</span>
             </h2>
             <p className="galleryPortalLead">
-              从人物设定、服装到幻想场景，呈现不同题材里的风格、构图与叙事。
+              早期视觉探索与风格练习——人物设定、服装、幻想场景，作为设计基本功参考，与上方的业务生产线分开看。
             </p>
-            <a href="#style">浏览视觉作品 <span aria-hidden="true">↓</span></a>
+            <a href="#style">进入视觉练习 <span aria-hidden="true">↓</span></a>
           </div>
         </ScrollExpand>
       </section>
@@ -656,11 +678,11 @@ function App({ initialView }) {
         <div className="shell">
           <div className="sectionHead styleHead">
             <div>
-              <div className="sectionKicker">02 / STYLE LAB</div>
-              <h2>风格创意库</h2>
+              <div className="sectionKicker">PRACTICE / 视觉练习</div>
+              <h2>视觉练习库</h2>
             </div>
             <p>
-              人物、插画、服装设定与世界观探索：用不同画幅呈现角色气质、色彩关系和场景叙事。
+              非业务项目，纯属设计基本功探索：人物、插画、服装设定与世界观练习，用不同画幅测试角色气质、色彩关系与场景叙事。
             </p>
           </div>
 
@@ -794,6 +816,45 @@ function App({ initialView }) {
         </div>
       </section>
 
+      <section className="evalSection shell" id="eval">
+        <div className="sectionHead">
+          <div>
+            <div className="sectionKicker">EVAL / 评测方法</div>
+            <h2>我怎么判断"这一镜到底哪里不对"</h2>
+          </div>
+          <p>
+            做 60+ 集 AI 短剧攒下的、可复用的评测直觉——这正是给 Agent 建 Benchmark 时最缺的那部分"业务 ground truth"。
+          </p>
+        </div>
+
+        <div className="evalGrid">
+          <article className="evalCard">
+            <h3>身份锚不可覆盖</h3>
+            <p>人物正脸身份锚、完整服装锚，不能被场景图或局部 AI 穿搭图覆盖。多图输入时职责分离，否则下一镜就变脸。</p>
+          </article>
+          <article className="evalCard">
+            <h3>前后镜连续性</h3>
+            <p>逐镜检查首帧/中帧/末帧：伞的位置、烟头、手里道具、窗外光线方向。一处断了就是逻辑断层，不是"风格问题"。</p>
+          </article>
+          <article className="evalCard">
+            <h3>失败样本进库</h3>
+            <p>穿帮帧、多指/断肢、字幕错字不删，归入负面提示词库与失败样本，下一次同类问题直接拦截。</p>
+          </article>
+          <article className="evalCard">
+            <h3>可解码 ≠ 可用</h3>
+            <p>ffprobe 通过只代表技术合格。人物不像、情绪不对、镜头没有叙事意图，照样判 qc_failed，定位到具体时间段重做。</p>
+          </article>
+          <article className="evalCard">
+            <h3>人工确认点</h3>
+            <p>付费生成、上传私有素材、音色克隆、登录发布——四个动作必须当次、明确、可追溯授权，机器不替人拍板。</p>
+          </article>
+          <article className="evalCard">
+            <h3>单段失败不整片重拍</h3>
+            <p>只重做失败的那一段，复用已审核资产；网络超时进入对账态，绝不因重试重复扣费。</p>
+          </article>
+        </div>
+      </section>
+
       <section className="closing" id="contact">
         <div
           className="closingMedia"
@@ -801,14 +862,15 @@ function App({ initialView }) {
           style={{ backgroundImage: `url(${assetPath('assets/portfolio-gallery/gallery-022.webp')})` }}
         />
         <div className="closingInner shell">
-          <p className="eyebrow">05 / CONTACT</p>
+          <p className="eyebrow">06 / CONTACT</p>
           <h2>让故事长出画面。</h2>
           <p>
-            如果你正在做 AI 漫剧、品牌视觉、AIGC 影像或小程序视觉方向，我们可以从一个角色、一支片子或一套视觉系统开始。
+            如果你在做 AI 短剧生产、Agent 工作流，或想给大模型建创意场景的评测标准——我们可以从一段剧本、一条流水线，或一次片场复盘开始。
           </p>
           <div className="closingContact" aria-label="联系信息">
             <span><b>电话</b> 19182874015</span>
             <span><b>微信</b> Sun677set</span>
+            <span><b>邮箱</b> 980175020@qq.com</span>
           </div>
         </div>
       </section>

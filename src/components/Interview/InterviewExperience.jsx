@@ -3,17 +3,17 @@ import { streamInterview } from '../../interview/client'
 import './InterviewExperience.css'
 
 const starterQuestions = [
-  '请做一下自我介绍',
-  '为什么适合 AI Agent 岗位',
-  '你常用哪些 AI 工具',
-  '讲讲你从0到1交付的项目',
-  '为什么从视觉设计转向 AI 应用',
-  '你的优势与不足是什么',
+  '讲一个你从0到1做的项目',
+  'AI生成内容最常见的翻车问题是什么',
+  '你怎么把一个想法变成可自动运行的流水线',
+  '你平时怎么选模型和工具',
+  '你的优势和不足是什么',
+  '讲一次你踩过的坑和怎么解决的',
 ]
 
 const welcomeMessage = {
   role: 'assistant',
-  content: '你好，我是刘耀华的 AI 面试助手。我会综合他的教育背景、作品集、真实项目与求职资料，主动关联最相关的经历，用适合面试的方式说明能力证据与岗位价值。',
+  content: '你好，我是刘耀华的 AI 分身。你可以问他做过的项目、技术选型、遇到的问题和怎么解决的——回答都基于真实经历，没做过的事会直接说没做过。',
 }
 
 function createSessionId() {
@@ -124,8 +124,8 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
             回答会综合刘耀华的教育背景、作品集与真实项目，并主动关联 Agent 工作流、Web 产品交付和岗位匹配度。
           </p>
           <dl className="interviewFacts">
-            <div><dt>定位</dt><dd>AI Agent / AI应用开发工程师</dd></div>
-            <div><dt>能力</dt><dd>Agent工作流 · Web开发 · 产品交付</dd></div>
+            <div><dt>定位</dt><dd>AI Agent 开发 / 工作流 / FDE</dd></div>
+            <div><dt>实战</dt><dd>60+部短剧 · 开源Skill · 自动化生产线</dd></div>
             <div><dt>状态</dt><dd><span /> AI 面试助手在线</dd></div>
           </dl>
           <p className="interviewDisclosure">AI 回答仅用于了解本人经历，不代表新的承诺或未公开信息。</p>
