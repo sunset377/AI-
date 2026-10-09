@@ -1093,7 +1093,7 @@ video {
   }
 
   .heroAside {
-    display: none;
+    display: grid;
   }
 
   .wallpaperSwitch {
