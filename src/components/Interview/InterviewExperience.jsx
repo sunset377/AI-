@@ -51,13 +51,14 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
     if (!content || isStreaming) return
 
     const userMessage = { role: 'user', content }
-    const history = [...messages, userMessage].slice(-10)
+    const retrying = error && messages.at(-1)?.role === 'user' && messages.at(-1).content === content
+    const history = (retrying ? messages : [...messages, userMessage]).slice(-10)
 
     setDraft('')
     setError('')
     setLastQuestion(content)
     setIsStreaming(true)
-    setMessages((current) => [...current, userMessage, { role: 'assistant', content: '' }])
+    setMessages((current) => [...current, ...(retrying ? [] : [userMessage]), { role: 'assistant', content: '' }])
 
     const controller = new AbortController()
     controllerRef.current = controller
@@ -67,30 +68,35 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
         messages: history,
         sessionId: sessionId.current,
         signal: controller.signal,
-        onToken(token, options) {
+        onToken(token) {
+          if (controllerRef.current !== controller || controller.signal.aborted) return
           setMessages((current) => current.map((message, index) => (
             index === current.length - 1
-              ? { ...message, content: options?.replace ? token : message.content + token }
+              ? { ...message, content: message.content + token }
               : message
           )))
         },
       })
     } catch (requestError) {
-      if (requestError.name !== 'AbortError') {
+      if (controllerRef.current === controller && requestError.name !== 'AbortError') {
         setError(requestError.message)
         setMessages((current) => {
           const last = current[current.length - 1]
-          return last?.role === 'assistant' && !last.content ? current.slice(0, -1) : current
+          return last?.role === 'assistant' ? current.slice(0, -1) : current
         })
       }
     } finally {
-      controllerRef.current = null
-      setIsStreaming(false)
+      if (controllerRef.current === controller) {
+        controllerRef.current = null
+        setIsStreaming(false)
+      }
     }
   }
 
   const clearConversation = () => {
     controllerRef.current?.abort()
+    controllerRef.current = null
+    setIsStreaming(false)
     setMessages([welcomeMessage])
     setDraft('')
     setError('')

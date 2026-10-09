@@ -40,17 +40,15 @@ test('streamInterview emits every complete token from a chunked response', async
   assert.deepEqual(tokens, ['你好', '，我是辞。'])
 })
 
-test('streamInterview uses an explicitly identified fallback on a server error', async () => {
+test('streamInterview reports a server error without generating a local answer', async () => {
   const tokens = []
-  const result = await streamInterview({
+  await assert.rejects(streamInterview({
       messages: [{ role: 'user', content: '你好' }],
       sessionId: 'session-12345678',
       onToken: (token, options) => tokens.push({ token, options }),
       fetchImpl: async () => Response.json({ error: '今天的体验次数已用完，请稍后再试。' }, { status: 429 }),
-    })
-  assert.equal(result.mode, 'resume-fallback')
-  assert.equal(tokens[0].options.replace, true)
-  assert.doesNotMatch(tokens[0].token, /今天的体验次数已用完/)
+    }), /稍后|频繁/)
+  assert.deepEqual(tokens, [])
 })
 
 test('resume fallback optimizes common interview questions without inventing facts', () => {
@@ -100,9 +98,9 @@ test('static fallback prioritizes a new explicit question over older conversatio
   assert.doesNotMatch(answer, /编程基础/)
 })
 
-test('streamInterview uses resume knowledge when a static host has no API route', async () => {
+test('streamInterview rejects a missing API route instead of using resume knowledge', async () => {
   const tokens = []
-  const result = await streamInterview({
+  await assert.rejects(streamInterview({
     messages: [{ role: 'user', content: '为什么适合 AI Agent 岗位' }],
     sessionId: 'session-12345678',
     onToken: (token) => tokens.push(token),
@@ -110,11 +108,8 @@ test('streamInterview uses resume knowledge when a static host has no API route'
       status: 405,
       headers: { 'content-type': 'text/plain; charset=utf-8' },
     }),
-  })
-
-  assert.equal(result.mode, 'resume-fallback')
-  assert.doesNotMatch(tokens.join(''), /简历知识库演示/)
-  assert.match(tokens.join(''), /Agent/)
+  }), /连接|重试/)
+  assert.deepEqual(tokens, [])
 })
 
 test('interview view explains the AI identity and offers starter questions', async () => {

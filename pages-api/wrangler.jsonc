@@ -1,0 +1,7 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "ci-interview-gateway",
+  "compatibility_date": "2026-10-09",
+  "pages_build_output_dir": "./public",
+  "services": [{ "binding": "INTERVIEW_API", "service": "ci-interview-api" }]
+}

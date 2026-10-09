@@ -51,18 +51,16 @@ test('UTF-8 split across network chunks and a final line without newline are pre
   assert.equal(tokens.join(''), '中文追问')
 })
 
-test('incomplete streams replace partial model text with a fallback, not concatenate it', async () => {
+test('incomplete streams fail instead of replacing real output with a local answer', async () => {
   let answer = ''
-  const result = await streamInterview({
+  await assert.rejects(streamInterview({
     messages, sessionId,
     onToken: (token, options) => { answer = options?.replace ? token : answer + token },
     fetchImpl: async () => new Response('data: {"choices":[{"delta":{"content":"未完成的实时输出"}}]}\n\n', {
       headers: { 'content-type': 'text/event-stream' },
     }),
-  })
-  assert.equal(result.mode, 'resume-fallback')
-  assert.doesNotMatch(answer, /未完成的实时输出/)
-  assert.ok(answer.length > 0)
+  }), /连接|重试/)
+  assert.equal(answer, '未完成的实时输出')
 })
 
 test('aborting a request does not produce an unsolicited fallback', async () => {

@@ -33,6 +33,7 @@ jobs:
       - name: Build for GitHub Pages
         env:
           VITE_INTERVIEW_API_URL: ${{ vars.VITE_INTERVIEW_API_URL }}
+          VITE_INTERVIEW_FALLBACK_API_URL: ${{ vars.VITE_INTERVIEW_FALLBACK_API_URL }}
           VITE_DEEPSEEK_API_KEY: ''
         run: npm run build -- --base=/AI-/
 
@@ -41,7 +42,7 @@ jobs:
 
       - name: Verify DeepSeek interview and secret isolation
         run: |
-          node --test test/interview-worker.test.js test/deepseek-interview.test.js test/storyboard.test.js
+          node --test test/interview-worker.test.js test/deepseek-interview.test.js test/interview-reliability.test.js test/storyboard.test.js
           node --test --test-name-pattern='parseSseLine|streamInterview' test/interview-client.test.js
 
       - name: Upload Pages artifact
