@@ -31,10 +31,18 @@ jobs:
         run: npm ci
 
       - name: Build for GitHub Pages
+        env:
+          VITE_INTERVIEW_API_URL: ${{ vars.VITE_INTERVIEW_API_URL }}
+          VITE_DEEPSEEK_API_KEY: ''
         run: npm run build -- --base=/AI-/
 
       - name: Verify deployment asset paths
         run: npm run test:deployment -- test/deployment-assets.test.js
+
+      - name: Verify DeepSeek interview and secret isolation
+        run: |
+          node --test test/interview-worker.test.js test/deepseek-interview.test.js
+          node --test --test-name-pattern='parseSseLine|streamInterview' test/interview-client.test.js
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

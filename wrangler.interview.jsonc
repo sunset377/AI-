@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ci-interview-api",
+  "account_id": "d176e82222b10071d90a3de1983cc5d4",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-09",
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "INTERVIEW_ORIGIN": "https://sunset377.github.io"
+  },
+  "ratelimits": [{
+    "name": "INTERVIEW_RATE_LIMITER",
+    "namespace_id": "1002",
+    "simple": { "limit": 6, "period": 60 }
+  }],
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  }
+}

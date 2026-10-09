@@ -63,18 +63,21 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
     controllerRef.current = controller
 
     try {
-      await streamInterview({
+      const result = await streamInterview({
         messages: history,
         sessionId: sessionId.current,
         signal: controller.signal,
-        onToken(token) {
+        onToken(token, options) {
           setMessages((current) => current.map((message, index) => (
             index === current.length - 1
-              ? { ...message, content: message.content + token }
+              ? { ...message, content: options?.replace ? token : message.content + token }
               : message
           )))
         },
       })
+      setMessages((current) => current.map((message, index) => (
+        index === current.length - 1 ? { ...message, mode: result.mode } : message
+      )))
     } catch (requestError) {
       if (requestError.name !== 'AbortError') {
         setError(requestError.message)
@@ -126,7 +129,7 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
           <dl className="interviewFacts">
             <div><dt>定位</dt><dd>AI Agent 开发 / 工作流 / FDE</dd></div>
             <div><dt>实战</dt><dd>60+部短剧 · 开源Skill · 自动化生产线</dd></div>
-            <div><dt>状态</dt><dd><span /> AI 面试助手在线</dd></div>
+            <div><dt>状态</dt><dd><span /> DeepSeek 实时对话 · 断线资料库兜底</dd></div>
           </dl>
           <p className="interviewDisclosure">AI 回答仅用于了解本人经历，不代表新的承诺或未公开信息。</p>
           <p className="interviewContact">
@@ -152,6 +155,11 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
                 <p>
                   {message.content}
                   {isStreaming && index === messages.length - 1 ? <i aria-label="正在回答" /> : null}
+                  {message.mode ? (
+                    <small className="interviewAnswerSource">
+                      {message.mode === 'deepseek' ? 'DeepSeek · 实时生成' : '资料库回答 · 实时连接暂不可用'}
+                    </small>
+                  ) : null}
                 </p>
               </article>
             ))}

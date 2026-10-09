@@ -40,16 +40,17 @@ test('streamInterview emits every complete token from a chunked response', async
   assert.deepEqual(tokens, ['你好', '，我是辞。'])
 })
 
-test('streamInterview surfaces the server error message', async () => {
-  await assert.rejects(
-    streamInterview({
+test('streamInterview uses an explicitly identified fallback on a server error', async () => {
+  const tokens = []
+  const result = await streamInterview({
       messages: [{ role: 'user', content: '你好' }],
       sessionId: 'session-12345678',
-      onToken() {},
+      onToken: (token, options) => tokens.push({ token, options }),
       fetchImpl: async () => Response.json({ error: '今天的体验次数已用完，请稍后再试。' }, { status: 429 }),
-    }),
-    /今天的体验次数已用完/,
-  )
+    })
+  assert.equal(result.mode, 'resume-fallback')
+  assert.equal(tokens[0].options.replace, true)
+  assert.doesNotMatch(tokens[0].token, /今天的体验次数已用完/)
 })
 
 test('resume fallback optimizes common interview questions without inventing facts', () => {
@@ -113,7 +114,7 @@ test('streamInterview uses resume knowledge when a static host has no API route'
 
   assert.equal(result.mode, 'resume-fallback')
   assert.doesNotMatch(tokens.join(''), /简历知识库演示/)
-  assert.match(tokens.join(''), /岗位的匹配点/)
+  assert.match(tokens.join(''), /Agent/)
 })
 
 test('interview view explains the AI identity and offers starter questions', async () => {

@@ -3,5 +3,7 @@ dist/
 .env
 .env.local
 .env.*.local
+.dev.vars*
+AI面试接入DeepSeek指令.md
 .DS_Store
 *.log
