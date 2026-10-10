@@ -107,3 +107,64 @@ test('background evidence distinguishes stable flat edges from multi-color or ch
   const stripes = Buffer.from(blue); for (let y = 0; y < 32; y++) stripes.fill(0, y * 64 * 3, (y + 1) * 64 * 3)
   assert.equal(measureBackground([stripes]).stable, false)
 })
+
+test('local dialogue separates requests from copy and resolves ambiguous text color', async (t) => {
+  const f = await fixture(t), d = await f.create(), base = `/drafts/${d.id}`
+  await f.request(`${base}/analyze`, 'POST', { revision: 1 }); let state = await f.wait(d.id)
+  const send = async (message) => {
+    const response = await f.request(`${base}/messages`, 'POST', { revision: state.revision, message, mode: 'local' })
+    assert.equal(response.status, 202); state = await f.wait(d.id)
+  }
+  await send('背景改绿色，字改黄色')
+  assert.equal(state.template.background, '#22c55e'); assert.equal(state.template.title, '')
+  assert.equal(state.pendingQuestion.field, 'textColor')
+  assert.equal((await f.request(`${base}/confirm`, 'POST', { revision: state.revision })).status, 409)
+  await send('全部'); assert.equal(state.pendingQuestion, null); assert.equal(state.template.titleColor, '#eab308')
+  assert.equal(state.messages.length, 4)
+})
+
+test('configured chat requires exact per-round consent and rejects executable patches without retries', async () => {
+  const { chatReplica } = await import('../server/replica-chat.js')
+  const { DEFAULT_TEMPLATE } = await import('../src/replica-template.js')
+  let calls = 0, sent
+  const config = { baseUrl: 'https://provider.example/v1', model: 'test-model', apiKey: 'TEST_SECRET', vision: false, director: 'private director rules', fetch: async (_, options) => { calls++; sent = JSON.parse(options.body); return Response.json({ choices: [{ message: { content: JSON.stringify({ reply: '绿色候选，请确认', patch: { background: '#22c55e' }, questions: [] }) } }] }) } }
+  const input = { message: '改绿', analysis: evidence, template: DEFAULT_TEMPLATE, history: [], images: ['PRIVATE_IMAGE'] }
+  await assert.rejects(chatReplica(input, config)); assert.equal(calls, 0)
+  await assert.rejects(chatReplica({ ...input, consent: { provider: 'other', shareImages: false } }, config)); assert.equal(calls, 0)
+  await assert.rejects(chatReplica({ ...input, consent: { provider: 'test-model', shareImages: false } }, { ...config, apiKey: '' })); assert.equal(calls, 0)
+  const authorized = { ...input, consent: { provider: 'test-model', shareImages: false } }
+  assert.equal((await chatReplica(authorized, config)).patch.background, '#22c55e')
+  assert.equal(JSON.stringify(sent).includes('PRIVATE_IMAGE'), false); assert.equal(sent.max_tokens, 1200)
+  for (const patch of [{ command: 'shell' }, { background: 'green' }, { transcription: 'invented' }]) {
+    await assert.rejects(chatReplica(authorized, { ...config, fetch: async () => { calls++; return Response.json({ choices: [{ message: { content: JSON.stringify({ reply: 'test', patch, questions: [] }) } }] }) } }))
+  }
+  let failures = 0
+  await assert.rejects(chatReplica(authorized, { ...config, fetch: async () => { failures++; throw new Error('TEST_SECRET failure') } }), (e) => !e.message.includes('TEST_SECRET'))
+  assert.equal(failures, 1)
+})
+
+test('paid dialogue has no automatic replay, stays private, and shares images only by opt-in', async (t) => {
+  let calls = 0, release
+  const chatConfig = { baseUrl: 'https://provider.example/v1', model: 'test-model', apiKey: 'TEST_SECRET', vision: true }
+  const f = await fixture(t, { chatConfig, chat: () => { calls++; return new Promise((_, reject) => { release = () => reject(new Error('TEST_SECRET')) }) } })
+  const d = await f.create(), base = `/drafts/${d.id}`
+  await f.request(`${base}/analyze`, 'POST', { revision: 1 }); const state = await f.wait(d.id)
+  const body = { revision: state.revision, message: '背景改绿', mode: 'api', consent: { provider: 'test-model', shareImages: false } }
+  assert.equal((await f.request(`${base}/messages`, 'POST', { ...body, consent: null })).status, 409); assert.equal(calls, 0)
+  assert.equal((await f.request(`${base}/messages`, 'POST', body)).status, 202)
+  assert.equal((await f.request(`${base}/messages`, 'POST', body)).status, 429)
+  release(); const failed = await f.wait(d.id, 'failed'); assert.equal(calls, 1)
+  assert.equal(failed.template.background, state.template.background); assert.equal(JSON.stringify(failed).includes('TEST_SECRET'), false)
+  const health = await (await f.request('/health')).text(); assert.equal(health.includes('TEST_SECRET'), false); assert.equal(health.includes('provider.example'), false)
+  const { chatReplica } = await import('../server/replica-chat.js')
+  let payload
+  const config = { ...chatConfig, fetch: async (_, opts) => { payload = JSON.parse(opts.body); return Response.json({ choices: [{ message: { content: '{"reply":"候选","patch":{},"questions":[]}' } }] }) } }
+  const image = `data:image/png;base64,${Buffer.from('TEST-PNG').toString('base64')}`
+  const input = { message: '描述', template: state.template, analysis: evidence, consent: { provider: 'test-model', shareImages: true } }
+  await chatReplica({ ...input, images: [image, image, image] }, config)
+  assert.equal(payload.messages.at(-1).content.filter((c) => c.type === 'image_url').length, 3)
+  await assert.rejects(chatReplica({ ...input, images: [image, image, image, image] }, config))
+  let attempts = 0
+  await assert.rejects(chatReplica({ ...input, consent: { provider: 'test-model', shareImages: false } }, { ...config, timeout: 10, fetch: (_, opts) => new Promise((_, reject) => { attempts++; opts.signal.addEventListener('abort', () => reject(opts.signal.reason)); setTimeout(() => reject(new Error('too slow')), 50) }) }))
+  assert.equal(attempts, 1)
+})

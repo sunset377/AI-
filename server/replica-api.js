@@ -4,8 +4,9 @@ import { copyFile, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 
 import path from 'node:path'
 import { REPLICA_LIMITS, validateReplicaOptions } from '../src/replica.js'
 import { checkReplicaTools, HYPIT_PROJECT, renderReplica } from './replica-render.js'
-import { DEFAULT_TEMPLATE, validateTemplate } from '../src/replica-template.js'
+import { DEFAULT_TEMPLATE, validateTemplate, guideTemplate } from '../src/replica-template.js'
 import { analyzeReplica } from './replica-analysis.js'
+import { chatReplica, readReplicaChatConfig, replicaChatHealth } from './replica-chat.js'
 
 const finalStates = new Set(['complete', 'failed'])
 const idPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
@@ -16,8 +17,9 @@ function sendJson(response, status, body) {
   response.end(JSON.stringify(body))
 }
 
-export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'jobs'), render = renderReplica, checkTools = checkReplicaTools, analyze = analyzeReplica } = {}) {
+export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'jobs'), render = renderReplica, checkTools = checkReplicaTools, analyze = analyzeReplica, chatConfig, chat = chatReplica } = {}) {
   await mkdir(directory, { recursive: true })
+  chatConfig ||= await readReplicaChatConfig()
   const jobs = new Map()
   const drafts = new Map()
   const uploads = new Set()
@@ -127,7 +129,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           await persist(draft); drafts.set(id, draft); return sendJson(response, 201, publicDraft(draft))
         } finally { uploading--; uploads.delete(owner); if (draftDirectory && !drafts.has(path.basename(draftDirectory))) await rm(draftDirectory, { recursive: true, force: true }) }
       }
-      const draftMatch = url.pathname.match(/^\/api\/replica\/drafts\/([a-f0-9-]+)(?:\/(input|analyze|confirm|render|frames\/[0-5]))?$/)
+      const draftMatch = url.pathname.match(/^\/api\/replica\/drafts\/([a-f0-9-]+)(?:\/(input|analyze|confirm|render|messages|frames\/[0-5]))?$/)
       if (draftMatch && idPattern.test(draftMatch[1])) {
         const draft = drafts.get(draftMatch[1])
         if (!draft || draft.owner !== owner) return sendJson(response, 404, { error: '草稿不存在。' })
@@ -144,15 +146,39 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
         if (request.method !== 'POST' && !(request.method === 'PATCH' && !operation)) return sendJson(response, 405, { error: '不支持此操作。' })
         let body
         try { body = await jsonBody(request) } catch { return sendJson(response, 400, { error: '请求格式无效或过大。' }) }
-        if (Object.keys(body).some((key) => !['revision', 'template'].includes(key))) return sendJson(response, 400, { error: '请求包含无效字段。' })
-        if (['analyze', 'render'].includes(operation) && !capacity(owner)) return sendJson(response, 429, { error: '请等待当前操作完成。' })
+        const allowed = operation === 'messages' ? ['revision', 'message', 'mode', 'consent'] : !operation ? ['revision', 'template'] : ['revision']
+        if (Object.keys(body).some((key) => !allowed.includes(key))) return sendJson(response, 400, { error: '请求包含无效字段。' })
+        if (['analyze', 'render', 'messages'].includes(operation) && !capacity(owner)) return sendJson(response, 429, { error: '请等待当前操作完成。' })
         if (draftBusy(draft)) return sendJson(response, 409, { error: '操作中的草稿不能修改。' })
         if (!Number.isInteger(body.revision) || body.revision !== draft.revision) return sendJson(response, 409, { error: '方案已更新，请刷新后重新确认。' })
         if (!operation && request.method === 'PATCH') {
           let template
           try { if (!body.template || typeof body.template !== 'object' || Array.isArray(body.template)) throw new Error(); template = validateTemplate({ ...draft.template, ...body.template }) } catch { return sendJson(response, 400, { error: '模板配置无效。' }) }
-          Object.assign(draft, { template, revision: draft.revision + 1, confirmedRevision: null, voicePreview: null, status: 'idle', error: null })
+          Object.assign(draft, { template, revision: draft.revision + 1, confirmedRevision: null, voicePreview: null, pendingQuestion: null, status: 'idle', error: null })
           await persist(draft); return sendJson(response, 200, publicDraft(draft))
+        }
+        if (operation === 'messages') {
+          if (!draft.analysis || typeof body.message !== 'string' || !body.message.trim() || body.message.length > 2000 || !['local', 'api'].includes(body.mode)) return sendJson(response, 400, { error: '先分析，再填写 1～2000 字修改需求并选择模式。' })
+          if (body.mode === 'api' && (!replicaChatHealth(chatConfig).ready || body.consent?.provider !== chatConfig.model || typeof body.consent.shareImages !== 'boolean' || (body.consent.shareImages && !chatConfig.vision))) return sendJson(response, 409, { error: '模型未就绪，或本轮外发尚未确认。' })
+          draft.status = 'chatting'; draft.confirmedRevision = null; draft.error = null; await persist(draft)
+          enqueue(draft, async (update) => {
+            let result
+            try {
+              if (body.mode === 'local') {
+                const guide = guideTemplate(body.message, draft.template, { pendingQuestion: draft.pendingQuestion })
+                result = { ...guide, reply: [Object.keys(guide.patch).length ? '已提出模板修改，请检查预览后确认。' : '请补充具体修改。', ...guide.questions.map((q) => q.text), ...guide.unhandled.map((s) => `本地向导未处理：${s}。请使用编辑控件，或选择已配置的模型讨论。`)].join('\n') }
+              } else {
+                const images = body.consent.shareImages ? await Promise.all(draft.analysis.frames.filter((_, i) => [0, 2, 5].includes(i)).slice(0, 3).map(async (f) => `data:image/png;base64,${(await readFile(path.join(dir, `frame-${f.id}.png`))).toString('base64')}`)) : []
+                result = await chat({ message: body.message, template: draft.template, analysis: draft.analysis, history: draft.messages, images, consent: body.consent }, chatConfig)
+              }
+              const template = validateTemplate({ ...draft.template, ...result.patch })
+              const pendingQuestion = result.questions[0] || (result.unhandled?.length ? { field: 'clarification', text: '仍有未处理要求；请通过编辑控件明确方案，再确认。' } : null)
+              await update({ template, revision: draft.revision + 1, voicePreview: null, pendingQuestion, messages: [...draft.messages.slice(-10), { role: 'user', content: body.message }, { role: 'assistant', content: result.reply, mode: body.mode }], status: 'idle', message: '本轮方案已返回，请确认。' })
+            } catch {
+              await update({ status: 'failed', error: '本轮对话失败；没有修改模板或自动重试。', messages: [...draft.messages.slice(-10), { role: 'user', content: body.message }, { role: 'assistant', content: '本轮未完成。再次发送将是新请求，可能再次计费。', failed: true }], message: '本轮未完成。' })
+            }
+          })
+          return sendJson(response, 202, publicDraft(draft))
         }
         if (operation === 'analyze') {
           Object.assign(draft, { status: 'analyzing', confirmedRevision: null, voicePreview: null, error: null }); await persist(draft)
@@ -164,7 +190,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           return sendJson(response, 202, publicDraft(draft))
         }
         if (operation === 'confirm') {
-          if (!draft.analysis || draft.template.audioMode === 'voice') return sendJson(response, 409, { error: '请先完成分析和声音确认。' })
+          if (!draft.analysis || draft.pendingQuestion || draft.template.audioMode === 'voice') return sendJson(response, 409, { error: '请先完成分析、未处理需求和声音确认。' })
           draft.confirmedRevision = draft.revision; await persist(draft); return sendJson(response, 200, publicDraft(draft))
         }
         if (operation === 'render') {
@@ -186,7 +212,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           healthAt = Date.now()
           health = await checkTools().catch((error) => ({ ready: false, error: error.message.startsWith('本地执行器') ? error.message : '本地执行服务尚未准备好 Hypit 和 FFmpeg。' }))
         }
-        return sendJson(response, 200, health)
+        return sendJson(response, 200, { ...health, chat: replicaChatHealth(chatConfig) })
       }
 
       if (url.pathname === '/api/replica/jobs' && request.method === 'GET') {
