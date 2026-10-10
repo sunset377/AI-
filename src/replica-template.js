@@ -32,6 +32,8 @@ export function planTemplate(value, { width, height, sourceDuration, voiceCues }
     }
     duration = end
     events = voiceCues.map((cue) => ({ ...cue }))
+    // Unspoken copy stays visible; only narrated fields follow speech cues.
+    for (const field of fields) if (template[field] && !voiceCues.some((cue) => cue.field === field)) events.push({ field, start: 0, end: duration })
   }
   const scale = Math.min(1, 1280 / Math.max(width, height))
   return { kind: 'template', width: Math.floor(width * scale / 2) * 2, height: Math.floor(height * scale / 2) * 2, duration, fps: 30, events, audioMode: template.audioMode }

@@ -68,6 +68,42 @@ test('draft changes invalidate confirmation and bounded slow operations reject e
   assert.equal((await f.request(`${base}/render`, 'POST', { revision: changed.revision })).status, 409)
 })
 
+test('template jobs cannot be deleted while their Runtime is shutting down', { timeout: 10_000 }, async (t) => {
+  const childProcess = (await import('node:child_process')).default
+  const fs = (await import('node:fs')).default
+  const { syncBuiltinESMExports } = await import('node:module')
+  const originalExecFile = childProcess.execFile
+  let release
+  const down = new Promise((resolve) => {
+    childProcess.execFile = (program, args, _options, callback) => {
+      const stdout = args[1] === 'build' ? '{"buildId":"bld_test_cleanup"}' : /ffprobe/i.test(program) ? JSON.stringify({ streams: [{ codec_type: 'video', width: 720, height: 1280 }], format: { duration: '4' } }) : '{}'
+      if (args[1] === 'runtime' && args[2] === 'down') { release = () => callback(null, { stdout, stderr: '' }); resolve() }
+      else callback(null, { stdout, stderr: '' })
+      return {}
+    }
+  })
+  t.mock.method(fs, 'existsSync', () => true)
+  syncBuiltinESMExports()
+  t.after(() => { childProcess.execFile = originalExecFile; t.mock.restoreAll(); syncBuiltinESMExports() })
+  const { renderReplica } = await import('../server/replica-render.js?cleanup-regression')
+  const f = await fixture(t, { render: renderReplica, checkVoice: async () => ({ ready: false }) })
+  const d = await f.create(), base = `/drafts/${d.id}`
+  await f.request(`${base}/analyze`, 'POST', { revision: 1 }); const draft = await f.wait(d.id)
+  await f.request(`${base}/confirm`, 'POST', { revision: draft.revision })
+  const response = await f.request(`${base}/render`, 'POST', { revision: draft.revision })
+  assert.equal(response.status, 202)
+  const job = await response.json()
+  await down
+  try { assert.equal((await f.request(`/jobs/${job.id}`, 'DELETE')).status, 409) }
+  finally { release() }
+  for (let n = 0; n < 100; n++) {
+    const state = await (await f.request(`/jobs/${job.id}`)).json()
+    if (state.status === 'complete') break
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+  assert.equal((await f.request(`/jobs/${job.id}`, 'DELETE')).status, 200)
+})
+
 test('draft capacity is bounded and restart keeps editable drafts but interrupts queued work', async (t) => {
   const f = await fixture(t)
   for (let n = 0; n < 10; n++) await f.create()

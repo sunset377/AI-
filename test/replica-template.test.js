@@ -47,6 +47,18 @@ test('approved narration cues determine event times without compressing speech',
   assert.throws(() => planTemplate({ ...valid, audioMode: 'voice' }, { width: 720, height: 1280, sourceDuration: 4, voiceCues: [{ field: 'title', start: 0, end: 31 }] }))
 })
 
+test('partial narration keeps unspoken copy visible without inventing speech timings', async () => {
+  const { renderTemplateSvg } = await import('../src/replica-template-visual.js')
+  const cues = [{ field: 'title', start: 0, end: 5 }]
+  const template = { ...valid, audioMode: 'voice', opening: 'staged' }
+  const plan = planTemplate(template, { width: 360, height: 640, sourceDuration: 4, voiceCues: cues })
+  assert.equal(plan.duration, 5)
+  assert.deepEqual(plan.events.find((cue) => cue.field === 'title'), cues[0])
+  for (const field of ['benefit', 'action']) assert.deepEqual(plan.events.find((cue) => cue.field === field), { field, start: 0, end: 5 })
+  const svg = renderTemplateSvg(plan, template, 2)
+  assert.equal([...svg.matchAll(/<text[^>]*opacity="1"/g)].length, 3)
+})
+
 test('shared template drawing changes color and motion without interpreting text as markup', async () => {
   const visual = await import('../src/replica-template-visual.js').catch(() => ({}))
   assert.equal(typeof visual.renderTemplateSvg, 'function')

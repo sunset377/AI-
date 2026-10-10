@@ -114,6 +114,7 @@ export async function renderTemplateReplica(job, directory, update) {
     writeFile(path.join(directory, 'style.svs'), '<?svml using="@hypit/recipe@1"?>\n<sheet version="1">film.main { background: #000000; }</sheet>\n'), writeFile(path.join(directory, 'plan.json'), JSON.stringify(plan, null, 2)),
   ])
   const hypit = (args, settings) => runHypit(['check', 'plan', 'build'].includes(args[0]) ? [...args, '--package-root', HYPIT_PROJECT] : args, { cwd: directory, ...settings })
+  let completed
   try {
     await update({ status: 'planning', progress: 10, message: 'Hypit 正在校验独立图形模板', plan })
     const run = path.join(directory, 'production.svrun')
@@ -137,8 +138,9 @@ export async function renderTemplateReplica(job, directory, update) {
     await runTool(process.env.FFMPEG_PATH || 'ffmpeg', ['-v', 'error', '-xerror', '-i', path.join(directory, 'result.mp4'), '-f', 'null', '-'])
     const result = { duration, width: stream.width, height: stream.height, audio }
     await writeFile(path.join(directory, 'review.json'), JSON.stringify({ ...result, decoded: true, buildId, kind: 'template' }, null, 2))
-    await update({ status: 'complete', progress: 100, result, message: '模板成片完成，技术校验通过；请观看确认。' })
+    completed = { status: 'complete', progress: 100, result, message: '模板成片完成，技术校验通过；请观看确认。' }
   } finally { await hypit(['runtime', 'down', '--runtime', runtimePath, '--json'], { timeout: 20_000 }).catch(() => {}) }
+  await update(completed)
 }
 
 async function executeReplica(job, directory, update) {
