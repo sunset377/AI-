@@ -1,4 +1,4 @@
-# 原片低成本复刻工作台
+# 本地视频复刻工作台
 
 入口：作品集的「爆款视频复刻」卡片，或 `/?view=replica`。这是独立编写的网页版本，不修改原来的 Electron 工作台，也不导入其密钥、模型或媒体。
 
@@ -20,7 +20,13 @@ npm run dev -- --host 127.0.0.1 --port 5174 --strictPort
 
 浏览器上传 → 校验视频 → 生成 Hypit SVML / SVRUN → 本地 Hypit Normalize / Trim / Retime → 取回真实片段 → FFmpeg 拼接、烧录 ASS 字幕和包装 → 校验时长、音轨并完整解码 → 提供下载。
 
-Hypit 是工作流工具，不是视频生成模型。此链只绑定 `@hypit/media-local`，没有远程模型端点或凭据，不调用 DeepSeek、MiniMax 或其他付费模型。零模型调用费不代表服务器、存储和带宽没有成本。
+Hypit 是工作流工具，不是视频生成模型。原片剪辑只绑定 `@hypit/media-local`，模板制作也没有远程视频模型端点或凭据。可选 DeepSeek 对话是另一条需要单独配置和确认的路径。零模型调用费不代表机器、存储和带宽没有成本。
+
+默认进入「模板重建」：上传 → 六帧测量 → 独立需求对话 → 填写/确认三段文案及颜色动效 → 保存 → 确认方案 → 制作真实 MP4。这里重新绘制纯色背景、大字、垃圾桶图标和光圈，不是简单在原片上加字幕；也不是自动还原任意原片工程。可独立设置三段文字颜色、背景、文字淡入/弹跳、光圈旋转、同时/逐段出现、时长和音轨。
+
+模板执行为自有 `@portfolio/replica-template` 组件 → Hypit 编译 HTML 帧程序 → 项目 `@portfolio/provider-template` 通过已安装 Puppeteer/Chrome 按 ABI 逐帧执行 → Provider 编码并将真实 `TimelineVisual` 存入 Hypit Runtime Results → 音轨合成/成片检查。官方 HTML Provider 在当前 Windows 的 `chrome.exe --version` 检查及下载的 Headless Shell 上不稳定，故使用公开 Provider SDK 扩展，不修改已安装 Hypit、不伪造 buildId。Provider 只接受无外部资源的 30fps 图形模板，不支持直接处理复杂真人镜头；实际启动 Chrome 探测就绪，无静默回退。
+
+模板制作需要保留已安装的 Hypit、Puppeteer Core 25.10.0 和 Chrome。`REPLICA_CHROME_PATH` 可指定已存在的浏览器；默认 Windows Chrome 标准路径。项目内依赖 junction 指向现有安装，不下载第二份 SDK。失败准备时的 `.browser-cache` 为私有诊断残留，不参与当前渲染。
 
 执行器自动查找 PATH 对应的 Hypit 安装，也支持环境变量 `HYPIT_CLI` 指向实际 `bin/hypit.mjs`，`FFMPEG_PATH` / `FFPROBE_PATH` 指向对应程序。无需安装原桌面工作台或下载 H3 模型。当前验证环境为 Hypit 0.3.1、FFmpeg 8.1.2、Node 24。
 
@@ -36,11 +42,15 @@ Hypit 是工作流工具，不是视频生成模型。此链只绑定 `@hypit/me
 
 任务保存在 `server/hypit/jobs/<UUID>/`，包括上传、剪辑方案、独立本地 Runtime、成片和检查记录；已排除版本控制及 Vite 静态访问/文件监视。任务使用 HttpOnly / SameSite 会话 Cookie 隔离，跨来源提交拒绝。每个浏览器同时一个任务，全局最多三个排队任务，执行串行。服务重启后，未完成任务标记中断，不自动重复提交。
 
+每会话最多 10 个草稿，全局最多 50 个；恢复草稿仅适用于当前浏览器会话，保存后再刷新。删除草稿须确认，只删除该草稿输入/代表帧/试听，不删除已经制作的独立版本。修改方案会使原确认及声音认可失效。
+
 运行记录的「删除文件」会永久移除对应任务的上传、成片和工作数据，不删除用户原始视频。任务没有自动过期清理；浏览器 Cookie 清除或过期后不能查看旧任务，运营者应定期检查服务端空间。不要将 `jobs` 目录复制到 `public` 或托管为静态文件。
 
 ## 在线边界
 
 静态作品集只能提供选片和包装预览，不能独立执行 Hypit。已上线的作品集没有改变。要让面试官远程制作 MP4，仍需部署一个持续运行的执行服务、HTTPS 同源路由，以及公网限流/登录、文件生命周期和容量策略。不要直接把 Vite 开发服务暴露到公网。
+
+**许可前置条件：**当前安装的 Hypit 使用附加条件的 Apache 2.0，第三方托管服务/多租户（即使免费）、商业再分发可能要求 Hypit.AI 书面商业许可；不能称为无限制开源。保留 Hypit 名称及报告版权信息。本机作者使用与向面试官开放托管制作并非同一种许可场景，公网前须核验并取得所需授权。
 
 「执行与模型」中的付费升级仅说明边界，当前没有 MiniMax H3 或其他模型提交接口，也不收集用户 API Key。复杂镜头生成和自动字幕识别不在这一版。
 
@@ -56,6 +66,12 @@ npm run build -- --base=/AI-/
 
 `verify:replica` 只生成专用测试片，实际跑 Hypit 并检查真实 MP4，不扫描或选用其他项目的媒体。可设置 `REPLICA_VERIFY_MODE=highlight` / `original`、`REPLICA_VERIFY_MUTE=1` 测试其他剪辑及音轨分支。
 
+模板验收设置 `REPLICA_VERIFY_KIND=template`；`REPLICA_VERIFY_ASPECT=wide`、`REPLICA_VERIFY_ROTATE=1`、`REPLICA_VERIFY_LONG=1` 检查横屏、旋转显示矩阵及长中文。输出保留真实 buildId、SHA-256、成片参数和实际采样时间。FFmpeg 8 的旋转夹具使用 `-display_rotation`，不能仅写一个已被忽略的 rotate 标签后宣称测过旋转。
+
 浏览器回归脚本 `scripts/verify-replica-browser.mjs` 复用已安装 Hypit 的 Puppeteer，需设置 `HYPIT_DISTRIBUTION`；通过 `REPLICA_QA_VIDEO` 指定本次生成的测试片，通过 `REPLICA_QA_URL` 指定本地入口。检查桌面和手机布局、完整预览、真实下载、权限拦截和成片播放。
 
-2026-10-10 本机验证：5 项复刻回归通过；4 秒生成测试片真实跑通紧凑开场（3.754 秒、有音轨）、亮点前置（4.033 秒、有音轨）、原片顺序（4 秒、去音轨），均完成解码检查。桌面浏览器真实上传、制作、下载和播放通过。全站测试仍有 9 项失败，涉及现有首页素材/文案断言、面试 fallback 与知识库导出、滚动文案；未顺带修改这些已有测试或面试实现。
+2026-10-10 最新验收记录见 [本机验收记录](replica-acceptance-2026-10-10.md)。没有调用真实付费模型、没有真实 F5 新试听；mock 声音测试不代表本人音色已听审。
+
+## 回退
+
+实施前源码快照：`.backups/replica-before-template-20261010-195705/`，含 52 个文件、manifest、ZIP 和回退说明。ZIP SHA-256：`D6E4A6F6F1D89D83BBB7C5164D964D1FB302E0C8F5FE617D73A650DF79589675`。仅按说明恢复对应源码，不删除 `server/hypit/jobs`、用户视频、密钥或浏览器配置；未做破坏性覆盖演练。保留当前功能分支和用户原有未提交修改。

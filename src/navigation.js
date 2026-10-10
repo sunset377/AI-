@@ -1,4 +1,4 @@
-const supportedViews = new Set(['gateway', 'portfolio', 'interview'])
+const supportedViews = new Set(['gateway', 'portfolio', 'interview', 'replica'])
 
 export function readView(location) {
   const view = new URLSearchParams(location?.search ?? '').get('view') ?? 'gateway'

@@ -21,6 +21,12 @@ try {
   await page.waitForFunction(() => document.querySelector('.rwStatus')?.textContent.includes('本地执行器已连接'), { timeout: 30_000 })
   await page.screenshot({ path: path.join(directory, 'desktop-empty.png'), fullPage: true })
   const clickText = async (selector, text) => page.evaluate((selector, text) => { const target = [...document.querySelectorAll(selector)].find((element) => element.textContent.includes(text)); if (!target) throw new Error(`Missing ${text}`); target.click() }, selector, text)
+  await page.focus('.rwNav button:nth-child(2)')
+  await page.keyboard.press('Enter')
+  await page.waitForFunction(() => document.querySelector('.rwTextFields textarea'))
+  await page.keyboard.press('Tab')
+  assert.equal(await page.evaluate(() => document.activeElement?.tagName), 'BUTTON')
+  await clickText('.rwNav button', '模板重建')
   if (process.env.REPLICA_QA_VIDEO) {
     if (process.env.REPLICA_QA_TEMPLATE_ONLY !== '1') {
     await clickText('.rwNav button', '原片剪辑包装')

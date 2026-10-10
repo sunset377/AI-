@@ -4,6 +4,7 @@ import Gateway from './components/Gateway/Gateway'
 import InterviewExperience from './components/Interview/InterviewExperience'
 import DirectorDemo from './components/DirectorDemo/DirectorDemo'
 import ScriptDemo from './components/ScriptDemo/ScriptDemo'
+import ReplicaWorkbench from './components/ReplicaWorkbench/ReplicaWorkbench'
 import { readView, writeView } from './navigation'
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`
@@ -96,12 +97,15 @@ const projects = [
   },
   {
     title: '爆款视频复刻工作台',
-    subtitle: '参考视频 → 同款复刻的任务流',
+    subtitle: 'Hypit 本地剪辑 · 原片低成本复刻',
     type: 'product',
     image: 'assets/portfolio-gallery/gallery-006.webp',
-    meta: '参考解析 / 分镜运镜拆解 / 人物替换 / 多方向生成',
+    meta: '原片保留 / 开头节奏 / 字幕包装 / MP4 导出',
     description:
-      '把参考视频解析、分镜与节奏拆解、人物替换和多方向生成组织为可重复执行的任务流，把生成状态、失败重试与结果整理纳入统一流程，沉淀可复用的复刻生产 SOP。',
+      '保留参考视频画面，用 Hypit 调整开头与剪辑节奏，再添加字幕和蓝紫视觉包装。浏览器先看效果，本地执行器制作真实 MP4；默认不调用付费视频模型。',
+    view: 'replica',
+    href: '?view=replica',
+    actionLabel: '打开视频复刻工作台',
   },
   {
     title: 'AI创作聚合平台',
@@ -140,7 +144,7 @@ const projects = [
   ...project,
   image: assetPath(project.image),
   preview: project.preview ? assetPath(project.preview) : undefined,
-  href: project.href?.startsWith('https://') || project.href?.startsWith('#')
+  href: project.view || project.href?.startsWith('https://') || project.href?.startsWith('#')
     ? project.href
     : project.href ? assetPath(project.href) : undefined,
 }))
@@ -438,6 +442,8 @@ function App({ initialView }) {
     }
   }, [lightboxIndex, visibleStyleShots.length])
 
+  if (view === 'replica') return <ReplicaWorkbench onBack={() => navigateTo('portfolio')} />
+
   if (view === 'gateway') {
     return (
       <Gateway
@@ -620,9 +626,12 @@ function App({ initialView }) {
                   <a
                     className="projectAction"
                     href={project.href}
-                    target={project.galleryGroup ? undefined : '_blank'}
-                    rel={project.galleryGroup ? undefined : 'noreferrer'}
-                    onClick={project.galleryGroup ? () => {
+                    target={project.galleryGroup || project.view ? undefined : '_blank'}
+                    rel={project.galleryGroup || project.view ? undefined : 'noreferrer'}
+                    onClick={project.view ? (event) => {
+                      event.preventDefault()
+                      navigateTo(project.view)
+                    } : project.galleryGroup ? () => {
                       setStyleFilter(project.galleryGroup)
                       setLightboxIndex(null)
                     } : undefined}

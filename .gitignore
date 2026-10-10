@@ -7,3 +7,6 @@ dist/
 AI面试接入DeepSeek指令.md
 .DS_Store
 *.log
+server/hypit/.hypit/
+server/hypit/jobs/
+server/hypit/.browser-cache/

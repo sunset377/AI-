@@ -15,6 +15,7 @@
 - `/`：双入口首页。
 - `/?view=portfolio`：完整作品集。
 - `/?view=interview`：AI 面试对话。
+- `/?view=replica`：原片低成本复刻工作台；本机 Hypit 执行、字幕包装与 MP4 导出，详见 [运行与在线边界](docs/replica-workbench.md)。
 
 ## 本地运行
 
