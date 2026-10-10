@@ -12,10 +12,13 @@ export function renderTemplateSvg(plan, template, at) {
     const progress = Math.max(0, Math.min(1, age / 0.6))
     const opacity = !visible ? 0 : template.textMotion === 'fade' ? progress : 1
     const offset = template.textMotion === 'bounce' ? -Math.sin(progress * Math.PI * 2) * (1 - progress) * size * 0.45 : 0
-    const max = Math.max(5, Math.floor(w * 0.86 / size))
     const chars = [...template[field]], lines = []
+    let fontSize = size, max = Math.max(5, Math.floor(w * 0.86 / fontSize))
+    while (Math.ceil(chars.length / max) * fontSize * 1.15 > h * 0.11) {
+      fontSize *= 0.9; max = Math.max(5, Math.floor(w * 0.86 / fontSize))
+    }
     for (let index = 0; index < chars.length; index += max) lines.push(chars.slice(index, index + max).join(''))
-    return `<text x="${w / 2}" y="${positions[field] + offset}" text-anchor="middle" fill="${template[`${field}Color`]}" font-size="${size}" font-weight="800" font-family="Microsoft YaHei,sans-serif" opacity="${opacity}" stroke="#132033" stroke-width="${size * 0.04}" paint-order="stroke">${lines.map((line, i) => `<tspan x="${w / 2}" dy="${i ? size * 1.15 : 0}">${escape(line)}</tspan>`).join('')}</text>`
+    return `<text x="${w / 2}" y="${positions[field] + offset}" text-anchor="middle" fill="${template[`${field}Color`]}" font-size="${fontSize}" font-weight="800" font-family="Microsoft YaHei,sans-serif" opacity="${opacity}" stroke="#132033" stroke-width="${fontSize * 0.04}" paint-order="stroke">${lines.map((line, i) => `<tspan x="${w / 2}" dy="${i ? fontSize * 1.15 : 0}">${escape(line)}</tspan>`).join('')}</text>`
   }).join('')
   const cx = w / 2, cy = h * 0.56, r = Math.min(w * 0.27, h * 0.19)
   const rotation = template.ringMotion === 'rotate' ? t * 120 : 0

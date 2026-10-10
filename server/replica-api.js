@@ -62,7 +62,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
   function publicDraft(draft) {
     const { id, filename, createdAt, status, message, progress, revision, confirmedRevision, analysis, template, messages, pendingQuestion, error } = draft
     const preview = draft.voicePreview
-    const voicePreview = preview ? { id: preview.id, sha256: preview.sha256, duration: preview.duration, cues: preview.cues, approved: preview.approved, revision: preview.revision, url: `/api/replica/drafts/${id}/voice/${preview.id}` } : null
+    const voicePreview = preview ? { id: preview.id, sha256: preview.sha256, duration: preview.duration, cues: preview.cues, prosody: preview.prosody, approved: preview.approved, revision: preview.revision, url: `/api/replica/drafts/${id}/voice/${preview.id}` } : null
     return { id, kind: 'draft', filename, createdAt, status, message, progress, revision, confirmedRevision, analysis, template, messages, pendingQuestion, error, voicePreview, inputUrl: `/api/replica/drafts/${id}/input`, frames: analysis?.frames.map((frame) => ({ ...frame, url: `/api/replica/drafts/${id}/frames/${frame.id}` })) || [] }
   }
 
@@ -168,12 +168,15 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
         if (operation === 'voice') {
           try { validateProsody(body.narration, body.prosody) } catch { return sendJson(response, 400, { error: '请核对旁白文字、句段与停顿。' }) }
           if (!draft.analysis || !(await checkVoice()).ready) return sendJson(response, 409, { error: '请先分析原片；本人 F5 配置、转写或本地权重未就绪。' })
+          // Readiness awaits local IO; another request may have edited or occupied this draft meanwhile.
+          if (!capacity(owner)) return sendJson(response, 429, { error: '请等待当前操作完成。' })
+          if (draftBusy(draft) || body.revision !== draft.revision) return sendJson(response, 409, { error: '方案已更新或正在操作，请刷新后重新确认。' })
           Object.assign(draft, { status: 'voicing', confirmedRevision: null, voicePreview: null, error: null }); await persist(draft)
           enqueue(draft, async (update) => {
             const preview = await voice({ narration: body.narration, prosody: body.prosody }, dir)
             const template = validateTemplate({ ...draft.template, narration: body.narration, audioMode: 'voice' })
             const revision = draft.revision + 1
-            await update({ template, revision, voicePreview: { ...preview, revision, approved: false }, status: 'idle', message: '试听已生成，听审认可后才可用于成片。' })
+            await update({ template, revision, voicePreview: { ...preview, prosody: structuredClone(body.prosody), revision, approved: false }, status: 'idle', message: '试听已生成，听审认可后才可用于成片。' })
           })
           return sendJson(response, 202, publicDraft(draft))
         }

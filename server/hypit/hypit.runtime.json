@@ -1,0 +1,7 @@
+{
+  "format": "hypit.runtime-local@1",
+  "dataRoot": ".hypit/execution",
+  "credentials": {},
+  "endpoints": { "media.local": { "use": "@hypit/media-local" } },
+  "bindings": {}
+}

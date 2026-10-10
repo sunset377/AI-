@@ -66,3 +66,43 @@ test('shared template drawing changes color and motion without interpreting text
   assert.match(sources.run, /final.video/)
   assert.doesNotMatch(sources.author, /<script>|<mediaop:Retime/)
 })
+
+test('template editor exposes separate requirements, bounded copy and confirm-before-render controls', async () => {
+  const { createServer } = await import('vite')
+  const React = (await import('react')).default
+  const { renderToStaticMarkup } = await import('react-dom/server')
+  const vite = await createServer({ appType: 'custom', cacheDir: '.codex-run/replica-tests/template-cache', server: { middlewareMode: true, hmr: false } })
+  try {
+    const { default: TemplateEditor } = await vite.ssrLoadModule('/src/components/ReplicaWorkbench/TemplateEditor.jsx')
+    const html = renderToStaticMarkup(React.createElement(TemplateEditor, { health: { ready: false }, requestApi: async () => {}, mediaUrl: (url) => url, onJob: () => {} }))
+    assert.match(html, /修改需求/); assert.match(html, /开场钩子文案/); assert.match(html, /利益点文案/)
+    assert.match(html, /本地向导/); assert.doesNotMatch(html, /value="api"/)
+    assert.match(html, /disabled=""[^>]*>分析原片/)
+    assert.match(html, /disabled=""[^>]*>制作模板成片/)
+    assert.match(html, /没有 OCR\/ASR/); assert.match(html, /role="status"/)
+    assert.doesNotMatch(html, /已识别语音|type="password"/)
+  } finally { await vite.close() }
+})
+
+test('maximum Chinese copy fits each vertical text band on portrait and landscape templates', async () => {
+  const { renderTemplateSvg } = await import('../src/replica-template-visual.js')
+  for (const [width, height] of [[360, 640], [640, 360], [64, 64]]) {
+    const template = { ...valid, title: '字'.repeat(40), benefit: '字'.repeat(40), action: '字'.repeat(40), textMotion: 'bounce' }
+    const plan = planTemplate(template, { width, height, sourceDuration: 4 })
+    const svg = renderTemplateSvg(plan, template, 0.45)
+    for (const match of svg.matchAll(/<text[^>]*font-size="([\d.]+)"[^>]*>(.*?)<\/text>/g)) {
+      const lines = (match[2].match(/<tspan/g) || []).length
+      assert.ok(lines * Number(match[1]) * 1.15 <= height * 0.11, 'copy overlaps its reserved text band')
+    }
+  }
+})
+
+test('local template provider refuses external assets, unsupported clocks and out-of-range capture', async () => {
+  const { templateSupport } = await import('../server/hypit/packages/provider-template/src/support.js')
+  const program = { visualIr: 'hypit.visual-ir@1', canvas: { width: 360, height: 640 }, frameRate: { numerator: 30, denominator: 1 }, frameCount: 120, artifacts: [], surfaces: [], frameSources: [], html: '<!doctype html><html></html>' }
+  assert.equal(templateSupport({ constraints: { program } }).status, 'supported')
+  for (const changed of [{ frameCount: 901 }, { frameRate: { numerator: 60, denominator: 1 } }, { canvas: { width: 4096, height: 640 } }, { artifacts: [{}] }, { surfaces: [{}] }, { frameSources: [{}] }]) {
+    assert.equal(templateSupport({ constraints: { program: { ...program, ...changed } } }).status, 'unsupported')
+  }
+  assert.equal(templateSupport({ constraints: { program, range: { startFrame: 0, endFrameExclusive: 121 } } }).status, 'unsupported')
+})

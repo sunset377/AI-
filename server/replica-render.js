@@ -103,9 +103,11 @@ export async function renderTemplateReplica(job, directory, update) {
   await mkdir(dependencyRoot, { recursive: true })
   const dependencyLink = path.join(dependencyRoot, '@hypit')
   if (!existsSync(dependencyLink)) await symlink(path.join(path.dirname(hypitLauncher()), '../node_modules/@hypit'), dependencyLink, 'junction')
+  const puppeteerLink = path.join(dependencyRoot, 'puppeteer-core')
+  if (!existsSync(puppeteerLink)) await symlink(path.join(path.dirname(hypitLauncher()), '../node_modules/puppeteer-core'), puppeteerLink, 'junction')
   const chromePath = process.env.REPLICA_CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe'
   if (!existsSync(chromePath)) throw new Error('本地执行器缺少已配置的 Chrome。')
-  profile.endpoints['html.local'] = { use: '@hypit/provider-html-local', config: { chromePath, workers: 1, defaultConcurrency: 1 } }
+  profile.endpoints['html.local'] = { use: '@portfolio/provider-template', config: { chromePath, ffmpegPath: process.env.FFMPEG_PATH || 'ffmpeg', ffprobePath: process.env.FFPROBE_PATH || 'ffprobe' } }
   await Promise.all([
     writeFile(path.join(directory, 'package.json'), JSON.stringify({ name: 'replica-template-task', private: true, type: 'module', hypit: { project: true } })),
     writeFile(runtimePath, JSON.stringify(profile)), writeFile(path.join(directory, 'production.svml'), sources.author), writeFile(path.join(directory, 'production.svrun'), sources.run),

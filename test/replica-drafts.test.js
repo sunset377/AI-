@@ -206,3 +206,28 @@ test('voice audition approval is private, revision-bound and follows actual 18-s
   assert.equal(state.voicePreview, null); assert.equal(state.confirmedRevision, null)
   const { readFile } = await import('node:fs/promises'); assert.equal(await readFile(path.join(f.directory, job.id, 'voice.wav'), 'utf8'), 'TEST-WAV')
 })
+
+test('voice readiness cannot race concurrent edits or another voice request', async (t) => {
+  const ready = [], calls = []
+  let checks = 0
+  const f = await fixture(t, { checkVoice: () => checks++ === 0 ? Promise.resolve({ ready: true }) : new Promise((resolve) => ready.push(resolve)), voice: async (input) => { calls.push(input); throw new Error('test stopped') } })
+  const d = await f.create(), base = `/drafts/${d.id}`
+  await f.request(`${base}/analyze`, 'POST', { revision: 1 }); let state = await f.wait(d.id)
+  const body = { revision: state.revision, narration: '测试', prosody: [{ field: 'title', text: '测试', pause: 0 }] }
+  const first = f.request(`${base}/voice`, 'POST', body)
+  while (!ready.length) await new Promise((r) => setTimeout(r, 5))
+  const second = f.request(`${base}/voice`, 'POST', body)
+  await new Promise((r) => setTimeout(r, 25))
+  for (const resolve of ready) resolve({ ready: true })
+  const statuses = (await Promise.all([first, second])).map((r) => r.status)
+  assert.equal(statuses.filter((s) => s === 202).length, 1)
+  await f.wait(d.id, 'failed'); assert.equal(calls.length, 1)
+  ready.length = 0
+  state = await (await f.request(base)).json()
+  const third = f.request(`${base}/voice`, 'POST', { ...body, revision: state.revision })
+  while (!ready.length) await new Promise((r) => setTimeout(r, 5))
+  const edited = await f.request(base, 'PATCH', { revision: state.revision, template: { title: '新文案' } })
+  ready[0]({ ready: true })
+  if (edited.status === 200) assert.equal((await third).status, 409)
+  else assert.ok([409, 429].includes(edited.status))
+})
