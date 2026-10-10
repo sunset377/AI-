@@ -46,3 +46,23 @@ test('approved narration cues determine event times without compressing speech',
   assert.throws(() => planTemplate({ ...valid, audioMode: 'voice' }, { width: 720, height: 1280, sourceDuration: 4 }))
   assert.throws(() => planTemplate({ ...valid, audioMode: 'voice' }, { width: 720, height: 1280, sourceDuration: 4, voiceCues: [{ field: 'title', start: 0, end: 31 }] }))
 })
+
+test('shared template drawing changes color and motion without interpreting text as markup', async () => {
+  const visual = await import('../src/replica-template-visual.js').catch(() => ({}))
+  assert.equal(typeof visual.renderTemplateSvg, 'function')
+  const template = { ...valid, background: '#22c55e', titleColor: '#eab308', title: '<script>"test"</script>', textMotion: 'bounce' }
+  const plan = planTemplate(template, { width: 720, height: 1280, sourceDuration: 4 })
+  const svg = visual.renderTemplateSvg(plan, template, 0.2)
+  assert.match(svg, /#22c55e/); assert.match(svg, /#eab308/)
+  assert.doesNotMatch(svg, /<script>|onload=/)
+  assert.match(svg, /&lt;script&gt;/)
+  assert.notEqual(svg, visual.renderTemplateSvg(plan, template, 1.2))
+  const still = { ...template, textMotion: 'none', ringMotion: 'none' }
+  assert.equal(visual.renderTemplateSvg(plan, still, 0), visual.renderTemplateSvg(plan, still, 1))
+  const { createTemplateSources } = await import('../server/replica-render.js')
+  assert.equal(typeof createTemplateSources, 'function')
+  const sources = createTemplateSources(plan, template)
+  assert.match(sources.author, /@portfolio\/replica-template@1/)
+  assert.match(sources.run, /final.video/)
+  assert.doesNotMatch(sources.author, /<script>|<mediaop:Retime/)
+})
