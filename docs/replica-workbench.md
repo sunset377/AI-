@@ -32,6 +32,8 @@ Hypit 是工作流工具，不是视频生成模型。此链只绑定 `@hypit/me
 
 原版 AI 漫剧导演从 MOMOCO 本机目录只读加载（可用服务端 `REPLICA_DIRECTOR_PATH` 指定），用于镜头、连续性和质检规划，不公开打包原始售卖 Skill。缺文件显示未读取；加载 Skill 不等于 H3/LibTV 已能制作，复杂剧情生成仍未接入。
 
+可选本人旁白固定读取已认可的个人 F5-TTS 配置。`REPLICA_F5_PYTHON` 可指定本地环境，`REPLICA_F5_CHECKPOINT`、`REPLICA_F5_VOCAB`、`REPLICA_F5_VOCODER` 必须明确指定已有权重、词表和 Vocos 目录（含 config.yaml/pytorch_model.bin）；不自动下载，不回退其他 TTS。自然语速 speed=1/nfe_step=32；用户分别规划问句、利益点、行动句及停顿，标点不等于可保证的情绪控制，必须实际试听认可。最长 30 秒；字幕块按实际句段时间，而不是挤进参考视频时长。改方案使认可失效，正式任务复制独立音轨，试听、转写和参考均不外发。权重商业许可仍是 pending_verification，不能承诺可商用。
+
 任务保存在 `server/hypit/jobs/<UUID>/`，包括上传、剪辑方案、独立本地 Runtime、成片和检查记录；已排除版本控制及 Vite 静态访问/文件监视。任务使用 HttpOnly / SameSite 会话 Cookie 隔离，跨来源提交拒绝。每个浏览器同时一个任务，全局最多三个排队任务，执行串行。服务重启后，未完成任务标记中断，不自动重复提交。
 
 运行记录的「删除文件」会永久移除对应任务的上传、成片和工作数据，不删除用户原始视频。任务没有自动过期清理；浏览器 Cookie 清除或过期后不能查看旧任务，运营者应定期检查服务端空间。不要将 `jobs` 目录复制到 `public` 或托管为静态文件。

@@ -168,3 +168,41 @@ test('paid dialogue has no automatic replay, stays private, and shares images on
   await assert.rejects(chatReplica({ ...input, consent: { provider: 'test-model', shareImages: false } }, { ...config, timeout: 10, fetch: (_, opts) => new Promise((_, reject) => { attempts++; opts.signal.addEventListener('abort', () => reject(opts.signal.reason)); setTimeout(() => reject(new Error('too slow')), 50) }) }))
   assert.equal(attempts, 1)
 })
+
+test('F5 readiness fails closed and its arguments cannot compress or substitute the voice', async () => {
+  const { checkReplicaVoice, f5Arguments, validateProsody } = await import('../server/replica-voice.js')
+  assert.equal((await checkReplicaVoice('Z:/missing/voice.json')).ready, false)
+  const cfg = { model: 'F5TTS_v1_Base', speed: 1, nfe_step: 32, reference_wav: 'ref.wav', referenceText: '准确转写', checkpoint: 'local.pt', vocab: 'local.txt' }
+  const args = f5Arguments(cfg, 'infer_cli.py', '试听文本', 'out')
+  assert.equal(args[args.indexOf('--speed') + 1], '1'); assert.equal(args[args.indexOf('--nfe_step') + 1], '32')
+  assert.equal(args.includes('--fix_duration'), false); assert.equal(args.includes('--ref_text'), true)
+  assert.throws(() => f5Arguments({ ...cfg, speed: 1.2 }, 'cli', 'text', 'out'))
+  assert.throws(() => validateProsody('文本', [{ field: 'title', text: '不同文本', pause: 0 }]))
+})
+
+test('voice audition approval is private, revision-bound and follows actual 18-second timing', async (t) => {
+  const { createHash, randomUUID } = await import('node:crypto')
+  const { planTemplate } = await import('../src/replica-template.js')
+  const f = await fixture(t, { checkVoice: async () => ({ ready: true, reasons: [], commercialLicense: 'pending_verification' }), voice: async (_, dir) => {
+    const id = randomUUID(), audioPath = path.join(dir, `voice-${id}.wav`), bytes = Buffer.from('TEST-WAV')
+    await writeFile(audioPath, bytes)
+    return { id, audioPath, sha256: createHash('sha256').update(bytes).digest('hex'), duration: 18, cues: [{ field: 'title', start: 0, end: 18 }] }
+  } })
+  const d = await f.create(), base = `/drafts/${d.id}`
+  await f.request(`${base}/analyze`, 'POST', { revision: 1 }); let state = await f.wait(d.id)
+  assert.equal((await f.request(`${base}/voice`, 'POST', { revision: state.revision, narration: '试听文本', prosody: [{ field: 'title', text: '试听文本', pause: 0 }] })).status, 202)
+  state = await f.wait(d.id); const preview = state.voicePreview
+  assert.equal(preview.audioPath, undefined)
+  assert.equal((await f.request(`${base}/confirm`, 'POST', { revision: state.revision })).status, 409)
+  assert.equal((await f.request(`${base}/voice/${preview.id}`, 'GET', undefined, { cookie: '' })).status, 404)
+  assert.equal((await f.request(`${base}/voice/${preview.id}/approve`, 'POST', { revision: state.revision, sha256: 'wrong' })).status, 409)
+  state = await (await f.request(`${base}/voice/${preview.id}/approve`, 'POST', { revision: state.revision, sha256: preview.sha256 })).json()
+  assert.equal(state.voicePreview.approved, true)
+  assert.equal(planTemplate(state.template, { width: 360, height: 640, sourceDuration: 4, voiceCues: state.voicePreview.cues }).duration, 18)
+  await f.request(`${base}/confirm`, 'POST', { revision: state.revision })
+  const job = await (await f.request(`${base}/render`, 'POST', { revision: state.revision })).json(); assert.equal(job.voicePreview.audioPath, undefined)
+  await new Promise((r) => setTimeout(r, 30))
+  state = await (await f.request(base, 'PATCH', { revision: state.revision, template: { narration: '新文本' } })).json()
+  assert.equal(state.voicePreview, null); assert.equal(state.confirmedRevision, null)
+  const { readFile } = await import('node:fs/promises'); assert.equal(await readFile(path.join(f.directory, job.id, 'voice.wav'), 'utf8'), 'TEST-WAV')
+})

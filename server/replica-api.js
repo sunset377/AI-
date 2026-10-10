@@ -7,6 +7,7 @@ import { checkReplicaTools, HYPIT_PROJECT, renderReplica } from './replica-rende
 import { DEFAULT_TEMPLATE, validateTemplate, guideTemplate } from '../src/replica-template.js'
 import { analyzeReplica } from './replica-analysis.js'
 import { chatReplica, readReplicaChatConfig, replicaChatHealth } from './replica-chat.js'
+import { checkReplicaVoice, createVoicePreview, validateProsody } from './replica-voice.js'
 
 const finalStates = new Set(['complete', 'failed'])
 const idPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
@@ -17,7 +18,7 @@ function sendJson(response, status, body) {
   response.end(JSON.stringify(body))
 }
 
-export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'jobs'), render = renderReplica, checkTools = checkReplicaTools, analyze = analyzeReplica, chatConfig, chat = chatReplica } = {}) {
+export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'jobs'), render = renderReplica, checkTools = checkReplicaTools, analyze = analyzeReplica, chatConfig, chat = chatReplica, checkVoice = checkReplicaVoice, voice = createVoicePreview } = {}) {
   await mkdir(directory, { recursive: true })
   chatConfig ||= await readReplicaChatConfig()
   const jobs = new Map()
@@ -60,7 +61,9 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
 
   function publicDraft(draft) {
     const { id, filename, createdAt, status, message, progress, revision, confirmedRevision, analysis, template, messages, pendingQuestion, error } = draft
-    return { id, kind: 'draft', filename, createdAt, status, message, progress, revision, confirmedRevision, analysis, template, messages, pendingQuestion, error, inputUrl: `/api/replica/drafts/${id}/input`, frames: analysis?.frames.map((frame) => ({ ...frame, url: `/api/replica/drafts/${id}/frames/${frame.id}` })) || [] }
+    const preview = draft.voicePreview
+    const voicePreview = preview ? { id: preview.id, sha256: preview.sha256, duration: preview.duration, cues: preview.cues, approved: preview.approved, revision: preview.revision, url: `/api/replica/drafts/${id}/voice/${preview.id}` } : null
+    return { id, kind: 'draft', filename, createdAt, status, message, progress, revision, confirmedRevision, analysis, template, messages, pendingQuestion, error, voicePreview, inputUrl: `/api/replica/drafts/${id}/input`, frames: analysis?.frames.map((frame) => ({ ...frame, url: `/api/replica/drafts/${id}/frames/${frame.id}` })) || [] }
   }
 
   async function jsonBody(request) {
@@ -129,12 +132,17 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           await persist(draft); drafts.set(id, draft); return sendJson(response, 201, publicDraft(draft))
         } finally { uploading--; uploads.delete(owner); if (draftDirectory && !drafts.has(path.basename(draftDirectory))) await rm(draftDirectory, { recursive: true, force: true }) }
       }
-      const draftMatch = url.pathname.match(/^\/api\/replica\/drafts\/([a-f0-9-]+)(?:\/(input|analyze|confirm|render|messages|frames\/[0-5]))?$/)
+      const draftMatch = url.pathname.match(/^\/api\/replica\/drafts\/([a-f0-9-]+)(?:\/(input|analyze|confirm|render|messages|voice|voice\/[a-f0-9-]+(?:\/approve)?|frames\/[0-5]))?$/)
       if (draftMatch && idPattern.test(draftMatch[1])) {
         const draft = drafts.get(draftMatch[1])
         if (!draft || draft.owner !== owner) return sendJson(response, 404, { error: '草稿不存在。' })
         const dir = path.join(directory, draft.id), operation = draftMatch[2]
         if (!operation && request.method === 'GET') return sendJson(response, 200, publicDraft(draft))
+        if (operation?.startsWith('voice/')) {
+          const preview = draft.voicePreview
+          if (!preview || preview.id !== operation.split('/')[1]) return sendJson(response, 404, { error: '试听不存在或已因修改失效。' })
+          if (!operation.endsWith('/approve') && ['GET', 'HEAD'].includes(request.method)) return serveFile(request, response, preview.audioPath, 'audio/wav')
+        }
         if (['input', ...[0, 1, 2, 3, 4, 5].map((i) => `frames/${i}`)].includes(operation) && ['GET', 'HEAD'].includes(request.method)) {
           if (operation !== 'input' && !draft.analysis?.frames.some((f) => `frames/${f.id}` === operation)) return sendJson(response, 404, { error: '代表帧尚未就绪。' })
           return serveFile(request, response, path.join(dir, operation === 'input' ? 'input.mp4' : `frame-${operation.split('/')[1]}.png`), operation === 'input' ? 'video/mp4' : 'image/png')
@@ -146,9 +154,9 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
         if (request.method !== 'POST' && !(request.method === 'PATCH' && !operation)) return sendJson(response, 405, { error: '不支持此操作。' })
         let body
         try { body = await jsonBody(request) } catch { return sendJson(response, 400, { error: '请求格式无效或过大。' }) }
-        const allowed = operation === 'messages' ? ['revision', 'message', 'mode', 'consent'] : !operation ? ['revision', 'template'] : ['revision']
+        const allowed = operation === 'messages' ? ['revision', 'message', 'mode', 'consent'] : operation === 'voice' ? ['revision', 'narration', 'prosody'] : operation?.endsWith('/approve') ? ['revision', 'sha256'] : !operation ? ['revision', 'template'] : ['revision']
         if (Object.keys(body).some((key) => !allowed.includes(key))) return sendJson(response, 400, { error: '请求包含无效字段。' })
-        if (['analyze', 'render', 'messages'].includes(operation) && !capacity(owner)) return sendJson(response, 429, { error: '请等待当前操作完成。' })
+        if (['analyze', 'render', 'messages', 'voice'].includes(operation) && !capacity(owner)) return sendJson(response, 429, { error: '请等待当前操作完成。' })
         if (draftBusy(draft)) return sendJson(response, 409, { error: '操作中的草稿不能修改。' })
         if (!Number.isInteger(body.revision) || body.revision !== draft.revision) return sendJson(response, 409, { error: '方案已更新，请刷新后重新确认。' })
         if (!operation && request.method === 'PATCH') {
@@ -156,6 +164,23 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           try { if (!body.template || typeof body.template !== 'object' || Array.isArray(body.template)) throw new Error(); template = validateTemplate({ ...draft.template, ...body.template }) } catch { return sendJson(response, 400, { error: '模板配置无效。' }) }
           Object.assign(draft, { template, revision: draft.revision + 1, confirmedRevision: null, voicePreview: null, pendingQuestion: null, status: 'idle', error: null })
           await persist(draft); return sendJson(response, 200, publicDraft(draft))
+        }
+        if (operation === 'voice') {
+          try { validateProsody(body.narration, body.prosody) } catch { return sendJson(response, 400, { error: '请核对旁白文字、句段与停顿。' }) }
+          if (!draft.analysis || !(await checkVoice()).ready) return sendJson(response, 409, { error: '请先分析原片；本人 F5 配置、转写或本地权重未就绪。' })
+          Object.assign(draft, { status: 'voicing', confirmedRevision: null, voicePreview: null, error: null }); await persist(draft)
+          enqueue(draft, async (update) => {
+            const preview = await voice({ narration: body.narration, prosody: body.prosody }, dir)
+            const template = validateTemplate({ ...draft.template, narration: body.narration, audioMode: 'voice' })
+            const revision = draft.revision + 1
+            await update({ template, revision, voicePreview: { ...preview, revision, approved: false }, status: 'idle', message: '试听已生成，听审认可后才可用于成片。' })
+          })
+          return sendJson(response, 202, publicDraft(draft))
+        }
+        if (operation?.endsWith('/approve')) {
+          const preview = draft.voicePreview
+          if (preview.revision !== draft.revision || body.sha256 !== preview.sha256 || digest(await readFile(preview.audioPath)) !== preview.sha256) return sendJson(response, 409, { error: '试听版本或校验值不一致，请重新生成。' })
+          preview.approved = true; await persist(draft); return sendJson(response, 200, publicDraft(draft))
         }
         if (operation === 'messages') {
           if (!draft.analysis || typeof body.message !== 'string' || !body.message.trim() || body.message.length > 2000 || !['local', 'api'].includes(body.mode)) return sendJson(response, 400, { error: '先分析，再填写 1～2000 字修改需求并选择模式。' })
@@ -190,7 +215,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           return sendJson(response, 202, publicDraft(draft))
         }
         if (operation === 'confirm') {
-          if (!draft.analysis || draft.pendingQuestion || draft.template.audioMode === 'voice') return sendJson(response, 409, { error: '请先完成分析、未处理需求和声音确认。' })
+          if (!draft.analysis || draft.pendingQuestion || (draft.template.audioMode === 'voice' && (!draft.voicePreview?.approved || draft.voicePreview.revision !== draft.revision))) return sendJson(response, 409, { error: '请先完成分析、未处理需求和声音确认。' })
           draft.confirmedRevision = draft.revision; await persist(draft); return sendJson(response, 200, publicDraft(draft))
         }
         if (operation === 'render') {
@@ -200,6 +225,11 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           try {
             await mkdir(taskDir); await copyFile(path.join(dir, 'input.mp4'), path.join(taskDir, 'input.mp4'))
             const job = { id, owner, kind: 'template', filename: draft.filename, createdAt: new Date().toISOString(), status: 'queued', message: '等待 Hypit 模板执行', progress: 0, cost: 0, template: structuredClone(draft.template), source: structuredClone(draft.analysis.metadata), draftRevision: draft.revision }
+            if (draft.template.audioMode === 'voice') {
+              if (!draft.voicePreview?.approved || draft.voicePreview.revision !== draft.revision) return sendJson(response, 409, { error: '请先认可当前旁白试听。' })
+              const { audioPath, ...preview } = draft.voicePreview
+              await copyFile(audioPath, path.join(taskDir, 'voice.wav')); job.voicePreview = structuredClone(preview)
+            }
             await persist(job); jobs.set(id, job)
             enqueue(job, (update) => render(job, taskDir, update)); return sendJson(response, 202, publicJob(job))
           } finally { draft.status = 'idle' }
@@ -212,7 +242,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           healthAt = Date.now()
           health = await checkTools().catch((error) => ({ ready: false, error: error.message.startsWith('本地执行器') ? error.message : '本地执行服务尚未准备好 Hypit 和 FFmpeg。' }))
         }
-        return sendJson(response, 200, { ...health, chat: replicaChatHealth(chatConfig) })
+        return sendJson(response, 200, { ...health, chat: replicaChatHealth(chatConfig), voice: await checkVoice() })
       }
 
       if (url.pathname === '/api/replica/jobs' && request.method === 'GET') {
