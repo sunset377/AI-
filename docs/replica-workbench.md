@@ -10,7 +10,7 @@
 npm run dev -- --host 127.0.0.1 --port 5174 --strictPort
 ```
 
-打开 `http://127.0.0.1:5174/?view=replica`。选择 0.5～15 秒、25 MB 以内的视频，推荐从 3～5 秒的 H.264 MP4 开始。
+打开 `http://127.0.0.1:5174/?view=replica`。现在默认是可操作的「导演 Agent」：直接输入想法，或添加 0.5～30 秒、25 MB 以内的参考视频；推荐从 3～5 秒的 H.264 MP4 开始。
 
 桌面快捷方式「视频复刻工作台」调用 `scripts/launch-replica.ps1`，自动启动或复用 5174 端口的本机服务，以 Chrome / Edge 独立应用窗口全屏打开。F11 切换全屏，Alt+F4 关闭窗口；关闭窗口不会停止后台制作服务。独立浏览器配置存放在 `%LOCALAPPDATA%\ReplicaWorkbench\BrowserProfile`，其任务记录与普通浏览器分开，不复制旧浏览器数据。启动错误通过提示框显示，启动日志在 `.codex-run/replica-app/`。这不是独立安装包，仍需保留项目目录和已安装依赖。
 
@@ -22,7 +22,9 @@ npm run dev -- --host 127.0.0.1 --port 5174 --strictPort
 
 Hypit 是工作流工具，不是视频生成模型。原片剪辑只绑定 `@hypit/media-local`，模板制作也没有远程视频模型端点或凭据。可选 DeepSeek 对话是另一条需要单独配置和确认的路径。零模型调用费不代表机器、存储和带宽没有成本。
 
-默认进入「模板重建」：上传 → 六帧测量 → 独立需求对话 → 填写/确认三段文案及颜色动效 → 保存 → 确认方案 → 制作真实 MP4。这里重新绘制纯色背景、大字、垃圾桶图标和光圈，不是简单在原片上加字幕；也不是自动还原任意原片工程。可独立设置三段文字颜色、背景、文字淡入/弹跳、光圈旋转、同时/逐段出现、时长和音轨。
+默认进入「导演 Agent」：单一输入框 → 本地反馈/必要追问 → 结构化需求、证据、镜头时间线和可复制视频指令 → 用户确认 → Hypit 真实 MP4。参考视频可选；无参考时默认 720×1280 画布，可直接生成通用文字卡。添加参考后会测量六帧、尺寸、时长、音轨和边缘颜色，但不会伪装成 OCR/ASR/剧情识别。支持的 `text-cards` 与 `cleanup-icon` 模板会重新绘制画面，不是只在原片上叠字幕。
+
+简单图形任务标记为「可执行」，确认后由本地 Hypit 制作；“真人唱歌/跳舞/换人/新场景”等标记为「仅规划」，不会伪装已经生成。旧的「原片剪辑包装」仍保留为独立入口。
 
 模板执行为自有 `@portfolio/replica-template` 组件 → Hypit 编译 HTML 帧程序 → 项目 `@portfolio/provider-template` 通过已安装 Puppeteer/Chrome 按 ABI 逐帧执行 → Provider 编码并将真实 `TimelineVisual` 存入 Hypit Runtime Results → 音轨合成/成片检查。官方 HTML Provider 在当前 Windows 的 `chrome.exe --version` 检查及下载的 Headless Shell 上不稳定，故使用公开 Provider SDK 扩展，不修改已安装 Hypit、不伪造 buildId。Provider 只接受无外部资源的 30fps 图形模板，不支持直接处理复杂真人镜头；实际启动 Chrome 探测就绪，无静默回退。
 
@@ -32,7 +34,7 @@ Hypit 是工作流工具，不是视频生成模型。原片剪辑只绑定 `@hy
 
 ## 数据与访问
 
-模板草稿增加独立需求对话：本地向导不调用模型，只识别界面列出的颜色和动效；模糊颜色目标会追问，未知指令必须用编辑控件明确。修改需求不会自动成为成片字幕。真实分析为六个代表帧、边缘主色和像素差异，不是 OCR/ASR 或镜头语义识别。
+导演对话保留最近轮次，需求与成片文案分开存储。本地向导不调用模型，只识别已支持的文案、颜色、动效、声音和模板指令；模糊颜色目标会追问，未知或复杂指令会进入阻塞项。每次修改都会使旧确认和旧声音认可失效；真实任务拷贝不可变方案与确认哈希，不会在渲染中途被后续编辑污染。
 
 可选模型通过服务端 `REPLICA_CHAT_BASE_URL`（默认 https://api.deepseek.com）、`REPLICA_CHAT_MODEL`（默认 deepseek-v4-pro）、`REPLICA_CHAT_API_KEY` 配置。模型名称仍须由供应商实际可用性验证，未配置时不可选。每轮明确外发测量、文案、需求和最近对话；仅当 `REPLICA_CHAT_VISION=1` 且用户本轮勾选图片外发时附最多三张私有代表帧，不发送音色参考或源视频。30秒超时、无自动重试；再次点击是新请求，可能再次计费。密钥和供应商地址不返回浏览器，不接收访客自定义接口。
 
@@ -64,14 +66,14 @@ npm run verify:replica
 npm run build -- --base=/AI-/
 ```
 
-`verify:replica` 只生成专用测试片，实际跑 Hypit 并检查真实 MP4，不扫描或选用其他项目的媒体。可设置 `REPLICA_VERIFY_MODE=highlight` / `original`、`REPLICA_VERIFY_MUTE=1` 测试其他剪辑及音轨分支。
+`verify:replica` 只生成专用测试片，实际跑 Hypit 并检查真实 MP4，不扫描或选用其他项目的媒体。导演 Agent 两个主路径分别用 `REPLICA_VERIFY_KIND=template` + `REPLICA_VERIFY_TEMPLATE=text-cards` + `REPLICA_VERIFY_REFERENCE=0` 以及 `REPLICA_VERIFY_TEMPLATE=cleanup-icon` + `REPLICA_VERIFY_REFERENCE=1` 验证。
 
 模板验收设置 `REPLICA_VERIFY_KIND=template`；`REPLICA_VERIFY_ASPECT=wide`、`REPLICA_VERIFY_ROTATE=1`、`REPLICA_VERIFY_LONG=1` 检查横屏、旋转显示矩阵及长中文。输出保留真实 buildId、SHA-256、成片参数和实际采样时间。FFmpeg 8 的旋转夹具使用 `-display_rotation`，不能仅写一个已被忽略的 rotate 标签后宣称测过旋转。
 
-浏览器回归脚本 `scripts/verify-replica-browser.mjs` 复用已安装 Hypit 的 Puppeteer，需设置 `HYPIT_DISTRIBUTION`；通过 `REPLICA_QA_VIDEO` 指定本次生成的测试片，通过 `REPLICA_QA_URL` 指定本地入口。检查桌面和手机布局、完整预览、真实下载、权限拦截和成片播放。
+浏览器回归脚本 `scripts/verify-replica-browser.mjs` 复用已安装 Hypit 的 Puppeteer，需设置 `HYPIT_DISTRIBUTION`；通过 `REPLICA_QA_VIDEO` 指定本次脚本生成的测试片，通过 `REPLICA_QA_URL` 指定本地入口。检查无参考/有参考完整对话与出片、方案确认失效、旧上传竞态、真实下载、完整播放、访客隔离及 1440/390 布局。
 
-2026-10-10 最新验收记录见 [本机验收记录](replica-acceptance-2026-10-10.md)。没有调用真实付费模型、没有真实 F5 新试听；mock 声音测试不代表本人音色已听审。
+2026-10-12 导演 Agent 最新验收记录已追加至 [本机验收记录](replica-acceptance-2026-10-10.md)。没有调用真实付费模型、没有真实 F5 新试听；mock 声音测试不代表本人音色已听审。
 
 ## 回退
 
-实施前源码快照：`.backups/replica-before-template-20261010-195705/`，含 52 个文件、manifest、ZIP 和回退说明。ZIP SHA-256：`D6E4A6F6F1D89D83BBB7C5164D964D1FB302E0C8F5FE617D73A650DF79589675`。仅按说明恢复对应源码，不删除 `server/hypit/jobs`、用户视频、密钥或浏览器配置；未做破坏性覆盖演练。保留当前功能分支和用户原有未提交修改。
+本次导演 Agent 实施前快照：`.backups/replica-before-conversation-agent-20261012/`，29 个源文件，31 条 manifest 全部匹配。ZIP SHA-256：`1BEB8C1BB9CB6C86102720CF718DD88A038F0BE277164BBEEDB77CDBAE82B402`；工作树补丁 SHA-256：`4CE2482143262BB2981F3C3B45742B7D0917C85525B1471E202220A3D019357A`。旧的 2026-10-10 快照仍保留。仅按回退说明恢复对应源码，不删除 `server/hypit/jobs`、用户视频、密钥或浏览器配置；未做破坏性覆盖演练。
