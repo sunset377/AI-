@@ -33,7 +33,7 @@ try {
     }
 
     $profile = Join-Path $env:LOCALAPPDATA 'ReplicaWorkbench\BrowserProfile'
-    Start-Process -FilePath $browser -ArgumentList @("--user-data-dir=`"$profile`"", "--app=$replicaUrl", '--start-fullscreen', '--no-first-run', '--no-default-browser-check') -WindowStyle Normal | Out-Null
+    Start-Process -FilePath $browser -ArgumentList @("--user-data-dir=`"$profile`"", "--app=$replicaUrl", '--start-maximized', '--no-first-run', '--no-default-browser-check') -WindowStyle Normal | Out-Null
 } catch {
     Add-Type -AssemblyName System.Windows.Forms
     [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, 'Video Replica Workbench') | Out-Null

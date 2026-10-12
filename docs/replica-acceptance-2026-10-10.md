@@ -23,7 +23,7 @@
 
 入口 `http://127.0.0.1:5174/?view=replica`。默认模板重建；「原片剪辑包装」为旧流程。分析提供六帧、尺寸/时长/音轨、主色候选和像素变化；未实现 OCR/ASR，不伪造原文、语音或镜头语义。
 
-桌面核对发现原「爆款视频复刻工作台（启动）」实际指向旧 Electron Replication.exe，已原样保留。本轮另建 `E:/98017/Desktop/视频复刻工作台.lnk`，指向当前项目 launch-replica.ps1；快捷方式参数已读回核对。Windows PowerShell 5 语法检查通过，使用现有 RemoteSigned 策略，未添加 ExecutionPolicy bypass。脚本以 Chrome 应用模式/全屏参数启动，F11 切换全屏；自动可见窗口启动被工具策略拒绝，未绕过或重试，实际桌面双击未验收。
+桌面核对发现原「爆款视频复刻工作台（启动）」实际指向旧 Electron Replication.exe，已原样保留。本轮另建 `E:/98017/Desktop/视频复刻工作台.lnk`，指向当前项目 launch-replica.ps1；快捷方式参数已读回核对。Windows PowerShell 5 语法检查通过，使用现有 RemoteSigned 策略，未添加 ExecutionPolicy bypass。2026-10-12 已按用户要求把 Chrome 应用模式的启动参数从强制全屏改为最大化窗口，Windows 任务栏保持可见；实际桌面双击仍由用户手动验收。
 
 修改需求不进入字幕。模糊颜色目标追问；用户独立填写开场钩子、利益点、行动引导，选择颜色、动效、开场及音轨。保存/确认版本后才制作，修改会使确认失效。每次任务独立保留原输入及成片，删除草稿不删除已制作版本。
 
