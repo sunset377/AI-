@@ -94,7 +94,9 @@ export function createTemplateSources(plan, value) {
 
 export async function renderTemplateReplica(job, directory, update) {
   const template = validateTemplate(job.template)
-  const plan = planTemplate(template, { ...job.source, sourceDuration: job.source.duration, voiceCues: job.voicePreview?.cues })
+  const reference = job.reference?.metadata || job.source
+  const canvas = job.canvas || reference
+  const plan = planTemplate(template, { width: canvas.width, height: canvas.height, sourceDuration: reference?.duration, hasAudio: Boolean(reference?.hasAudio), voiceCues: job.voicePreview?.cues })
   const sources = createTemplateSources(plan, template)
   const runtimePath = path.join(directory, 'hypit.runtime.json')
   const profile = JSON.parse(await readFile(path.join(HYPIT_PROJECT, 'hypit.runtime.json')))
@@ -126,7 +128,7 @@ export async function renderTemplateReplica(job, directory, update) {
     await hypit(['status', buildId, '--runtime', runtimePath, '--watch', '--max-wait-ms', '180000', '--json'], { timeout: 200_000 })
     await hypit(['get', buildId, '--output', 'final.video', '--to', path.join(directory, 'picture.mp4'), '--json'])
     await update({ status: 'packaging', progress: 85, message: '正在合成所选音轨并检查成片' })
-    const audio = template.audioMode === 'voice' || (template.audioMode === 'original' && job.source.hasAudio)
+    const audio = template.audioMode === 'voice' || (template.audioMode === 'original' && reference?.hasAudio)
     const args = ['-v', 'error', '-y', '-i', path.join(directory, 'picture.mp4')]
     if (audio) args.push('-i', path.join(directory, template.audioMode === 'voice' ? 'voice.wav' : 'input.mp4'), '-map', '0:v:0', '-map', '1:a:0', '-af', 'apad', '-t', String(Math.ceil(plan.duration * 30) / 30), '-c:a', 'aac')
     else args.push('-map', '0:v:0', '-an')

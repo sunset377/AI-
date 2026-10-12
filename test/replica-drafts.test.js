@@ -49,10 +49,17 @@ test('draft analysis and immutable versions preserve private media after deletin
   assert.equal((await f.request(base, 'PATCH', { revision, template: { command: 'run' } })).status, 400)
   const jobs = []
   for (let n = 0; n < 2; n++) {
-    assert.equal((await f.request(`${base}/confirm`, 'POST', { revision })).status, 200)
+    const confirmation = await f.request(`${base}/confirm`, 'POST', { revision })
+    assert.equal(confirmation.status, 200)
+    const confirmed = await confirmation.json()
     const response = await f.request(`${base}/render`, 'POST', { revision })
     assert.equal(response.status, 202)
-    jobs.push(await response.json())
+    const job = await response.json()
+    assert.deepEqual(job.reference, { filename: 'source.mp4', metadata: evidence.metadata })
+    assert.deepEqual(job.directorPlan, confirmed.directorPlan)
+    assert.equal(job.confirmedPlanHash, confirmed.confirmedPlanHash)
+    assert.match(job.inputUrl, /\/input$/)
+    jobs.push(job)
     await new Promise((r) => setTimeout(r, 30))
   }
   assert.notEqual(jobs[0].id, jobs[1].id)
@@ -254,6 +261,54 @@ test('text-only dialogue creates an executable plan and complex requests stay pl
   assert.equal(state.confirmedRevision, null)
   assert.equal(state.confirmedPlanHash, null)
   assert.equal((await f.request(`${base}/confirm`, 'POST', { revision: state.revision })).status, 409)
+})
+
+test('confirmed text-only plan becomes an immutable job without a fake input file', async (t) => {
+  let received, hadInput
+  const f = await fixture(t, { render: async (job, dir, update) => {
+    received = structuredClone(job)
+    hadInput = await readFile(path.join(dir, 'input.mp4')).then(() => true, () => false)
+    await writeFile(path.join(dir, 'result.mp4'), 'TEXT-ONLY-RESULT')
+    await update({ status: 'complete', progress: 100 })
+  } })
+  const created = await (await f.request('/drafts', 'POST', {})).json(), base = `/drafts/${created.id}`
+  let state = await makeExecutable(f, base, created)
+  state = await (await f.request(`${base}/confirm`, 'POST', { revision: state.revision })).json()
+  const response = await f.request(`${base}/render`, 'POST', { revision: state.revision })
+  assert.equal(response.status, 202)
+  const queued = await response.json()
+  assert.equal(queued.inputUrl, null)
+  assert.equal(queued.reference, null)
+  assert.deepEqual(queued.directorPlan, state.directorPlan)
+  assert.equal(queued.confirmedPlanHash, state.confirmedPlanHash)
+  assert.deepEqual(queued.canvas, state.canvas)
+  for (let n = 0; n < 100; n++) {
+    const job = await (await f.request(`/jobs/${queued.id}`)).json()
+    if (job.status === 'complete') break
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+  assert.equal(hadInput, false)
+  assert.equal(received.reference, null)
+  assert.equal((await f.request(`/jobs/${queued.id}/input`)).status, 404)
+  assert.equal((await f.request(base, 'DELETE')).status, 200)
+  assert.equal(await (await f.request(`/jobs/${queued.id}/result`)).text(), 'TEXT-ONLY-RESULT')
+})
+
+test('render rejects a persisted confirmation whose director plan hash does not match', async (t) => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'replica-hash-test-'))
+  const session = 'a'.repeat(64), owner = createHash('sha256').update(session).digest('hex')
+  const id = '33333333-3333-4333-8333-333333333333', dir = path.join(directory, id), plan = executablePlan()
+  await mkdir(dir)
+  await writeFile(path.join(dir, 'job.json'), JSON.stringify({ id, owner, kind: 'draft', schemaVersion: 3, filename: '未命名视频方案', createdAt: new Date().toISOString(), status: 'idle', message: '', progress: 100, revision: 2, confirmedRevision: 2, confirmedPlanHash: '0'.repeat(64), reference: null, canvas: { width: 720, height: 1280, fps: 30 }, analysis: null, template: { ...DEFAULT_TEMPLATE, title: '三秒看懂', benefit: '本地生成', action: '马上开始' }, directorPlan: plan, messages: [], requirements: plan.requirements, unresolved: [], pendingQuestion: null }))
+  let calls = 0
+  const middleware = await createReplicaApi({ directory, render: async () => { calls++ }, checkTools: async () => ({ ready: true }) })
+  const server = createServer((req, res) => middleware(req, res, () => { res.writeHead(404); res.end() }))
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
+  t.after(async () => { await new Promise((resolve) => server.close(resolve)); await rm(directory, { recursive: true, force: true }) })
+  const origin = `http://127.0.0.1:${server.address().port}`
+  const response = await fetch(`${origin}/api/replica/drafts/${id}/render`, { method: 'POST', headers: { origin, cookie: `replica_session=${session}`, 'content-type': 'application/json' }, body: JSON.stringify({ revision: 2 }) })
+  assert.equal(response.status, 409)
+  assert.equal(calls, 0)
 })
 
 test('no-reference original audio and unresolved local questions cannot be confirmed', async (t) => {

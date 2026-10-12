@@ -79,7 +79,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
 
   function publicJob(job) {
     const { owner, ...visible } = job
-    return { ...visible, inputUrl: `/api/replica/jobs/${job.id}/input`, resultUrl: job.status === 'complete' ? `/api/replica/jobs/${job.id}/result` : null }
+    return { ...visible, inputUrl: job.reference === null ? null : `/api/replica/jobs/${job.id}/input`, resultUrl: job.status === 'complete' ? `/api/replica/jobs/${job.id}/result` : null }
   }
 
   function publicDraft(draft) {
@@ -297,12 +297,16 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           draft.confirmedRevision = draft.revision; draft.confirmedPlanHash = digest(JSON.stringify(plan)); await persist(draft); return sendJson(response, 200, publicDraft(draft))
         }
         if (operation === 'render') {
-          if (!draft.analysis || draft.confirmedRevision !== draft.revision) return sendJson(response, 409, { error: '请先确认当前方案。' })
+          let directorPlan
+          try { directorPlan = validateDirectorPlan(draft.directorPlan) } catch { return sendJson(response, 409, { error: '请先确认当前可执行方案。' }) }
+          const confirmedPlanHash = digest(JSON.stringify(directorPlan))
+          if (draft.confirmedRevision !== draft.revision || draft.confirmedPlanHash !== confirmedPlanHash || directorPlan.status !== 'executable' || directorPlan.route.kind !== 'hypit-template' || (!draft.reference && draft.template.audioMode === 'original')) return sendJson(response, 409, { error: '当前方案、版本或确认校验值不一致。' })
           draft.status = 'rendering'
           const id = randomUUID(), taskDir = path.join(directory, id)
           try {
-            await mkdir(taskDir); await copyFile(path.join(dir, 'input.mp4'), path.join(taskDir, 'input.mp4'))
-            const job = { id, owner, kind: 'template', filename: draft.filename, createdAt: new Date().toISOString(), status: 'queued', message: '等待 Hypit 模板执行', progress: 0, cost: 0, template: structuredClone(draft.template), source: structuredClone(draft.analysis.metadata), draftRevision: draft.revision }
+            await mkdir(taskDir)
+            if (draft.reference) await copyFile(path.join(dir, 'input.mp4'), path.join(taskDir, 'input.mp4'))
+            const job = { id, owner, kind: 'template', filename: draft.filename, createdAt: new Date().toISOString(), status: 'queued', message: '等待 Hypit 模板执行', progress: 0, cost: 0, template: structuredClone(draft.template), directorPlan: structuredClone(directorPlan), confirmedPlanHash, canvas: structuredClone(draft.canvas), reference: structuredClone(draft.reference), draftRevision: draft.revision }
             if (draft.template.audioMode === 'voice') {
               if (!draft.voicePreview?.approved || draft.voicePreview.revision !== draft.revision) return sendJson(response, 409, { error: '请先认可当前旁白试听。' })
               const { audioPath, ...preview } = draft.voicePreview
@@ -388,6 +392,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
         return sendJson(response, 200, { deleted: true })
       }
       if (match[2] && ['GET', 'HEAD'].includes(request.method)) {
+        if (match[2] === 'input' && job.reference === null) return sendJson(response, 404, { error: '此任务没有参考原片。' })
         if (match[2] === 'result' && job.status !== 'complete') return sendJson(response, 409, { error: '视频尚未完成。' })
         const file = path.join(jobDirectory, `${match[2] === 'input' ? 'input' : 'result'}.mp4`)
         const { size } = await stat(file)
