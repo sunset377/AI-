@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createServer, request as httpRequest } from 'node:http'
-import { mkdtemp, writeFile, mkdir, rm } from 'node:fs/promises'
+import { mkdtemp, writeFile, readFile, mkdir, rm } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { createReplicaApi } from '../server/replica-api.js'
@@ -50,6 +51,66 @@ test('draft analysis and immutable versions preserve private media after deletin
   assert.notEqual(jobs[0].id, draft.id)
   assert.equal((await f.request(base, 'DELETE')).status, 200)
   for (const job of jobs) for (const file of ['input', 'result']) assert.equal((await f.request(`/jobs/${job.id}/${file}`, 'GET', undefined, { range: 'bytes=0-3' })).status, 206)
+})
+
+test('text draft has no fake input and a reference replacement invalidates derived state', async (t) => {
+  const f = await fixture(t)
+  const response = await f.request('/drafts', 'POST', {})
+  assert.equal(response.status, 201)
+  let draft = await response.json(), base = `/drafts/${draft.id}`
+  assert.equal(draft.schemaVersion, 3)
+  assert.equal(draft.reference, null)
+  assert.equal(draft.inputUrl, null)
+  assert.equal(draft.analysis, null)
+  assert.equal(draft.directorPlan, null)
+  assert.deepEqual(draft.canvas, { width: 720, height: 1280, fps: 30 })
+  assert.equal((await f.request(`${base}/input`)).status, 404)
+  assert.equal((await f.request(base, 'GET', undefined, { cookie: '' })).status, 404)
+
+  const attach = new FormData(); attach.append('video', new Blob(['first-reference']), 'first.mp4'); attach.append('revision', String(draft.revision))
+  const attachedResponse = await f.request(`${base}/reference`, 'POST', attach)
+  assert.equal(attachedResponse.status, 200)
+  draft = await attachedResponse.json()
+  assert.equal(draft.revision, 2)
+  assert.deepEqual(draft.reference, { filename: 'first.mp4', metadata: null })
+  assert.match(draft.inputUrl, /\/input$/)
+  assert.equal(await (await f.request(`${base}/input`)).text(), 'first-reference')
+  assert.equal((await f.request(`${base}/analyze`, 'POST', { revision: draft.revision })).status, 202)
+  draft = await f.wait(draft.id)
+  assert.deepEqual(draft.reference.metadata, evidence.metadata)
+  assert.equal((await f.request(`${base}/confirm`, 'POST', { revision: draft.revision })).status, 200)
+
+  const replace = new FormData(); replace.append('video', new Blob(['second-reference']), 'second.mp4'); replace.append('revision', String(draft.revision))
+  const replaced = await (await f.request(`${base}/reference`, 'POST', replace)).json()
+  assert.equal(replaced.revision, draft.revision + 1)
+  assert.equal(replaced.analysis, null)
+  assert.equal(replaced.directorPlan, null)
+  assert.equal(replaced.confirmedRevision, null)
+  assert.equal(replaced.voicePreview, null)
+  assert.deepEqual(replaced.reference, { filename: 'second.mp4', metadata: null })
+  assert.equal(await (await f.request(`${base}/input`)).text(), 'second-reference')
+})
+
+test('schema 2 draft restores as cleanup template without rewriting its saved file', async (t) => {
+  const f = await fixture(t)
+  const session = f.cookie.split('=')[1]
+  const owner = createHash('sha256').update(session).digest('hex')
+  const id = '22222222-2222-4222-8222-222222222222', dir = path.join(f.directory, id)
+  await mkdir(dir)
+  await writeFile(path.join(dir, 'input.mp4'), 'LEGACY')
+  const saved = { id, owner, kind: 'draft', schemaVersion: 2, filename: 'legacy.mp4', createdAt: new Date().toISOString(), status: 'idle', message: '旧草稿', progress: 100, revision: 3, confirmedRevision: null, analysis: evidence, template: { background: '#70adeb', title: '旧标题', benefit: '', action: '', titleColor: '#ffffff', benefitColor: '#eab308', actionColor: '#ffffff', textMotion: 'fade', ringMotion: 'rotate', opening: 'simultaneous', duration: 4, audioMode: 'mute', narration: '' }, messages: [], pendingQuestion: null }
+  await writeFile(path.join(dir, 'job.json'), JSON.stringify(saved, null, 2))
+  const middleware = await createReplicaApi({ directory: f.directory, checkTools: async () => ({ ready: true }) })
+  const server = createServer((req, res) => middleware(req, res, () => { res.writeHead(404); res.end() }))
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
+  t.after(() => new Promise((resolve) => server.close(resolve)))
+  const origin = `http://127.0.0.1:${server.address().port}`
+  const restored = await (await fetch(`${origin}/api/replica/drafts/${id}`, { headers: { cookie: f.cookie } })).json()
+  assert.equal(restored.schemaVersion, 3)
+  assert.equal(restored.template.templateId, 'cleanup-icon')
+  assert.deepEqual(restored.reference, { filename: 'legacy.mp4', metadata: evidence.metadata })
+  assert.deepEqual(restored.canvas, { width: 720, height: 1280, fps: 30 })
+  assert.equal(JSON.parse(await readFile(path.join(dir, 'job.json'), 'utf8')).template.templateId, undefined)
 })
 
 test('draft changes invalidate confirmation and bounded slow operations reject edits and uploads', async (t) => {

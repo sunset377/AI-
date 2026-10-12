@@ -11,6 +11,7 @@ import { readView } from '../src/navigation.js'
 import { planReplica, validateReplicaOptions, mapOutputToSource } from '../src/replica.js'
 import { createAss, createHypitSources } from '../server/replica-render.js'
 import { createReplicaApi } from '../server/replica-api.js'
+import { readReplicaMetadata } from '../server/replica-analysis.js'
 
 const options = { opening: 'fast', highlightStart: 0, style: 'blue', title: '新开场', captions: '第一句\n第二句', keepAudio: true }
 
@@ -34,9 +35,17 @@ test('highlight moves exactly one source interval without losing or duplicating 
 test('trust boundary rejects invalid timing, huge captions and unsupported options', () => {
   assert.equal(validateReplicaOptions(options).keepAudio, true)
   for (const patch of [{ opening: 'unknown' }, { style: 'unknown' }, { highlightStart: Infinity }, { title: 'x'.repeat(41) }, { captions: 'x'.repeat(1001) }, { captions: 'x'.repeat(61) }]) assert.throws(() => validateReplicaOptions({ ...options, ...patch }))
-  for (const duration of [NaN, Infinity, 0, 20]) assert.throws(() => planReplica(duration, options))
+  assert.ok(planReplica(30, options).outputDuration > 29)
+  for (const duration of [NaN, Infinity, 0, 30.1]) assert.throws(() => planReplica(duration, options))
   assert.throws(() => planReplica(4, { ...options, opening: 'highlight', highlightStart: 4 }))
   assert.throws(() => planReplica(1, { ...options, captions: 'a\nb\nc' }))
+})
+
+test('reference metadata accepts the 30 second boundary and rejects larger or invalid video', () => {
+  const probe = { streams: [{ codec_type: 'video', width: 720, height: 1280, duration: '30.05', disposition: {} }, { codec_type: 'audio' }], format: { duration: '30.05' } }
+  assert.deepEqual(readReplicaMetadata(probe), { duration: 30.05, width: 720, height: 1280, hasAudio: true, rotation: 0 })
+  assert.throws(() => readReplicaMetadata({ ...probe, streams: [{ ...probe.streams[0], duration: '30.051' }] }))
+  assert.throws(() => readReplicaMetadata({ streams: [], format: { duration: '4' } }))
 })
 
 test('subtitle text cannot inject ASS commands, and Hypit only demands local media operations', () => {

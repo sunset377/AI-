@@ -1,4 +1,4 @@
-export const REPLICA_LIMITS = { seconds: 15, bytes: 25 * 1024 * 1024, captions: 1000 }
+export const REPLICA_LIMITS = { seconds: 30, bytes: 25 * 1024 * 1024, captions: 1000 }
 
 export function validateReplicaOptions(input) {
   if (!input || !['original', 'fast', 'highlight'].includes(input.opening) || !['blue', 'clean'].includes(input.style)) {
@@ -15,7 +15,7 @@ export function validateReplicaOptions(input) {
 }
 
 export function planReplica(duration, options) {
-  if (!Number.isFinite(duration) || duration < 0.5 || duration > REPLICA_LIMITS.seconds + 0.05) throw new Error('请选择 0.5～15 秒的视频，建议先用 3～5 秒片段。')
+  if (!Number.isFinite(duration) || duration < 0.5 || duration > REPLICA_LIMITS.seconds + 0.05) throw new Error('请选择 0.5～30 秒的视频，建议先用 3～5 秒片段。')
   // Work on the same 30 fps clock used by Hypit's Normalize surface.
   const end = Math.floor(duration * 30) / 30
   const hookEnd = Math.min(1, end)

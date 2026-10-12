@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
-import { createReadStream } from 'node:fs'
+import { createReadStream, existsSync } from 'node:fs'
 import { copyFile, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { REPLICA_LIMITS, validateReplicaOptions } from '../src/replica.js'
@@ -12,6 +12,11 @@ import { checkReplicaVoice, createVoicePreview, validateProsody } from './replic
 const finalStates = new Set(['complete', 'failed'])
 const idPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 const digest = (value) => createHash('sha256').update(value).digest('hex')
+const defaultCanvas = () => ({ width: 720, height: 1280, fps: 30 })
+const canvasFromMetadata = ({ width, height }) => {
+  const scale = Math.min(1, 1280 / Math.max(width, height))
+  return { width: Math.floor(width * scale / 2) * 2, height: Math.floor(height * scale / 2) * 2, fps: 30 }
+}
 
 function sendJson(response, status, body) {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' })
@@ -46,6 +51,10 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
     try {
       const job = JSON.parse(await readFile(path.join(directory, entry.name, 'job.json'), 'utf8'))
       if (job.id !== entry.name || typeof job.owner !== 'string') continue
+      if (job.kind === 'draft' && job.schemaVersion === 2) {
+        const metadata = job.analysis?.metadata || null
+        Object.assign(job, { schemaVersion: 3, template: validateTemplate({ ...job.template, templateId: 'cleanup-icon' }), reference: existsSync(path.join(directory, entry.name, 'input.mp4')) ? { filename: job.filename, metadata } : null, canvas: metadata ? canvasFromMetadata(metadata) : defaultCanvas(), directorPlan: null, confirmedPlanHash: null })
+      }
       if (job.kind === 'draft' ? draftBusy(job) : !finalStates.has(job.status)) {
         Object.assign(job, { status: 'failed', message: '执行服务已重启，此任务已中断。请重新创建任务。' })
         await persist(job)
@@ -60,10 +69,10 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
   }
 
   function publicDraft(draft) {
-    const { id, filename, createdAt, status, message, progress, revision, confirmedRevision, analysis, template, messages, pendingQuestion, error } = draft
+    const { id, schemaVersion, filename, createdAt, status, message, progress, revision, confirmedRevision, confirmedPlanHash, reference, canvas, analysis, template, directorPlan, messages, pendingQuestion, error } = draft
     const preview = draft.voicePreview
     const voicePreview = preview ? { id: preview.id, sha256: preview.sha256, duration: preview.duration, cues: preview.cues, prosody: preview.prosody, approved: preview.approved, revision: preview.revision, url: `/api/replica/drafts/${id}/voice/${preview.id}` } : null
-    return { id, kind: 'draft', filename, createdAt, status, message, progress, revision, confirmedRevision, analysis, template, messages, pendingQuestion, error, voicePreview, inputUrl: `/api/replica/drafts/${id}/input`, frames: analysis?.frames.map((frame) => ({ ...frame, url: `/api/replica/drafts/${id}/frames/${frame.id}` })) || [] }
+    return { id, kind: 'draft', schemaVersion, filename, createdAt, status, message, progress, revision, confirmedRevision, confirmedPlanHash, reference, canvas, analysis, template, directorPlan, messages, pendingQuestion, error, voicePreview, inputUrl: reference ? `/api/replica/drafts/${id}/input` : null, frames: analysis?.frames.map((frame) => ({ ...frame, url: `/api/replica/drafts/${id}/frames/${frame.id}` })) || [] }
   }
 
   async function jsonBody(request) {
@@ -115,6 +124,15 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
       if (url.pathname === '/api/replica/drafts' && request.method === 'GET') return sendJson(response, 200, { drafts: [...drafts.values()].filter((d) => d.owner === owner).map(publicDraft) })
       if (url.pathname === '/api/replica/drafts' && request.method === 'POST') {
         if (!capacity(owner) || drafts.size + uploads.size >= 50 || [...drafts.values()].filter((d) => d.owner === owner).length >= 10) return sendJson(response, 429, { error: '草稿或操作已达上限，请等待或清理草稿。' })
+        if (request.headers['content-type']?.startsWith('application/json')) {
+          let body
+          try { body = await jsonBody(request) } catch { return sendJson(response, 400, { error: '请求格式无效或过大。' }) }
+          if (Object.keys(body).length) return sendJson(response, 400, { error: '新会话不接受额外字段。' })
+          const id = randomUUID(), draftDirectory = path.join(directory, id)
+          await mkdir(draftDirectory)
+          const draft = { id, owner, kind: 'draft', schemaVersion: 3, filename: '未命名视频方案', createdAt: new Date().toISOString(), status: 'idle', message: '告诉导演你想做什么；参考视频可稍后添加。', progress: 0, revision: 1, confirmedRevision: null, confirmedPlanHash: null, reference: null, canvas: defaultCanvas(), analysis: null, template: { ...DEFAULT_TEMPLATE }, directorPlan: null, messages: [], requirements: [], pendingQuestion: null }
+          await persist(draft); drafts.set(id, draft); return sendJson(response, 201, publicDraft(draft))
+        }
         const length = Number(request.headers['content-length'])
         if (!Number.isFinite(length) || length <= 0 || length > REPLICA_LIMITS.bytes + 64_000) return sendJson(response, 413, { error: '视频最多 25 MB。' })
         if (!request.headers['content-type']?.startsWith('multipart/form-data; boundary=')) return sendJson(response, 415, { error: '请上传视频文件。' })
@@ -128,11 +146,12 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           if (!(video instanceof File) || !video.size || video.size > REPLICA_LIMITS.bytes || !/\.(mp4|mov|webm|m4v)$/i.test(video.name)) return sendJson(response, 400, { error: '请选择不超过 25 MB 的视频。' })
           const id = randomUUID(); draftDirectory = path.join(directory, id); await mkdir(draftDirectory)
           await writeFile(path.join(draftDirectory, 'input.mp4'), Buffer.from(await video.arrayBuffer()))
-          const draft = { id, owner, kind: 'draft', schemaVersion: 2, filename: path.basename(video.name).slice(0, 200), createdAt: new Date().toISOString(), status: 'idle', message: '请先分析原片，再确认文案。', progress: 0, revision: 1, confirmedRevision: null, analysis: null, template: { ...DEFAULT_TEMPLATE }, messages: [], pendingQuestion: null }
+          const filename = path.basename(video.name).slice(0, 200)
+          const draft = { id, owner, kind: 'draft', schemaVersion: 3, filename, createdAt: new Date().toISOString(), status: 'idle', message: '请先分析参考，再告诉导演你的目标。', progress: 0, revision: 1, confirmedRevision: null, confirmedPlanHash: null, reference: { filename, metadata: null }, canvas: defaultCanvas(), analysis: null, template: { ...DEFAULT_TEMPLATE }, directorPlan: null, messages: [], requirements: [], pendingQuestion: null }
           await persist(draft); drafts.set(id, draft); return sendJson(response, 201, publicDraft(draft))
         } finally { uploading--; uploads.delete(owner); if (draftDirectory && !drafts.has(path.basename(draftDirectory))) await rm(draftDirectory, { recursive: true, force: true }) }
       }
-      const draftMatch = url.pathname.match(/^\/api\/replica\/drafts\/([a-f0-9-]+)(?:\/(input|analyze|confirm|render|messages|voice|voice\/[a-f0-9-]+(?:\/approve)?|frames\/[0-5]))?$/)
+      const draftMatch = url.pathname.match(/^\/api\/replica\/drafts\/([a-f0-9-]+)(?:\/(input|reference|analyze|confirm|render|messages|voice|voice\/[a-f0-9-]+(?:\/approve)?|frames\/[0-5]))?$/)
       if (draftMatch && idPattern.test(draftMatch[1])) {
         const draft = drafts.get(draftMatch[1])
         if (!draft || draft.owner !== owner) return sendJson(response, 404, { error: '草稿不存在。' })
@@ -144,12 +163,34 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           if (!operation.endsWith('/approve') && ['GET', 'HEAD'].includes(request.method)) return serveFile(request, response, preview.audioPath, 'audio/wav')
         }
         if (['input', ...[0, 1, 2, 3, 4, 5].map((i) => `frames/${i}`)].includes(operation) && ['GET', 'HEAD'].includes(request.method)) {
+          if (operation === 'input' && !draft.reference) return sendJson(response, 404, { error: '当前会话没有参考视频。' })
           if (operation !== 'input' && !draft.analysis?.frames.some((f) => `frames/${f.id}` === operation)) return sendJson(response, 404, { error: '代表帧尚未就绪。' })
           return serveFile(request, response, path.join(dir, operation === 'input' ? 'input.mp4' : `frame-${operation.split('/')[1]}.png`), operation === 'input' ? 'video/mp4' : 'image/png')
         }
         if (!operation && request.method === 'DELETE') {
           if (draftBusy(draft)) return sendJson(response, 409, { error: '操作中的草稿不能删除。' })
           draft.status = 'deleting'; await (writes.get(draft.id) || Promise.resolve()); await rm(dir, { recursive: true }); drafts.delete(draft.id); return sendJson(response, 200, { deleted: true })
+        }
+        if (operation === 'reference' && request.method === 'POST') {
+          if (!capacity(owner)) return sendJson(response, 429, { error: '请等待当前操作完成。' })
+          if (draftBusy(draft)) return sendJson(response, 409, { error: '操作中的草稿不能修改。' })
+          const length = Number(request.headers['content-length'])
+          if (!Number.isFinite(length) || length <= 0 || length > REPLICA_LIMITS.bytes + 64_000) return sendJson(response, 413, { error: '视频最多 25 MB。' })
+          if (!request.headers['content-type']?.startsWith('multipart/form-data; boundary=')) return sendJson(response, 415, { error: '请上传视频文件。' })
+          uploading++; uploads.add(owner); const pending = path.join(dir, 'input.pending')
+          try {
+            let bytes = 0; const chunks = []
+            for await (const chunk of request) { bytes += chunk.length; if (bytes > REPLICA_LIMITS.bytes + 64_000) return sendJson(response, 413, { error: '视频最多 25 MB。' }); chunks.push(chunk) }
+            let form
+            try { form = await new Request('http://localhost/upload', { method: 'POST', headers: { 'content-type': request.headers['content-type'] }, body: Buffer.concat(chunks) }).formData() } catch { return sendJson(response, 400, { error: '视频上传不完整。' }) }
+            const video = form.get('video'), revision = Number(form.get('revision'))
+            if (!Number.isInteger(revision) || revision !== draft.revision) return sendJson(response, 409, { error: '方案已更新，请刷新后重新选择参考。' })
+            if (!(video instanceof File) || !video.size || video.size > REPLICA_LIMITS.bytes || !/\.(mp4|mov|webm|m4v)$/i.test(video.name)) return sendJson(response, 400, { error: '请选择不超过 25 MB 的视频。' })
+            await writeFile(pending, Buffer.from(await video.arrayBuffer())); await copyFile(pending, path.join(dir, 'input.mp4'))
+            const filename = path.basename(video.name).slice(0, 200)
+            Object.assign(draft, { filename, reference: { filename, metadata: null }, analysis: null, directorPlan: null, template: validateTemplate({ ...draft.template, audioMode: 'mute' }), revision: draft.revision + 1, confirmedRevision: null, confirmedPlanHash: null, voicePreview: null, pendingQuestion: null, status: 'idle', progress: 0, message: '参考视频已更新，请先分析。', error: null })
+            await persist(draft); return sendJson(response, 200, publicDraft(draft))
+          } finally { uploading--; uploads.delete(owner); await rm(pending, { force: true }).catch(() => {}) }
         }
         if (request.method !== 'POST' && !(request.method === 'PATCH' && !operation)) return sendJson(response, 405, { error: '不支持此操作。' })
         let body
@@ -209,11 +250,12 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           return sendJson(response, 202, publicDraft(draft))
         }
         if (operation === 'analyze') {
+          if (!draft.reference) return sendJson(response, 409, { error: '当前会话没有可分析的参考视频。' })
           Object.assign(draft, { status: 'analyzing', confirmedRevision: null, voicePreview: null, error: null }); await persist(draft)
           enqueue(draft, async (update) => {
             const analysis = await analyze(path.join(dir, 'input.mp4'), dir, update)
-            const template = validateTemplate({ ...draft.template, background: analysis.background.stable ? analysis.background.color : draft.template.background, duration: analysis.metadata.duration })
-            await update({ analysis, template, revision: draft.revision + 1, status: 'idle', progress: 100, message: '测量已完成；请确认原片文案。' })
+            const template = validateTemplate({ ...draft.template, background: analysis.background.stable ? analysis.background.color : draft.template.background, duration: Math.min(30, analysis.metadata.duration), ...(analysis.metadata.hasAudio ? {} : { audioMode: 'mute' }) })
+            await update({ analysis, reference: { ...draft.reference, metadata: analysis.metadata }, canvas: canvasFromMetadata(analysis.metadata), directorPlan: null, template, revision: draft.revision + 1, status: 'idle', progress: 100, message: '测量已完成；语义和文案仍需确认。' })
           })
           return sendJson(response, 202, publicDraft(draft))
         }

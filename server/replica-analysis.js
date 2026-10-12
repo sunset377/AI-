@@ -20,14 +20,19 @@ export function measureBackground(samples) {
   return { color: `#${measured[0].channels.map((v) => v.toString(16).padStart(2, '0')).join('')}`, coverage, stable }
 }
 
+export function readReplicaMetadata(probe) {
+  const stream = probe?.streams?.find((item) => item.codec_type === 'video' && !item.disposition?.attached_pic)
+  const duration = Number(stream?.duration ?? probe?.format?.duration)
+  if (!stream || ![stream.width, stream.height].every((n) => n >= 64 && n <= 4096) || !Number.isFinite(duration) || duration < 0.5 || duration > 30.05) throw new Error('请选择 0.5～30 秒、尺寸 64～4096 像素的视频。')
+  const rotation = Number(stream.side_data_list?.find((item) => item.rotation !== undefined)?.rotation ?? stream.tags?.rotate ?? 0)
+  const swapped = Math.abs(rotation % 180) === 90
+  return { duration, width: swapped ? stream.height : stream.width, height: swapped ? stream.width : stream.height, hasAudio: probe.streams.some((item) => item.codec_type === 'audio'), rotation }
+}
+
 export async function analyzeReplica(inputPath, directory, update = async () => {}) {
   const probe = JSON.parse((await runTool(process.env.FFPROBE_PATH || 'ffprobe', ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', inputPath])).stdout)
-  const stream = probe.streams.find((s) => s.codec_type === 'video' && !s.disposition?.attached_pic)
-  const duration = Number(stream?.duration ?? probe.format?.duration)
-  if (!stream || ![stream.width, stream.height].every((n) => n >= 64 && n <= 4096) || !Number.isFinite(duration) || duration < 0.5 || duration > 15.05) throw new Error('请选择 0.5～15 秒、尺寸 64～4096 像素的视频。')
-  const rotate = Number(stream.side_data_list?.find((d) => d.rotation !== undefined)?.rotation ?? stream.tags?.rotate ?? 0)
-  const swapped = Math.abs(rotate % 180) === 90
-  const metadata = { duration, width: swapped ? stream.height : stream.width, height: swapped ? stream.width : stream.height, hasAudio: probe.streams.some((s) => s.codec_type === 'audio'), rotation: rotate }
+  const metadata = readReplicaMetadata(probe)
+  const duration = metadata.duration
   const frames = [], samples = [], changes = []
   for (let id = 0; id < 6; id++) {
     const at = id === 5 ? Math.max(0, duration - 0.08) : duration * id / 5
