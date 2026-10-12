@@ -130,7 +130,7 @@ test('shared template drawing changes color and motion without interpreting text
   assert.doesNotMatch(sources.author, /<script>|<mediaop:Retime/)
 })
 
-test('template editor exposes separate requirements, bounded copy and confirm-before-render controls', async () => {
+test('template editor exposes an always-ready director composer, evidence and executable plan controls', async () => {
   const { createServer } = await import('vite')
   const React = (await import('react')).default
   const { renderToStaticMarkup } = await import('react-dom/server')
@@ -138,12 +138,17 @@ test('template editor exposes separate requirements, bounded copy and confirm-be
   try {
     const { default: TemplateEditor } = await vite.ssrLoadModule('/src/components/ReplicaWorkbench/TemplateEditor.jsx')
     const html = renderToStaticMarkup(React.createElement(TemplateEditor, { health: { ready: false }, requestApi: async () => {}, mediaUrl: (url) => url, onJob: () => {} }))
-    assert.match(html, /修改需求/); assert.match(html, /开场钩子文案/); assert.match(html, /利益点文案/)
+    assert.match(html, /告诉导演你想做什么/)
+    assert.match(html, /aria-label="告诉导演你想做什么"/)
+    assert.match(html, /添加参考视频/); assert.match(html, /新建会话/); assert.match(html, /恢复会话/)
+    assert.match(html, /本次没有参考原片/); assert.match(html, /导演对话记录/)
+    assert.match(html, /当前方案/); assert.match(html, /证据来源/); assert.match(html, /复制视频指令/)
+    assert.match(html, /确认当前方案/); assert.match(html, /开场钩子文案/); assert.match(html, /利益点文案/)
     assert.match(html, /本地向导/); assert.doesNotMatch(html, /value="api"/)
-    assert.match(html, /disabled=""[^>]*>分析原片/)
-    assert.match(html, /disabled=""[^>]*>制作模板成片/)
+    assert.doesNotMatch(html, /aria-label="告诉导演你想做什么"[^>]*disabled/)
+    assert.match(html, /disabled=""[^>]*>制作成片/)
     assert.match(html, /没有 OCR\/ASR/); assert.match(html, /role="status"/)
-    assert.doesNotMatch(html, /已识别语音|type="password"/)
+    assert.doesNotMatch(html, /已识别剧情|已识别语音|type="password"|API KEY|自定义 URL/)
   } finally { await vite.close() }
 })
 

@@ -73,6 +73,13 @@ function StyledPreview({ url, plan, options }) {
   </>
 }
 
+export function ResultComparison({ currentJob, mediaUrl }) {
+  return <div className={`rwCompare ${currentJob.inputUrl ? '' : 'rwCompare--outputOnly'}`}>
+    {currentJob.inputUrl ? <div><p className="rwEyebrow">01 / 原片</p><video src={mediaUrl(currentJob.inputUrl)} controls playsInline preload="metadata" aria-label="对比原片" /></div> : <div className="rwNoSource"><p className="rwEyebrow">REFERENCE</p><strong>本次无参考原片</strong><span>这个版本从文字方案开始，由本地 Hypit 绘制。</span></div>}
+    <div><p className="rwEyebrow">{currentJob.inputUrl ? '02' : '01'} / 复刻版</p>{currentJob.resultUrl ? <video src={mediaUrl(currentJob.resultUrl)} controls playsInline preload="metadata" aria-label="Hypit 复刻成片" /> : <div className="rwPending"><span>{currentJob.status === 'failed' ? '!' : 'R'}</span><p>{currentJob.status === 'failed' ? '本次任务未生成可用成片' : '实际生成完成后显示成片'}</p></div>}</div>
+  </div>
+}
+
 export default function ReplicaWorkbench({ onBack }) {
   useEffect(() => {
     const previous = document.title
@@ -183,10 +190,10 @@ export default function ReplicaWorkbench({ onBack }) {
     <main className="replicaWorkbench">
       <aside className="rwRail">
         <button className="rwBrand" type="button" onClick={onBack} aria-label="返回个人作品集"><span className="rwBrandMark">R</span><strong>视频复刻工作台</strong></button>
-        <div className="rwRailCopy"><p>ONE VIDEO IN</p><div>Skill-led.<br />Make it yours.</div><span>用原片，做一个新开场。</span></div>
+        <div className="rwRailCopy"><p>ONE IDEA IN</p><div>Plan it.<br />Make it real.</div><span>说出想法，可选一段参考。</span></div>
         <nav className="rwNav" aria-label="工作台导航">
           {[
-            ['template', 'R', '模板重建', '分析 · 对话 · 确认制作'],
+            ['template', 'R', '导演 Agent', '想法 · 对话 · 方案 · 成片'],
             ['create', '剪', '原片剪辑包装', '旧版 · 节奏 · 字幕包装'],
             ['result', '▶', '结果工作台', '真实成片 · 原片对比'],
             ['history', '记', '运行记录', '状态 · 任务 · 文件管理'],
@@ -198,7 +205,7 @@ export default function ReplicaWorkbench({ onBack }) {
       </aside>
 
       <div className="rwMain">
-        <header className="rwHeader"><div><p className="rwEyebrow">HYPIT VIDEO WORKBENCH · 02</p><h1>{({ template: '看懂结构，做出你的版本。', create: '留住画面，换个开场。', result: '你的新版本，在这里。', history: '每一次制作，都有记录。', engine: '本地先做，按需升级。' })[tab]}</h1><p className="rwIntro">{({ template: '上传短片，先看测量反馈，再告诉导演修改要求。确认模板与预览后，用本地 Hypit 制作独立成片。', create: '上传一个短片，调整开头节奏、字幕和视觉包装。先做一个版本，满意后再导出。', result: '原片与复刻版并排看；模板重建和原片剪辑分别保留真实成片。', history: '只展示当前浏览器的任务。文件保存在执行服务，可在任务完成后删除。', engine: '本地模板和剪辑不调用视频大模型；可选语言模型每轮确认后才发出请求。' })[tab]}</p></div><span className={`rwStatus ${health?.ready ? 'isReady' : ''}`}><i />{checking ? '检查执行服务' : health?.ready ? '本地执行器已连接' : '仅本地预览'}</span></header>
+        <header className="rwHeader"><div><p className="rwEyebrow">HYPIT VIDEO WORKBENCH · 03</p><h1>{({ template: '看懂结构，做出你的版本。', create: '留住画面，换个开场。', result: '你的新版本，在这里。', history: '每一次制作，都有记录。', engine: '本地先做，按需升级。' })[tab]}</h1><p className="rwIntro">{({ template: '先输入想法，参考视频可选。导演 Agent 会反馈、追问并生成结构化方案；支持的图形模板确认后由本地 Hypit 制作成片。', create: '上传一个短片，调整开头节奏、字幕和视觉包装。先做一个版本，满意后再导出。', result: '有参考时并排对比；无参考时直接展示真实成片。', history: '只展示当前浏览器的任务。文件保存在执行服务，可在任务完成后删除。', engine: '本地模板和剪辑不调用视频大模型；可选语言模型每轮确认后才发出请求。' })[tab]}</p></div><span className={`rwStatus ${health?.ready ? 'isReady' : ''}`}><i />{checking ? '检查执行服务' : health?.ready ? '本地执行器已连接' : '仅本地预览'}</span></header>
 
         {error && <p className="rwAlert" role="alert">{error}</p>}
         {pollError && <p className="rwAlert" role="alert">{pollError} 已提交任务不会自动重试。<button type="button" onClick={connect}>重新连接</button></p>}
@@ -212,9 +219,9 @@ export default function ReplicaWorkbench({ onBack }) {
               <input ref={fileInput} className="rwFileInput" type="file" accept="video/mp4,video/quicktime,video/webm,.m4v" aria-label="选择参考视频" disabled={busy} onChange={(event) => { choose(event.target.files[0]); event.target.value = '' }} />
               {url ? <div className="rwUploaded"><video src={url} controls playsInline preload="metadata" aria-label="参考视频原片" onLoadedMetadata={(event) => {
                 const value = event.currentTarget.duration
-                if (!Number.isFinite(value) || value < 0.5 || value > REPLICA_LIMITS.seconds + 0.05) { setDuration(0); setError('请选择 0.5～15 秒的视频，建议先用 3～5 秒片段。') } else { setDuration(value); setError('') }
+                if (!Number.isFinite(value) || value < 0.5 || value > REPLICA_LIMITS.seconds + 0.05) { setDuration(0); setError('请选择 0.5～30 秒的视频，建议先用 3～5 秒片段。') } else { setDuration(value); setError('') }
               }} onError={() => { setDuration(0); setError('浏览器无法播放这段视频，请更换为 H.264 编码的 MP4。') }} /><div className="rwFileMeta"><strong>{file?.name}</strong><span>{duration ? `${duration.toFixed(1)} 秒 · ` : ''}{(file.size / 1024 / 1024).toFixed(1)} MB</span></div><button type="button" className="rwSecondary" disabled={busy} onClick={() => fileInput.current.click()}>更换视频</button></div> :
-                <button className={`rwDropzone${dragging ? ' isDragging' : ''}`} type="button" disabled={busy} onClick={() => fileInput.current.click()} onDragOver={(event) => { event.preventDefault(); setDragging(true) }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); choose(event.dataTransfer.files[0]) }}><span className="rwUploadIcon">↑</span><strong>把源视频放在这里</strong><span>拖入文件，或点击选择视频</span><small>MP4 / MOV / WebM · 最长 15 秒 · 最大 25 MB<br />建议用 3～5 秒片段开始体验</small><span className="rwChooseButton">选择视频 ↗</span></button>}
+                <button className={`rwDropzone${dragging ? ' isDragging' : ''}`} type="button" disabled={busy} onClick={() => fileInput.current.click()} onDragOver={(event) => { event.preventDefault(); setDragging(true) }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); choose(event.dataTransfer.files[0]) }}><span className="rwUploadIcon">↑</span><strong>把源视频放在这里</strong><span>拖入文件，或点击选择视频</span><small>MP4 / MOV / WebM · 最长 30 秒 · 最大 25 MB<br />建议用 3～5 秒片段开始体验</small><span className="rwChooseButton">选择视频 ↗</span></button>}
               <div className="rwSourceNote"><span>原片画面保留</span><p>调整剪辑顺序和节奏，不自动替换人物、场景或声音身份。</p></div>
             </section>
 
@@ -236,7 +243,7 @@ export default function ReplicaWorkbench({ onBack }) {
           <div className="rwPanelHead"><div><p className="rwEyebrow">REAL OUTPUT</p><h2>{currentJob?.filename || '等待你的第一个版本'}</h2></div>{currentJob && <span className="rwPill rwFree">¥ 0 模型费</span>}</div>
           {!currentJob ? <div className="rwEmpty"><span className="rwUploadIcon">▶</span><h3>先制作一个版本</h3><p>实际成片完成后，会在这里显示对比和下载。</p><button className="rwPrimary" type="button" onClick={() => setTab('create')}>去上传视频 →</button></div> : <>
             <div className={`rwJobStatus ${currentJob.status === 'failed' ? 'isFailed' : ''}`} role="status"><strong>{currentJob.message}</strong><span>{currentJob.progress}%</span><progress max="100" value={currentJob.progress} /></div>
-            <div className="rwCompare"><div><p className="rwEyebrow">01 / 原片</p><video src={mediaUrl(currentJob.inputUrl)} controls playsInline preload="metadata" aria-label="对比原片" /></div><div><p className="rwEyebrow">02 / 复刻版</p>{currentJob.resultUrl ? <video src={mediaUrl(currentJob.resultUrl)} controls playsInline preload="metadata" aria-label="Hypit 复刻成片" /> : <div className="rwPending"><span>{currentJob.status === 'failed' ? '!' : 'R'}</span><p>{currentJob.status === 'failed' ? '本次任务未生成可用成片' : '实际生成完成后显示成片'}</p></div>}</div></div>
+            <ResultComparison currentJob={currentJob} mediaUrl={mediaUrl} />
             <div className="rwResultFoot"><p>{currentJob.result ? `${currentJob.result.width} × ${currentJob.result.height} · ${currentJob.result.duration.toFixed(1)} 秒 · ${currentJob.result.audio ? '含所选音轨' : '无音轨'}` : '不会用演示视频替代生成结果。'}</p><div>{currentJob.resultUrl && <a className="rwPrimary" href={`${mediaUrl(currentJob.resultUrl)}?download=1`}>下载 MP4 ↓</a>}<button type="button" className="rwSecondary" disabled={busy} onClick={() => { setSelectedId(null); setTab(currentJob.kind === 'template' ? 'template' : 'create') }}>调整并新建版本</button></div></div>
             {currentJob.plan && <div className="rwTimeline"><p className="rwEyebrow">复刻执行方案</p>{currentJob.plan.kind === 'template' ? currentJob.plan.events.map((cue, index) => <div key={index}><span>{String(index + 1).padStart(2, '0')}</span><strong>{({ title: '开场钩子', benefit: '利益点', action: '行动引导' })[cue.field]}</strong><small>{cue.start.toFixed(2)}–{cue.end.toFixed(2)} 秒 · 模板重绘</small></div>) : currentJob.plan.segments.map((segment, index) => <div key={index}><span>{String(index + 1).padStart(2, '0')}</span><strong>原片 {segment.start.toFixed(2)}–{segment.end.toFixed(2)} 秒</strong><small>{segment.rate} 倍速 · 原片画面</small></div>)}</div>}
           </>}
