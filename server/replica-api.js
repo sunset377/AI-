@@ -5,6 +5,7 @@ import path from 'node:path'
 import { REPLICA_LIMITS, validateReplicaOptions } from '../src/replica.js'
 import { checkReplicaTools, HYPIT_PROJECT, renderReplica } from './replica-render.js'
 import { DEFAULT_TEMPLATE, validateTemplate, guideTemplate } from '../src/replica-template.js'
+import { buildDirectorPlan, validateDirectorPlan } from '../src/replica-director.js'
 import { analyzeReplica } from './replica-analysis.js'
 import { chatReplica, readReplicaChatConfig, replicaChatHealth } from './replica-chat.js'
 import { checkReplicaVoice, createVoicePreview, validateProsody } from './replica-voice.js'
@@ -17,6 +18,14 @@ const canvasFromMetadata = ({ width, height }) => {
   const scale = Math.min(1, 1280 / Math.max(width, height))
   return { width: Math.floor(width * scale / 2) * 2, height: Math.floor(height * scale / 2) * 2, fps: 30 }
 }
+const planReference = (analysis) => analysis ? {
+  summary: `已测量参考视频：${analysis.metadata.width}×${analysis.metadata.height}，${analysis.metadata.duration} 秒；未自动识别文字、语音、人物或剧情。`,
+  evidence: [
+    { source: 'observed', text: `参考视频尺寸 ${analysis.metadata.width}×${analysis.metadata.height}，时长 ${analysis.metadata.duration} 秒。` },
+    ...(analysis.background?.stable ? [{ source: 'observed', text: `边缘区域检测到稳定背景色 ${analysis.background.color}。` }] : []),
+    ...(analysis.unknowns || []).slice(0, 10).map((text) => ({ source: 'observed', text })),
+  ],
+} : null
 
 function sendJson(response, status, body) {
   response.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' })
@@ -54,6 +63,11 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
       if (job.kind === 'draft' && job.schemaVersion === 2) {
         const metadata = job.analysis?.metadata || null
         Object.assign(job, { schemaVersion: 3, template: validateTemplate({ ...job.template, templateId: 'cleanup-icon' }), reference: existsSync(path.join(directory, entry.name, 'input.mp4')) ? { filename: job.filename, metadata } : null, canvas: metadata ? canvasFromMetadata(metadata) : defaultCanvas(), directorPlan: null, confirmedPlanHash: null })
+      }
+      if (job.kind === 'draft' && job.schemaVersion === 3) {
+        job.requirements ||= []
+        job.unresolved ||= []
+        job.confirmedPlanHash ||= null
       }
       if (job.kind === 'draft' ? draftBusy(job) : !finalStates.has(job.status)) {
         Object.assign(job, { status: 'failed', message: '执行服务已重启，此任务已中断。请重新创建任务。' })
@@ -130,7 +144,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           if (Object.keys(body).length) return sendJson(response, 400, { error: '新会话不接受额外字段。' })
           const id = randomUUID(), draftDirectory = path.join(directory, id)
           await mkdir(draftDirectory)
-          const draft = { id, owner, kind: 'draft', schemaVersion: 3, filename: '未命名视频方案', createdAt: new Date().toISOString(), status: 'idle', message: '告诉导演你想做什么；参考视频可稍后添加。', progress: 0, revision: 1, confirmedRevision: null, confirmedPlanHash: null, reference: null, canvas: defaultCanvas(), analysis: null, template: { ...DEFAULT_TEMPLATE }, directorPlan: null, messages: [], requirements: [], pendingQuestion: null }
+          const draft = { id, owner, kind: 'draft', schemaVersion: 3, filename: '未命名视频方案', createdAt: new Date().toISOString(), status: 'idle', message: '告诉导演你想做什么；参考视频可稍后添加。', progress: 0, revision: 1, confirmedRevision: null, confirmedPlanHash: null, reference: null, canvas: defaultCanvas(), analysis: null, template: { ...DEFAULT_TEMPLATE }, directorPlan: null, messages: [], requirements: [], unresolved: [], pendingQuestion: null }
           await persist(draft); drafts.set(id, draft); return sendJson(response, 201, publicDraft(draft))
         }
         const length = Number(request.headers['content-length'])
@@ -147,7 +161,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           const id = randomUUID(); draftDirectory = path.join(directory, id); await mkdir(draftDirectory)
           await writeFile(path.join(draftDirectory, 'input.mp4'), Buffer.from(await video.arrayBuffer()))
           const filename = path.basename(video.name).slice(0, 200)
-          const draft = { id, owner, kind: 'draft', schemaVersion: 3, filename, createdAt: new Date().toISOString(), status: 'idle', message: '请先分析参考，再告诉导演你的目标。', progress: 0, revision: 1, confirmedRevision: null, confirmedPlanHash: null, reference: { filename, metadata: null }, canvas: defaultCanvas(), analysis: null, template: { ...DEFAULT_TEMPLATE }, directorPlan: null, messages: [], requirements: [], pendingQuestion: null }
+          const draft = { id, owner, kind: 'draft', schemaVersion: 3, filename, createdAt: new Date().toISOString(), status: 'idle', message: '请先分析参考，再告诉导演你的目标。', progress: 0, revision: 1, confirmedRevision: null, confirmedPlanHash: null, reference: { filename, metadata: null }, canvas: defaultCanvas(), analysis: null, template: { ...DEFAULT_TEMPLATE }, directorPlan: null, messages: [], requirements: [], unresolved: [], pendingQuestion: null }
           await persist(draft); drafts.set(id, draft); return sendJson(response, 201, publicDraft(draft))
         } finally { uploading--; uploads.delete(owner); if (draftDirectory && !drafts.has(path.basename(draftDirectory))) await rm(draftDirectory, { recursive: true, force: true }) }
       }
@@ -188,7 +202,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
             if (!(video instanceof File) || !video.size || video.size > REPLICA_LIMITS.bytes || !/\.(mp4|mov|webm|m4v)$/i.test(video.name)) return sendJson(response, 400, { error: '请选择不超过 25 MB 的视频。' })
             await writeFile(pending, Buffer.from(await video.arrayBuffer())); await copyFile(pending, path.join(dir, 'input.mp4'))
             const filename = path.basename(video.name).slice(0, 200)
-            Object.assign(draft, { filename, reference: { filename, metadata: null }, analysis: null, directorPlan: null, template: validateTemplate({ ...draft.template, audioMode: 'mute' }), revision: draft.revision + 1, confirmedRevision: null, confirmedPlanHash: null, voicePreview: null, pendingQuestion: null, status: 'idle', progress: 0, message: '参考视频已更新，请先分析。', error: null })
+            Object.assign(draft, { filename, reference: { filename, metadata: null }, analysis: null, directorPlan: null, unresolved: [], template: validateTemplate({ ...draft.template, audioMode: 'mute' }), revision: draft.revision + 1, confirmedRevision: null, confirmedPlanHash: null, voicePreview: null, pendingQuestion: null, status: 'idle', progress: 0, message: '参考视频已更新，请先分析。', error: null })
             await persist(draft); return sendJson(response, 200, publicDraft(draft))
           } finally { uploading--; uploads.delete(owner); await rm(pending, { force: true }).catch(() => {}) }
         }
@@ -203,21 +217,24 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
         if (!operation && request.method === 'PATCH') {
           let template
           try { if (!body.template || typeof body.template !== 'object' || Array.isArray(body.template)) throw new Error(); template = validateTemplate({ ...draft.template, ...body.template }) } catch { return sendJson(response, 400, { error: '模板配置无效。' }) }
-          Object.assign(draft, { template, revision: draft.revision + 1, confirmedRevision: null, voicePreview: null, pendingQuestion: null, status: 'idle', error: null })
+          let directorPlan = draft.directorPlan
+          try { if (draft.requirements?.length) directorPlan = buildDirectorPlan({ requirements: draft.requirements, reference: planReference(draft.analysis), canvas: draft.canvas, template, blockers: draft.unresolved }) } catch { directorPlan = null }
+          Object.assign(draft, { template, directorPlan, revision: draft.revision + 1, confirmedRevision: null, confirmedPlanHash: null, voicePreview: null, pendingQuestion: null, status: 'idle', error: null })
           await persist(draft); return sendJson(response, 200, publicDraft(draft))
         }
         if (operation === 'voice') {
           try { validateProsody(body.narration, body.prosody) } catch { return sendJson(response, 400, { error: '请核对旁白文字、句段与停顿。' }) }
-          if (!draft.analysis || !(await checkVoice()).ready) return sendJson(response, 409, { error: '请先分析原片；本人 F5 配置、转写或本地权重未就绪。' })
+          if (!(await checkVoice()).ready) return sendJson(response, 409, { error: '本人 F5 配置、转写或本地权重未就绪。' })
           // Readiness awaits local IO; another request may have edited or occupied this draft meanwhile.
           if (!capacity(owner)) return sendJson(response, 429, { error: '请等待当前操作完成。' })
           if (draftBusy(draft) || body.revision !== draft.revision) return sendJson(response, 409, { error: '方案已更新或正在操作，请刷新后重新确认。' })
-          Object.assign(draft, { status: 'voicing', confirmedRevision: null, voicePreview: null, error: null }); await persist(draft)
+          Object.assign(draft, { status: 'voicing', confirmedRevision: null, confirmedPlanHash: null, voicePreview: null, error: null }); await persist(draft)
           enqueue(draft, async (update) => {
             const preview = await voice({ narration: body.narration, prosody: body.prosody }, dir)
             const template = validateTemplate({ ...draft.template, narration: body.narration, audioMode: 'voice' })
             const revision = draft.revision + 1
-            await update({ template, revision, voicePreview: { ...preview, prosody: structuredClone(body.prosody), revision, approved: false }, status: 'idle', message: '试听已生成，听审认可后才可用于成片。' })
+            const directorPlan = draft.requirements?.length ? buildDirectorPlan({ requirements: draft.requirements, reference: planReference(draft.analysis), canvas: draft.canvas, template, questions: draft.pendingQuestion ? [{ field: draft.pendingQuestion.field, text: draft.pendingQuestion.text }] : [], blockers: draft.unresolved }) : null
+            await update({ template, directorPlan, revision, confirmedPlanHash: null, voicePreview: { ...preview, prosody: structuredClone(body.prosody), revision, approved: false }, status: 'idle', message: '试听已生成，听审认可后才可用于成片。' })
           })
           return sendJson(response, 202, publicDraft(draft))
         }
@@ -227,22 +244,34 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           preview.approved = true; await persist(draft); return sendJson(response, 200, publicDraft(draft))
         }
         if (operation === 'messages') {
-          if (!draft.analysis || typeof body.message !== 'string' || !body.message.trim() || body.message.length > 2000 || !['local', 'api'].includes(body.mode)) return sendJson(response, 400, { error: '先分析，再填写 1～2000 字修改需求并选择模式。' })
+          if (typeof body.message !== 'string' || !body.message.trim() || body.message.length > 2000 || !['local', 'api'].includes(body.mode)) return sendJson(response, 400, { error: '请填写 1～2000 字需求并选择模式。' })
           if (body.mode === 'api' && (!replicaChatHealth(chatConfig).ready || body.consent?.provider !== chatConfig.model || typeof body.consent.shareImages !== 'boolean' || (body.consent.shareImages && !chatConfig.vision))) return sendJson(response, 409, { error: '模型未就绪，或本轮外发尚未确认。' })
-          draft.status = 'chatting'; draft.confirmedRevision = null; draft.error = null; await persist(draft)
+          if (body.mode === 'api' && body.consent.shareImages && !draft.analysis?.frames.length) return sendJson(response, 409, { error: '参考视频尚未分析，不能发送代表帧。' })
+          draft.status = 'chatting'; draft.confirmedRevision = null; draft.confirmedPlanHash = null; draft.error = null; await persist(draft)
           enqueue(draft, async (update) => {
-            let result
+            let result, requirements
             try {
+              requirements = [...(draft.requirements || []), body.message.trim()].slice(-20)
               if (body.mode === 'local') {
                 const guide = guideTemplate(body.message, draft.template, { pendingQuestion: draft.pendingQuestion })
-                result = { ...guide, reply: [Object.keys(guide.patch).length ? '已提出模板修改，请检查预览后确认。' : '请补充具体修改。', ...guide.questions.map((q) => q.text), ...guide.unhandled.map((s) => `本地向导未处理：${s}。请使用编辑控件，或选择已配置的模型讨论。`)].join('\n') }
+                const template = validateTemplate({ ...draft.template, ...guide.patch })
+                const plan = buildDirectorPlan({ requirements, reference: planReference(draft.analysis), canvas: draft.canvas, template, questions: guide.questions.map(({ field, text }) => ({ field, text })), blockers: guide.unhandled })
+                const evidenceNote = draft.analysis ? '依据参考视频的技术测量规划；文字、语音、人物和剧情仍未自动识别。' : '依据描述，未分析原片。'
+                result = { ...guide, plan, reply: [evidenceNote, Object.keys(guide.patch).length ? '已提出模板修改，请检查预览后确认。' : '请补充具体修改。', ...guide.questions.map((q) => q.text), ...guide.unhandled.map((s) => `本地向导未处理：${s}。复杂镜头仅保留为待规划方案，不会假报成片。`)].join('\n') }
               } else {
                 const images = body.consent.shareImages ? await Promise.all(draft.analysis.frames.filter((_, i) => [0, 2, 5].includes(i)).slice(0, 3).map(async (f) => `data:image/png;base64,${(await readFile(path.join(dir, `frame-${f.id}.png`))).toString('base64')}`)) : []
-                result = await chat({ message: body.message, template: draft.template, analysis: draft.analysis, history: draft.messages, images, consent: body.consent }, chatConfig)
+                result = await chat({ message: body.message, template: draft.template, analysis: draft.analysis, plan: draft.directorPlan, history: draft.messages, images, consent: body.consent }, chatConfig)
               }
               const template = validateTemplate({ ...draft.template, ...result.patch })
               const pendingQuestion = result.questions[0] || (result.unhandled?.length ? { field: 'clarification', text: '仍有未处理要求；请通过编辑控件明确方案，再确认。' } : null)
-              await update({ template, revision: draft.revision + 1, voicePreview: null, pendingQuestion, messages: [...draft.messages.slice(-10), { role: 'user', content: body.message }, { role: 'assistant', content: result.reply, mode: body.mode }], status: 'idle', message: '本轮方案已返回，请确认。' })
+              const questions = result.questions.map(({ field, text }) => ({ field, text }))
+              let directorPlan = validateDirectorPlan(result.plan)
+              if (body.mode === 'api') {
+                directorPlan = directorPlan.route.kind === 'hypit-template'
+                  ? buildDirectorPlan({ requirements, reference: planReference(draft.analysis), canvas: draft.canvas, template, questions, blockers: directorPlan.blockers })
+                  : validateDirectorPlan({ ...directorPlan, requirements, reference: planReference(draft.analysis), canvas: { ...directorPlan.canvas, width: draft.canvas.width, height: draft.canvas.height, fps: 30 }, questions })
+              }
+              await update({ template, directorPlan, requirements, unresolved: directorPlan.blockers, revision: draft.revision + 1, confirmedRevision: null, confirmedPlanHash: null, voicePreview: null, pendingQuestion, messages: [...draft.messages.slice(-10), { role: 'user', content: body.message }, { role: 'assistant', content: result.reply, mode: body.mode }], status: 'idle', message: '本轮方案已返回，请确认。' })
             } catch {
               await update({ status: 'failed', error: '本轮对话失败；没有修改模板或自动重试。', messages: [...draft.messages.slice(-10), { role: 'user', content: body.message }, { role: 'assistant', content: '本轮未完成。再次发送将是新请求，可能再次计费。', failed: true }], message: '本轮未完成。' })
             }
@@ -251,17 +280,21 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
         }
         if (operation === 'analyze') {
           if (!draft.reference) return sendJson(response, 409, { error: '当前会话没有可分析的参考视频。' })
-          Object.assign(draft, { status: 'analyzing', confirmedRevision: null, voicePreview: null, error: null }); await persist(draft)
+          Object.assign(draft, { status: 'analyzing', confirmedRevision: null, confirmedPlanHash: null, voicePreview: null, error: null }); await persist(draft)
           enqueue(draft, async (update) => {
             const analysis = await analyze(path.join(dir, 'input.mp4'), dir, update)
             const template = validateTemplate({ ...draft.template, background: analysis.background.stable ? analysis.background.color : draft.template.background, duration: Math.min(30, analysis.metadata.duration), ...(analysis.metadata.hasAudio ? {} : { audioMode: 'mute' }) })
-            await update({ analysis, reference: { ...draft.reference, metadata: analysis.metadata }, canvas: canvasFromMetadata(analysis.metadata), directorPlan: null, template, revision: draft.revision + 1, status: 'idle', progress: 100, message: '测量已完成；语义和文案仍需确认。' })
+            const canvas = canvasFromMetadata(analysis.metadata)
+            const directorPlan = draft.requirements?.length ? buildDirectorPlan({ requirements: draft.requirements, reference: planReference(analysis), canvas, template, questions: draft.pendingQuestion ? [{ field: draft.pendingQuestion.field, text: draft.pendingQuestion.text }] : [], blockers: draft.unresolved }) : null
+            await update({ analysis, reference: { ...draft.reference, metadata: analysis.metadata }, canvas, directorPlan, confirmedPlanHash: null, template, revision: draft.revision + 1, status: 'idle', progress: 100, message: '测量已完成；语义和文案仍需确认。' })
           })
           return sendJson(response, 202, publicDraft(draft))
         }
         if (operation === 'confirm') {
-          if (!draft.analysis || draft.pendingQuestion || (draft.template.audioMode === 'voice' && (!draft.voicePreview?.approved || draft.voicePreview.revision !== draft.revision))) return sendJson(response, 409, { error: '请先完成分析、未处理需求和声音确认。' })
-          draft.confirmedRevision = draft.revision; await persist(draft); return sendJson(response, 200, publicDraft(draft))
+          let plan
+          try { plan = validateDirectorPlan(draft.directorPlan) } catch { return sendJson(response, 409, { error: '请先完成可执行导演方案。' }) }
+          if (plan.status !== 'executable' || plan.route.kind !== 'hypit-template' || plan.questions.length || plan.blockers.length || draft.pendingQuestion || (!draft.reference && draft.template.audioMode === 'original') || (draft.template.audioMode === 'voice' && (!draft.voicePreview?.approved || draft.voicePreview.revision !== draft.revision))) return sendJson(response, 409, { error: '请先解决未处理需求、声音或生产路径。' })
+          draft.confirmedRevision = draft.revision; draft.confirmedPlanHash = digest(JSON.stringify(plan)); await persist(draft); return sendJson(response, 200, publicDraft(draft))
         }
         if (operation === 'render') {
           if (!draft.analysis || draft.confirmedRevision !== draft.revision) return sendJson(response, 409, { error: '请先确认当前方案。' })
