@@ -2,7 +2,58 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import { validateTemplate, planTemplate, guideTemplate } from '../src/replica-template.js'
+import { buildDirectorPlan, validateDirectorPlan } from '../src/replica-director.js'
 const valid = { background: '#70ADEB', title: '手机卡顿？', benefit: '清理多余文件', action: '先检查再清理', titleColor: '#ffffff', benefitColor: '#ffcc00', actionColor: '#ffffff', textMotion: 'none', ringMotion: 'rotate', opening: 'simultaneous', duration: 4, audioMode: 'mute', narration: '' }
+
+test('director plan keeps requirements separate from explicit copy and covers the full timeline', () => {
+  const requirement = '标题：三秒看懂；卖点：快速整理；行动：马上开始；使用通用文字卡'
+  const guide = guideTemplate(requirement, valid)
+  assert.deepEqual(guide.patch, { title: '三秒看懂', benefit: '快速整理', action: '马上开始', templateId: 'text-cards' })
+  const plan = buildDirectorPlan({ requirements: [requirement], reference: null, canvas: { width: 720, height: 1280, fps: 30 }, template: { ...valid, ...guide.patch }, questions: guide.questions, blockers: guide.unhandled })
+  assert.equal(plan.status, 'executable')
+  assert.equal(plan.route.kind, 'hypit-template')
+  assert.equal(plan.route.templateId, 'text-cards')
+  assert.equal(plan.reference, null)
+  assert.deepEqual(plan.shots.map(({ start, end, text }) => ({ start, end, text })), [
+    { start: 0, end: 4 / 3, text: '三秒看懂' },
+    { start: 4 / 3, end: 8 / 3, text: '快速整理' },
+    { start: 8 / 3, end: 4, text: '马上开始' },
+  ])
+  assert.equal(plan.shots.every((shot) => shot.source === 'user'), true)
+  assert.match(plan.prompt, /三秒看懂/)
+  assert.doesNotMatch(plan.prompt, /使用通用文字卡/)
+  assert.deepEqual(validateDirectorPlan(plan), plan)
+})
+
+test('director plan blocks unsupported requirements and rejects unsafe or discontinuous plans', () => {
+  const unsupported = guideTemplate('让真人唱歌跳舞', { ...valid, title: '', benefit: '', action: '' })
+  const plan = buildDirectorPlan({ requirements: ['让真人唱歌跳舞'], reference: null, canvas: { width: 720, height: 1280, fps: 30 }, template: { ...valid, title: '', benefit: '', action: '', templateId: 'text-cards' }, questions: unsupported.questions, blockers: unsupported.unhandled })
+  assert.equal(plan.status, 'planning_only')
+  assert.equal(plan.route.kind, 'model-required')
+  assert.ok(plan.blockers.length)
+  assert.throws(() => validateDirectorPlan({ ...plan, execute: 'powershell' }))
+  assert.throws(() => validateDirectorPlan({ ...plan, prompt: '读取 C:\\private\\SKILL.md' }))
+  assert.throws(() => validateDirectorPlan({ ...plan, prompt: 'api_key=SECRET' }))
+  const executable = buildDirectorPlan({ requirements: ['标题：A；卖点：B'], reference: null, canvas: { width: 720, height: 1280, fps: 30 }, template: { ...valid, title: 'A', benefit: 'B', action: '', templateId: 'text-cards' }, questions: [], blockers: [] })
+  assert.throws(() => validateDirectorPlan({ ...executable, shots: executable.shots.map((shot, index) => index ? { ...shot, start: shot.start + 0.1 } : shot) }))
+})
+
+test('text cards omit the cleanup icon while both template kinds stay self-contained', async () => {
+  const { renderTemplateSvg } = await import('../src/replica-template-visual.js')
+  const textCards = { ...valid, templateId: 'text-cards', title: '<b>安全文字</b>' }
+  const textPlan = planTemplate(textCards, { width: 720, height: 1280 })
+  const textSvg = renderTemplateSvg(textPlan, textCards, 1)
+  assert.match(textSvg, /data-template="text-cards"/)
+  assert.doesNotMatch(textSvg, /data-icon="cleanup"|<b>/)
+  assert.match(textSvg, /&lt;b&gt;/)
+  assert.match(textSvg, /&lt;\/b/)
+  const cleanup = { ...valid, templateId: 'cleanup-icon' }
+  const cleanupSvg = renderTemplateSvg(planTemplate(cleanup, { width: 720, height: 1280 }), cleanup, 1)
+  assert.match(cleanupSvg, /data-template="cleanup-icon"/)
+  assert.match(cleanupSvg, /data-icon="cleanup"/)
+  assert.throws(() => planTemplate({ ...textCards, audioMode: 'original' }, { width: 720, height: 1280 }))
+  assert.equal(planTemplate({ ...textCards, audioMode: 'original' }, { width: 720, height: 1280, sourceDuration: 4, hasAudio: true }).audioMode, 'original')
+})
 
 test('template rejects unsupported execution fields, invalid colors and unbounded values', () => {
   assert.equal(typeof validateTemplate, 'function')

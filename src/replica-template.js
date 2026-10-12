@@ -1,4 +1,4 @@
-export const DEFAULT_TEMPLATE = Object.freeze({ background: '#70adeb', title: '', benefit: '', action: '', titleColor: '#ffffff', benefitColor: '#eab308', actionColor: '#ffffff', textMotion: 'fade', ringMotion: 'rotate', opening: 'simultaneous', duration: 4, audioMode: 'mute', narration: '' })
+export const DEFAULT_TEMPLATE = Object.freeze({ templateId: 'text-cards', background: '#70adeb', title: '', benefit: '', action: '', titleColor: '#ffffff', benefitColor: '#eab308', actionColor: '#ffffff', textMotion: 'fade', ringMotion: 'rotate', opening: 'simultaneous', duration: 4, audioMode: 'mute', narration: '' })
 const colors = { 红: '#ef4444', 绿: '#22c55e', 蓝: '#3b82f6', 黄: '#eab308', 白: '#ffffff', 黑: '#000000', 紫: '#a855f7', 橙: '#f97316' }
 const fields = ['title', 'benefit', 'action']
 
@@ -14,13 +14,15 @@ export function validateTemplate(value) {
     result[field] = result[field].trim()
   }
   for (const [field, allowed] of Object.entries({ textMotion: ['none', 'fade', 'bounce'], ringMotion: ['none', 'rotate'], opening: ['simultaneous', 'staged'], audioMode: ['original', 'mute', 'voice'] })) if (!allowed.includes(result[field])) throw new Error('模板选项无效。')
+  if (!['text-cards', 'cleanup-icon'].includes(result.templateId)) throw new Error('模板类型无效。')
   if (typeof result.duration !== 'number' || !Number.isFinite(result.duration) || result.duration < 0.5 || result.duration > 30) throw new Error('模板时长必须在 0.5～30 秒之间。')
   return result
 }
 
-export function planTemplate(value, { width, height, sourceDuration, voiceCues } = {}) {
+export function planTemplate(value, { width, height, sourceDuration, hasAudio = false, voiceCues } = {}) {
   const template = validateTemplate(value)
-  if (![width, height].every((n) => Number.isFinite(n) && n >= 64 && n <= 4096) || !Number.isFinite(sourceDuration) || sourceDuration < 0.5 || sourceDuration > 15.05) throw new Error('参考视频尺寸或时长无效。')
+  if (![width, height].every((n) => Number.isFinite(n) && n >= 64 && n <= 4096) || (sourceDuration !== undefined && (!Number.isFinite(sourceDuration) || sourceDuration < 0.5 || sourceDuration > 30.05))) throw new Error('画布尺寸或参考视频时长无效。')
+  if (template.audioMode === 'original' && (sourceDuration === undefined || !hasAudio)) throw new Error('没有真实参考音轨，不能选择保留原音。')
   let duration = template.duration
   let events = fields.map((field, index) => ({ field, start: template.opening === 'staged' ? index * duration / 3 : 0, end: duration }))
   if (template.audioMode === 'voice') {
@@ -36,7 +38,7 @@ export function planTemplate(value, { width, height, sourceDuration, voiceCues }
     for (const field of fields) if (template[field] && !voiceCues.some((cue) => cue.field === field)) events.push({ field, start: 0, end: duration })
   }
   const scale = Math.min(1, 1280 / Math.max(width, height))
-  return { kind: 'template', width: Math.floor(width * scale / 2) * 2, height: Math.floor(height * scale / 2) * 2, duration, fps: 30, events, audioMode: template.audioMode }
+  return { kind: 'template', templateId: template.templateId, width: Math.floor(width * scale / 2) * 2, height: Math.floor(height * scale / 2) * 2, duration, fps: 30, events, audioMode: template.audioMode }
 }
 
 export function guideTemplate(message, value, { pendingQuestion } = {}) {
@@ -44,6 +46,10 @@ export function guideTemplate(message, value, { pendingQuestion } = {}) {
   if (typeof message !== 'string' || !message.trim() || message.length > 2000) throw new Error('修改需求请输入 1～2000 字。')
   const patch = {}, questions = [], unhandled = []
   for (const raw of message.split(/[，,。；;\n]+/).map((part) => part.trim()).filter(Boolean)) {
+    const copy = raw.match(/^(标题|开场(?:钩子)?|卖点|利益点|行动(?:引导)?)[：:](.+)$/)
+    if (copy) { patch[{ 标题: 'title', 开场: 'title', 开场钩子: 'title', 卖点: 'benefit', 利益点: 'benefit', 行动: 'action', 行动引导: 'action' }[copy[1]]] = copy[2].trim(); continue }
+    if (/通用文字卡/.test(raw)) { patch.templateId = 'text-cards'; continue }
+    if (/清理图标|垃圾桶/.test(raw)) { patch.templateId = 'cleanup-icon'; continue }
     const color = raw.match(/#[a-f0-9]{6}/i)?.[0].toLowerCase() ?? colors[raw.match(/([红绿蓝黄白黑紫橙])(?:色)?/)?.[1]]
     const targets = /全部|所有/.test(raw) ? fields : /标题|开头/.test(raw) ? ['title'] : /利益|卖点/.test(raw) ? ['benefit'] : /行动|底部/.test(raw) ? ['action'] : []
     if (pendingQuestion?.field === 'textColor' && targets.length && /^#[a-f0-9]{6}$/i.test(pendingQuestion.color)) { for (const field of targets) patch[`${field}Color`] = color || pendingQuestion.color; continue }
