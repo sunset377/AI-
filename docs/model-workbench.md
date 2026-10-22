@@ -61,3 +61,13 @@ npm run build -- --base=/AI-/
 本地界面验收：`npm run preview -- --port 5190 --base=/AI-/`，再运行 `node scripts/verify-model-workbench.mjs`。该脚本使用隔离浏览器和模拟接口，不发生模型消费，截图仅为本地验收产物，不发布到作品集。
 
 本轮非付费检查：网关、首页及邀请相关 16 项测试通过，`/AI-/` 构建和 Wrangler dry-run 通过；线上目录返回 133 个模型、`ready:false`，付费入口 503。全站测试未通过：旧的默认首页、合作平台展示、历史人像展示 SSR 测试失败/超时；另一次限定运行证实 `interview-knowledge.test.js` 引用不存在的 `agentInterviewQuestionBank` 导出。此处未为通过旧断言而恢复已删除的个人信息或改写无关面试资料。
+
+全站测试因旧 SSR 服务长期不退出而终止，未完成整套执行；已观察到的失败项如下，不代表仅有这些失败：
+
+- `the default render makes the Agent workflow the primary destination while retaining interview access`
+- `portfolio exposes the partnership product and the silent project preview`
+- `portfolio route preserves the supplied artwork and offers a return to the new gateway`
+- `resume fallback optimizes common interview questions without inventing facts`
+- `static fallback keeps short follow-up questions connected to recent context`
+- `static fallback prioritizes a new explicit question over older conversation topics`
+- `interview-knowledge.test.js`：缺少 `agentInterviewQuestionBank` 导出，文件无法加载。
