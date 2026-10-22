@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "portfolio-model-gateway",
+  "main": "src/model-gateway.js",
+  "compatibility_date": "2026-10-22",
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "PUBLIC_ORIGIN": "https://sunset377.github.io",
+    "EXPERIENCE_EXPIRES_AT": "2026-10-30T15:59:59Z"
+  },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "portfolio-model-gateway",
+    "database_id": "121e6ebf-76af-4f7a-aec3-0b47204f9677",
+    "migrations_dir": "migrations/models"
+  }],
+  "observability": { "enabled": true, "logs": { "enabled": true }, "traces": { "enabled": true, "head_sampling_rate": 0.01 } }
+}

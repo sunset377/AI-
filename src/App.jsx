@@ -7,6 +7,7 @@ import ScriptDemo from './components/ScriptDemo/ScriptDemo'
 import ReplicaWorkbench from './components/ReplicaWorkbench/ReplicaWorkbench'
 import VideoPreview from './components/VideoPreview/VideoPreview'
 import NativeBoard from './components/CSBoard/NativeBoard'
+import ModelWorkbench from './components/ModelWorkbench/ModelWorkbench'
 import { readView, writeView } from './navigation'
 
 const assetPath = (path) => `${import.meta.env.BASE_URL}${path}`
@@ -384,6 +385,13 @@ function App({ initialView }) {
   const [directorBrief, setDirectorBrief] = useState('')
 
   useEffect(() => {
+    const invite = new URLSearchParams(window.location.hash.slice(1)).get('experience')
+    if (invite) {
+      sessionStorage.setItem('portfolio-model-invite', invite)
+      const url = new URL(window.location.href)
+      url.hash = ''
+      window.history.replaceState(window.history.state, '', url)
+    }
     const handlePopState = () => setView(readView(window.location))
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
@@ -397,7 +405,7 @@ function App({ initialView }) {
 
   useEffect(() => {
     const target = window.location.hash
-      ? document.querySelector(window.location.hash)
+      ? document.getElementById(window.location.hash.slice(1))
       : null
 
     if (!target) return undefined
@@ -446,7 +454,8 @@ function App({ initialView }) {
   }, [lightboxIndex, visibleStyleShots.length])
 
   if (view === 'replica') return <ReplicaWorkbench initialRequirement={directorBrief} onBack={() => navigateTo(directorBrief ? 'studio' : 'portfolio')} />
-  if (view === 'studio') return <NativeBoard onBack={() => navigateTo('portfolio')} onDirector={(brief = '') => { setDirectorBrief(brief); navigateTo('replica') }} />
+  if (view === 'studio') return <ModelWorkbench onBack={() => navigateTo('portfolio')} onWhiteboard={() => navigateTo('whiteboard')} onDirector={(brief = '') => { setDirectorBrief(brief); navigateTo('replica') }} />
+  if (view === 'whiteboard') return <NativeBoard onBack={() => navigateTo('studio')} onDirector={(brief = '') => { setDirectorBrief(brief); navigateTo('replica') }} />
 
   if (view === 'gateway') return <Gateway assetPath={assetPath} onEnterPortfolio={() => navigateTo('portfolio')} onEnterInterview={() => navigateTo('interview')} />
 

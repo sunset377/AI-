@@ -1,0 +1,1203 @@
+{
+  "source": "AIGC Hub / TokenGo",
+  "syncedAt": "2026-10-22T18:00:34.934Z",
+  "models": [
+    {
+      "id": "deepseek-v4.1-flash",
+      "publicId": "deepseek-v4.1-flash",
+      "type": "chat",
+      "name": "DeepSeek V4.1 Flash",
+      "description": "DeepSeek V4.1 Flash，DeepSeek 全新模型结构系列中的最小尺寸，推理模型，原生识图，100 万 token 上下文。",
+      "provider": "DEE",
+      "available": true
+    },
+    {
+      "id": "deepseek-v4-flash",
+      "publicId": "deepseek-v4-flash",
+      "type": "chat",
+      "name": "DeepSeek V4 Flash",
+      "description": "DeepSeek V4 性价比款，日常对话场景比 V4 Pro 便宜 12 倍。",
+      "provider": "DEE",
+      "available": true
+    },
+    {
+      "id": "gpt-6-sol",
+      "publicId": "gt-6-sol",
+      "type": "chat",
+      "name": "GT-6 Sol",
+      "description": "GT 6 系列中端主力（Sol），继承 Astra 的前沿能力，主打 Agent 与复杂编码，推理强度可调，105 万上下文，性价比突出，支持图片输入。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "gpt-5.6-terra",
+      "publicId": "gt-5.6-terra",
+      "type": "chat",
+      "name": "GT-5.6 Terra",
+      "description": "GT-5.6 均衡版（Terra），智能与成本兼顾，高性能低价，日常最常用。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "gpt-5.6-luna",
+      "publicId": "gt-5.6-luna",
+      "type": "chat",
+      "name": "GT-5.6 Luna",
+      "description": "GT-5.6 轻量版（Luna），极低成本、高速响应，适合高并发场景。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "gpt-5.6-sol",
+      "publicId": "gt-5.6-sol",
+      "type": "chat",
+      "name": "GT-5.6 Sol",
+      "description": "GT 系列新一代旗舰对话模型（Sol 旗舰版），推理、编程与复杂任务性能最强。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "gpt-6-astra",
+      "publicId": "gt-6-astra",
+      "type": "chat",
+      "name": "GT-6 Astra",
+      "description": "GT 6 首发旗舰（Astra），文本与视觉多模态推理，计算机操作、软件工程、深度研究与专业工作能力领先，可自主执行浏览网页、写测代码、产出文档表格演示等多步骤任务，1.05M 上下文。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "claude-opus-5-5",
+      "publicId": "cl-opus-5-5",
+      "type": "chat",
+      "name": "CL Opus 5.5",
+      "description": "CL 系列全新旗舰，自适应思考常开，Agent 与编码能力突出，速度更快、价格低于 Opus 5，原生 1M 上下文。",
+      "provider": "ANT",
+      "available": true
+    },
+    {
+      "id": "claude-fable-5-1",
+      "publicId": "cl-fable-5-1",
+      "type": "chat",
+      "name": "CL Fable 5.1",
+      "description": "CL 5 家族最新旗舰（Mythos 级）5.1 版，复杂编码、长程 Agent、深度研究与企业知识工作全面顶级，原生 1M 上下文、128K 最大输出，默认自适应思考。",
+      "provider": "ANT",
+      "available": true
+    },
+    {
+      "id": "claude-fable-5",
+      "publicId": "cl-fable-5",
+      "type": "chat",
+      "name": "CL Fable 5",
+      "description": "CL 5 家族首发旗舰（Mythos 级），编程、知识工作与视觉理解全面顶级，原生 1M 上下文。",
+      "provider": "ANT",
+      "available": true
+    },
+    {
+      "id": "claude-opus-4-7",
+      "publicId": "cl-opus-4-7",
+      "type": "chat",
+      "name": "CL Opus 4.7",
+      "description": "CL 系列顶级模型，擅长高难度推理、高质量写作与长上下文专家任务，原生 1M 上下文。",
+      "provider": "ANT",
+      "available": true
+    },
+    {
+      "id": "claude-opus-4-8",
+      "publicId": "cl-opus-4-8",
+      "type": "chat",
+      "name": "CL Opus 4.8",
+      "description": "CL 系列最新顶级模型，推理深度与写作质量再升级，胜任最高难度任务，原生 1M 上下文。",
+      "provider": "ANT",
+      "available": true
+    },
+    {
+      "id": "claude-opus-4-6",
+      "publicId": "cl-opus-4-6",
+      "type": "chat",
+      "name": "CL Opus 4.6",
+      "description": "CL Opus 4.6 顶级模型，擅长高难度推理、高质量写作与长上下文专家任务，原生 1M 上下文。",
+      "provider": "ANT",
+      "available": true
+    },
+    {
+      "id": "claude-sonnet-4-6",
+      "publicId": "cl-sonnet-4-6",
+      "type": "chat",
+      "name": "CL Sonnet 4.6",
+      "description": "均衡的 CL 模型，在编程、Agent 工作流和商业任务中表现出色。",
+      "provider": "ANT",
+      "available": true
+    },
+    {
+      "id": "gemini-3.8-flash",
+      "publicId": "gm-3.8-flash",
+      "type": "chat",
+      "name": "GM-3.8 Flash",
+      "description": "GM-3.8 Flash 多模态模型，最新一代 Flash，速度更快、推理更强，适合高频对话、多模态理解与助手流程。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "gemini-3-pro",
+      "publicId": "gm-3-pro",
+      "type": "chat",
+      "name": "GM-3 Pro",
+      "description": "GM 系列先进多模态模型，适合长文档、复杂推理和跨模态理解。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "gemini-3.5-flash",
+      "publicId": "gm-3.5-flash",
+      "type": "chat",
+      "name": "GM-3.5 Flash",
+      "description": "GM-3.5 Flash 多模态模型，兼顾速度与质量，适合高频对话、多模态理解与助手流程。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "kimi-k3",
+      "publicId": "kimi-k3",
+      "type": "chat",
+      "name": "Kimi K3",
+      "description": "Kimi K3 是 Moonshot 迄今能力最强的旗舰模型，拥有 2.8 万亿参数，基于 KDA 混合线性注意力机制（Kimi Delta Attention）与注意力残差技术构建，拥有 100 万 token 超长上下文。全球首个开源的 3 万亿级模型，面向长程编程、知识工作与推理等前沿智能场景。",
+      "provider": "MOO",
+      "available": true
+    },
+    {
+      "id": "deepseek-v4-pro-0813",
+      "publicId": "deepseek-v4-pro-0813",
+      "type": "chat",
+      "name": "DeepSeek V4 Pro (0813)",
+      "description": "DeepSeek V4 Pro 0813 版 — 8 月 13 日新快照, 推理与输出质量升级, 原生 1M 上下文。输出按 R1 式口径计价 (输出重)。",
+      "provider": "DEE",
+      "available": true
+    },
+    {
+      "id": "deepseek-v4-pro",
+      "publicId": "deepseek-v4-pro",
+      "type": "chat",
+      "name": "DeepSeek V4 Pro",
+      "description": "DeepSeek V4 旗舰模型，推理能力更强，原生 1M 超长上下文，胜任复杂分析与长文档任务。",
+      "provider": "DEE",
+      "available": true
+    },
+    {
+      "id": "grok-4-20-non-reasoning",
+      "publicId": "gk-4-20-non-reasoning",
+      "type": "chat",
+      "name": "GK-4.20 非推理版",
+      "description": "GK-4.20 非推理版，跳过深度思考直接作答，响应更快、成本更低，适合日常对话与即时问答。",
+      "provider": "XAI",
+      "available": true
+    },
+    {
+      "id": "doubao-seed-2-0-pro",
+      "publicId": "doubao-seed-2-0-pro",
+      "type": "chat",
+      "name": "豆包 Seed 2.0 Pro",
+      "description": "字节跳动多模态旗舰模型，支持长上下文、搜索增强和强力综合分析。",
+      "provider": "BYT",
+      "available": true
+    },
+    {
+      "id": "claude-opus-5",
+      "publicId": "cl-opus-5",
+      "type": "chat",
+      "name": "CL Opus 5",
+      "description": "CL 系列最新一代旗舰模型，推理、写作与 Agentic 能力全面升级，胜任最高难度任务，原生 1M 上下文。",
+      "provider": "ANT",
+      "available": true
+    },
+    {
+      "id": "grok-4.5",
+      "publicId": "gk-4.5",
+      "type": "chat",
+      "name": "GK-4.5",
+      "description": "GK-4.5 旗舰，Opus 级能力但 token 效率大幅领先（同任务 token 消耗约为竞品 1/4），工具调用与 Agentic 自动化表现顶尖，性价比突出。",
+      "provider": "XAI",
+      "available": true
+    },
+    {
+      "id": "glm-5.2",
+      "publicId": "glm-5.2",
+      "type": "chat",
+      "name": "GLM-5.2",
+      "description": "智谱 GLM-5.2 旗舰，当前最强开源级模型之一，长程编码与 Agentic 任务接近顶级闭源模型，中文与工具调用尤为出色，原生 1M 上下文。",
+      "provider": "ZHI",
+      "available": true
+    },
+    {
+      "id": "qwen3.8-max",
+      "publicId": "qwen3.8-max",
+      "type": "chat",
+      "name": "通义千问 3.8-Max",
+      "description": "阿里通义千问 Qwen3.8-Max 旗舰，2.4T 参数多模态 MoE，强中文、长上下文与多语言，编码与 Agentic 任务表现优异，原生 1M 上下文。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "grok-4.7",
+      "publicId": "gk-4.7",
+      "type": "chat",
+      "name": "GK-4.7",
+      "description": "GK-4.7 推理模型，面向编码、智能体任务与知识工作，支持图片输入、函数调用与结构化输出，500K 上下文。",
+      "provider": "XAI",
+      "available": true
+    },
+    {
+      "id": "grok-4.6",
+      "publicId": "gk-4.6",
+      "type": "chat",
+      "name": "GK-4.6",
+      "description": "GK-4.6 旗舰，在 4.5 的 token 效率优势上继续迭代，工具调用与 Agentic 自动化表现顶尖。",
+      "provider": "XAI",
+      "available": true
+    },
+    {
+      "id": "gpt-6.1-sol",
+      "publicId": "gt-6.1-sol",
+      "type": "chat",
+      "name": "GT-6.1 Sol",
+      "description": "GT 6 Sol 升级版推理模型，智能体编程、计算机操作与专业复杂任务能力贴近旗舰 Astra，推理强度可调，支持图片输入。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "gemini-4-argon",
+      "publicId": "gm-4-argon",
+      "type": "chat",
+      "name": "GM-4 Argon",
+      "description": "GM-4 Argon 旗舰推理模型，擅长复杂软件工程、深度数理推理与长链路智能体任务，支持图片理解与 1M 上下文。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "gemini-3.5-flash-lite",
+      "publicId": "gm-3.5-flash-lite",
+      "type": "chat",
+      "name": "GM-3.5 Flash Lite",
+      "description": "轻量高性价比 GM 模型，适合高频智能体子任务、文档解析与简单信息抽取，低延迟，支持文本、图片、视频、音频与 PDF 输入。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "qwen3.7-max",
+      "publicId": "qwen3.7-max",
+      "type": "chat",
+      "name": "通义千问 3.7 Max",
+      "description": "通义千问 Qwen3.7-Max，Qwen3.7 系列规模最大的旗舰模型，编程、办公与长周期自主执行能力强，支持工具调用与深度思考开关，1M 上下文 (当前开放纯文本能力)。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "glm-5.3",
+      "publicId": "glm-5.3",
+      "type": "chat",
+      "name": "GLM-5.3",
+      "description": "智谱 GLM-5.3 旗舰，GLM-5.2 的后继版本，长程编码、Agentic 任务与中文表达进一步提升，原生 1M 上下文、最大 128K 输出。",
+      "provider": "ZHI",
+      "available": true
+    },
+    {
+      "id": "gemini-3.1-pro",
+      "publicId": "gm-3.1-pro",
+      "type": "chat",
+      "name": "GM-3.1 Pro",
+      "description": "GM-3.1 顶级多模态模型，推理与多模态理解进一步增强，支持图片、视频、音频与长文档。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "claude-sonnet-5-5",
+      "publicId": "cl-sonnet-5-5",
+      "type": "chat",
+      "name": "CL Sonnet 5.5",
+      "description": "CL Sonnet 系列新一代，编程、Agent 任务与视觉理解兼顾速度和成本，自适应思考，原生 1M 上下文。",
+      "provider": "ANT",
+      "available": true
+    },
+    {
+      "id": "gemini-3.7-flash",
+      "publicId": "gm-3.7-flash",
+      "type": "chat",
+      "name": "GM-3.7 Flash",
+      "description": "GM-3.7 Flash 多模态模型，速度与质量兼顾的新一代 Flash，适合高频对话、多模态理解与助手流程。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "qwen3.6-plus",
+      "publicId": "qwen3.6-plus",
+      "type": "chat",
+      "name": "通义千问 3.6 Plus",
+      "description": "通义千问 Qwen3.6-Plus，原生视觉语言 Plus 模型，编程与智能体能力强，支持读图、工具调用与深度思考开关，1M 上下文。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "gemini-3.6-flash",
+      "publicId": "gm-3.6-flash",
+      "type": "chat",
+      "name": "GM-3.6 Flash",
+      "description": "GM-3.6 Flash 多模态模型，兼顾速度与质量，适合高频对话、多模态理解与助手流程。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "qwen3.8-flash",
+      "publicId": "qwen3.8-flash",
+      "type": "chat",
+      "name": "通义千问 3.8 Flash",
+      "description": "通义千问 Qwen3.8-Flash，最新一代 Flash 档多模态模型，兼顾理解生成与响应速度，支持读图、工具调用与深度思考开关，1M 上下文。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "minimax-m3",
+      "publicId": "minimax-m3",
+      "type": "chat",
+      "name": "MiniMax-M3",
+      "description": "MMX-M3 旗舰，首个同时具备前沿编码能力、1M 上下文与原生多模态的开放权重模型，可在单次会话中容纳完整代码库并执行工具调用。",
+      "provider": "MMX",
+      "available": true
+    },
+    {
+      "id": "glm-5.3-flash",
+      "publicId": "glm-5.3-flash",
+      "type": "chat",
+      "name": "GLM-5.3 Flash",
+      "description": "智谱 GLM-5.3 Flash，GLM-5.3 旗舰的高速轻量版，中文对话、代码补全与 Agent 工具调用的高性价比选择。",
+      "provider": "ZHI",
+      "available": true
+    },
+    {
+      "id": "qwen3.5-omni-flash",
+      "publicId": "qwen3.5-omni-flash",
+      "type": "chat",
+      "name": "通义千问 3.5 全模态 Flash",
+      "description": "千问全模态大模型 Flash 版，支持文本、图片、音频、音视频理解与交互，可同时输出文字与自然语音。支持超过 10 小时音频理解、60+ 种语言音频输入与 30+ 种语言语音输出，适合语音助手、多媒体分析与内容创作。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "qwen3.7-plus",
+      "publicId": "qwen3.7-plus",
+      "type": "chat",
+      "name": "通义千问 3.7 Plus",
+      "description": "通义千问 Qwen3.7-Plus，Qwen3.6-Plus 的后继版本，推理与视觉理解增强，支持工具调用与结构化输出，原生 1M 上下文、最大 131K 输出。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "qwen3.7-flash",
+      "publicId": "qwen3.7-flash",
+      "type": "chat",
+      "name": "通义千问 3.7 Flash",
+      "description": "通义千问 Qwen3.7-Flash，轻量高速档，支持视觉输入与深度思考开关，原生 1M 上下文，适合高并发、低成本的常规对话与批量任务。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "gpt-5.5",
+      "publicId": "gt-5.5",
+      "type": "chat",
+      "name": "GT-5.5",
+      "description": "GT 系列新一代旗舰对话模型，推理与写作能力全面升级，支持可调节的思考深度。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "gpt-5.4",
+      "publicId": "gt-5.4",
+      "type": "chat",
+      "name": "GT-5.4",
+      "description": "GT 系列旗舰推理模型，专注于专业工作、深度分析和高质量文稿撰写。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "gpt-5.3-codex",
+      "publicId": "gt-5.3-codex",
+      "type": "chat",
+      "name": "GT-5.3 Codex",
+      "description": "面向工程的编程模型，擅长代码编写、调试、重构和全栈开发。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "gpt-5.4-mini",
+      "publicId": "gt-5.4-mini",
+      "type": "chat",
+      "name": "GT-5.4 Mini",
+      "description": "低成本 GT-5.4 轻量版，适合快速通用对话、轻量分析与高频日常任务。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "gpt-5.4-nano",
+      "publicId": "gt-5.4-nano",
+      "type": "chat",
+      "name": "GT-5.4 Nano",
+      "description": "超轻量 GT-5.4 版本，响应极快、成本极低，适合高频低延迟的助手型交互。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "gemini-3-flash",
+      "publicId": "gm-3-flash",
+      "type": "chat",
+      "name": "GM-3 Flash",
+      "description": "更快的 GM 变体，优化吞吐量、交互工作和低延迟多模态任务。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "gemini-3.1-flash-lite",
+      "publicId": "gm-3.1-flash-lite",
+      "type": "chat",
+      "name": "GM-3.1 Flash Lite",
+      "description": "轻量 GM 模型，适合高频使用、低延迟请求和简单助手流程。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "claude-haiku-4-5",
+      "publicId": "cl-haiku-4-5",
+      "type": "chat",
+      "name": "CL Haiku 4.5",
+      "description": "CL 系列轻量模型，响应快、成本低，适合日常对话、内容摘要与轻量推理。",
+      "provider": "ANT",
+      "available": true
+    },
+    {
+      "id": "claude-sonnet-5",
+      "publicId": "cl-sonnet-5",
+      "type": "chat",
+      "name": "CL Sonnet 5",
+      "description": "CL 5 家族均衡旗舰，编程、Agent 工作流与视觉理解全面顶级，原生 1M 上下文，自适应扩展思维。",
+      "provider": "ANT",
+      "available": true
+    },
+    {
+      "id": "codex-auto-review",
+      "publicId": "gt-codex-auto-review",
+      "type": "chat",
+      "name": "GT Codex 代码审查",
+      "description": "GT Codex 代码审查助手，读取代码变更并给出审查意见，适合接入 CI 或定时审查流程。",
+      "provider": "AIGC Hub",
+      "available": true
+    },
+    {
+      "id": "minimax-m3.1-flash",
+      "publicId": "minimax-m3.1-flash",
+      "type": "chat",
+      "name": "MiniMax-M3.1-Flash",
+      "description": "MMX-M3.1 Flash，M3 系列的高速版本，面向编码与智能体任务，支持工具调用，100 万 token 上下文，原生理解图片和视频画面。",
+      "provider": "MMX",
+      "available": true
+    },
+    {
+      "id": "gpt-image-2.5-sunburst",
+      "publicId": "gt-image-2.5-sunburst",
+      "type": "image",
+      "name": "GT Image 2.5 Sunb 高端版",
+      "description": "GT 系列 2.5 代图像模型高端版，画面质感与细节表现更强，支持文生图与图生图、最高 4K 输出。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "gpt-image-2.5-flare",
+      "publicId": "gt-image-2.5-flare",
+      "type": "image",
+      "name": "GT Image 2.5 Flare 快速版",
+      "description": "GT 系列 2.5 代图像模型快速版，生成速度快、成本低，支持文生图与图生图、最高 4K 输出。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "doubao-seedream-5-0-pro",
+      "publicId": "doubao-seedream-5-0-pro",
+      "type": "image",
+      "name": "豆包 Seedream 5.0 Pro",
+      "description": "字节跳动 Seedream 5.0 Pro 图像生成模型，支持文生图、图生图编辑与最多 10 张参考图的多图融合，9 档画幅比例，人物与细节还原出色。",
+      "provider": "BYT",
+      "available": true
+    },
+    {
+      "id": "gpt-image-2",
+      "publicId": "gt-image-2",
+      "type": "image",
+      "name": "GT Image 2",
+      "description": "GT 系列最新一代图像生成模型，语义理解与细节表现更强，支持文生图与图生图。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "gemini-3.1-flash-image",
+      "publicId": "gm-3.1-flash-image",
+      "type": "image",
+      "name": "GM-3.1 Flash Image",
+      "description": "GM 系列最新高效图像模型（又名 NB 2），是 NB Pro 的高速版本，针对速度和高用量场景优化。支持联网搜索生图、联网图片搜索接地、512px 快速预览，新增 1:4/4:1/1:8/8:1 超宽比例。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "gemini-3-pro-image",
+      "publicId": "gm-3-pro-image",
+      "type": "image",
+      "name": "GM-3 Pro Image",
+      "description": "GM 系列2025年最新超高清图像模型，拥有目前最强的文字渲染能力，擅长生成8K分辨率的微距摄影、皮肤质感与复杂排版设计。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "doubao-seedream-5-0",
+      "publicId": "doubao-seedream-5-0",
+      "type": "image",
+      "name": "豆包 Seedream 5.0",
+      "description": "字节跳动即梦 AI 图像生成模型，基于 Seedream 5.0 架构，支持多图融合、最高 4K 输出、联网搜索生图，文字和人脸细节表现出色。",
+      "provider": "BYT",
+      "available": true
+    },
+    {
+      "id": "mj_imagine",
+      "publicId": "mj_imagine",
+      "type": "image",
+      "name": "MJ",
+      "description": "MJ 是全球最火的 AI 图像生成模型，以极高的艺术性和美感著称。擅长生成电影级概念艺术、插画、海报、氛围图，支持通过垫图控制风格，或多图融合（Blend）混合多张图的主体与风格。",
+      "provider": "MID",
+      "available": true
+    },
+    {
+      "id": "qwen-image-3.0",
+      "publicId": "qwen-image-3.0",
+      "type": "image",
+      "name": "通义千问 3.0 图像",
+      "description": "阿里通义千问 3.0 图像生成，文字与人脸细节出色，支持图生图 / 编辑（≤3 张参考图融合），清晰度 1K / 2K，多种画面比例。Pro 档质量更高。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "gpt-image-2-official",
+      "publicId": "gt-image-2-official",
+      "type": "image",
+      "name": "GT Image 2 官方版",
+      "description": "GT Image 2 旗舰图像模型，支持高质量图像生成与精准局部编辑。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "gpt-image-1.5-all",
+      "publicId": "gt-image-1.5-all",
+      "type": "image",
+      "name": "GT Image 1.5",
+      "description": "GT 系列最新绘图引擎，拥有行业第一的语义理解力，无需复杂提示词即可听懂大白话逻辑，精准还原画面细节。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "doubao-seedream-4-5",
+      "publicId": "doubao-seedream-4-5",
+      "type": "image",
+      "name": "豆包 Seedream 4.5",
+      "description": "字节 Seedream 4.5 图像生成模型，适合更高质量的中文图像生成与参考图创作。",
+      "provider": "BYT",
+      "available": true
+    },
+    {
+      "id": "qwen-image-2.0",
+      "publicId": "qwen-image-2.0",
+      "type": "image",
+      "name": "通义 Qwen Image 2.0",
+      "description": "通义 Qwen Image 2.0 图像生成模型，适合中文文字、海报和通用创意图。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "wan2.7-image",
+      "publicId": "wan2.7-image",
+      "type": "image",
+      "name": "Wan 2.7 图像",
+      "description": "阿里 Wan 2.7 图像生成模型，适合通用图像创作和中文场景。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "grok-imagine-image",
+      "publicId": "gk-imagine-image",
+      "type": "image",
+      "name": "GK Imagine 1.0 图像",
+      "description": "GK Imagine 1.0 图像模型，快速生成与编辑高质量创意图像。",
+      "provider": "XAI",
+      "available": true
+    },
+    {
+      "id": "aliyun-image-superres",
+      "publicId": "aliyun-image-superres",
+      "type": "image",
+      "name": "阿里云图像超分",
+      "description": "对已有图片做超分辨率放大 (最高 4 倍), 提升清晰度, 区别于生成式模型。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "gemini-3.1-flash-lite-image",
+      "publicId": "gm-3.1-flash-lite-image",
+      "type": "image",
+      "name": "GM-3.1 Flash Lite Image",
+      "description": "GM 系列 NB Lite 图像效率专家，NB 系列的超低延迟经济版，针对速度和高用量场景优化，支持文生图与图片修改（仅 1K 分辨率）。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "flux-2",
+      "publicId": "fx-2",
+      "type": "image",
+      "name": "FX-2.0 Pro",
+      "description": "FX-2.0 Pro —— 高质量图像生成，细节与光影表现出色，支持文生图与图生图（≤8 张参考图），多种画面比例。",
+      "provider": "BFL",
+      "available": true
+    },
+    {
+      "id": "flux-kontext",
+      "publicId": "fx-kontext",
+      "type": "image",
+      "name": "FX Kontext 编辑",
+      "description": "FX Kontext —— 图像编辑特化模型：上传参考图 + 文字指令进行编辑改写，不传图则为文生图。Max 档质量更高。",
+      "provider": "BFL",
+      "available": true
+    },
+    {
+      "id": "gpt-image-2-c",
+      "publicId": "gt-image-2-c",
+      "type": "image",
+      "name": "GT Image 2 C",
+      "description": "GT Image 2 紧凑版，专注 1K 分辨率图像生成，支持返回 URL 与 base64，出图快、成本低（不支持 2K/4K）。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "flux-3",
+      "publicId": "fx-3",
+      "type": "image",
+      "name": "FX-3",
+      "description": "FX-3 —— 新一代高质量图像生成，支持文生图、单图编辑与最多 10 张参考图融合，多种画面比例，1K / 2K / 4K 三档分辨率。",
+      "provider": "BFL",
+      "available": true
+    },
+    {
+      "id": "face-repaint",
+      "publicId": "face-repaint",
+      "type": "image",
+      "name": "人脸转绘",
+      "description": "人脸转绘：将照片中的真人面部转为手绘风格，人物、姿态与服装保持不变。转绘后可用于不支持真人的视频生成，输出 2K。",
+      "provider": "TIA",
+      "available": true
+    },
+    {
+      "id": "kling-image-o3",
+      "publicId": "kling-image-o3",
+      "type": "image",
+      "name": "可灵图片 O3",
+      "description": "快手可灵图片 O3，中文文字排版与参考图还原俱佳，支持文生图与多图参考融合，可出 1K/2K/4K 三档。",
+      "provider": "KUA",
+      "available": true
+    },
+    {
+      "id": "grok-imagine-image-2.0",
+      "publicId": "gk-imagine-image-2.0",
+      "type": "image",
+      "name": "GK Imagine 2.0 图像",
+      "description": "GK Imagine 2.0 生图：新一代画质与语义理解，支持文字生图、单图编辑与多图融合（最多 5 张参考图）。支持 1:1 / 16:9 / 9:16 / 3:2 / 2:3 / 4:3 / 3:4 多种画幅，出图快，按张计费。",
+      "provider": "XAI",
+      "available": true
+    },
+    {
+      "id": "gemini-nano-banana-2.1-image",
+      "publicId": "gm-nano-banana-2.1-image",
+      "type": "image",
+      "name": "GM NB 2.1 Image",
+      "description": "GM 系列 NB 2 的更新版本（NB 2.1），保持 Flash 级速度与成本，画质、提示词遵循、多轮主体一致性与文字渲染明显提升，支持 1:4 / 4:1 / 8:1 超宽幅与 1K/2K/4K 输出。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "seedance-2-5",
+      "publicId": "seedance-2-5",
+      "type": "video",
+      "name": "Seedance 2.5 · 官方直连",
+      "description": "Seedance 2.5 官方直连——字节跳动新一代视频生成模型，画质与动态表现较 2.0 全面升级。支持 4~30 秒长视频（远超同类 4~15 秒），480P / 720P / 1080P 三档，横屏竖屏任选，原生自带音轨。文生 + 图生 + 多模态参考（最多 30 张参考图、10 段参考视频、10 段参考音频）均支持，真人面部可正常生成。按秒计费，时长越长价越高；上传参考视频后按「视频总秒 + 输出秒」计费。",
+      "provider": "BYT",
+      "available": true
+    },
+    {
+      "id": "seedance-2-5-special",
+      "publicId": "seedance-2-5-special",
+      "type": "video",
+      "name": "Seedance 2.5 · 特价按次",
+      "description": "Seedance 2.5 特价按次——新一代模型按次一口价整条出片。固定 30 秒，720P / 1080P 同价，五种画面比例任选，原生自带音轨。文生、首帧图生与参考图均支持：最多 30 张参考图，可用于人物形象、场景、画风与构图参考。真人面部可正常生成。本卡不支持参考视频与参考音频。特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "BYT",
+      "available": true
+    },
+    {
+      "id": "seedance-2-5-promo",
+      "publicId": "seedance-2-5-promo",
+      "type": "video",
+      "name": "Seedance 2.5 · 特价按秒",
+      "description": "Seedance 2.5 特价档——与官方直连同款新一代模型，画质与动态表现较 2.0 全面升级，走特价供给更省。480P / 720P / 1080P 可选，横屏竖屏任选，原生自带音轨。文生 + 图生 + 多模态参考（最多 30 张参考图、10 段参考音频）均支持，真人面部可正常生成。按秒计费，时长越长价越高。注意：偶尔出现审核严格，可自行处理参考图或重试；30 秒失败可尝试 29 秒，成功率更高。特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "BYT",
+      "available": true
+    },
+    {
+      "id": "seedance-2-0-official",
+      "publicId": "seedance-2-0-official",
+      "type": "video",
+      "name": "Seedance 2.0 · 官方直连",
+      "description": "火山方舟官方 Seedance 2.0——字节跳动出品的官方视频生成模型，稳定不卡人脸、人脸一致性强。分辨率 480P~1080P 全覆盖，按秒计费按需付费。支持文生视频 + 图生视频（多参考图 ≤9 + 参考视频 ≤3 + 首尾帧），人物 / 动作 / 画风多素材融合；还能拿一段视频做**视频延续**（接着往下拍）与**视频编辑**（把片里的商品 / 角色换成参考图里的）。适合短剧、漫剧、商用视频等对稳定性与人脸要求高的场景。",
+      "provider": "BYT",
+      "available": true
+    },
+    {
+      "id": "seedance-2-0-promo",
+      "publicId": "seedance-2-0-promo",
+      "type": "video",
+      "name": "Seedance 2.0 · 特价按秒",
+      "description": "特价按秒：可过人脸。上传图 / 视频 / 音频多模态参考融合生成：图片（≤9）+ 视频（≤3）+ 音频（≤3），支持人物 / 动作 / 画风 / BGM 参考。时长可选 4-15 秒，清晰度 480P / 720P / 1080P / 2K / 4K 可选（2K / 4K 仅部分档位与线路支持），按秒计费短片更省。成片质量高，当前生成耗时较长，请耐心等待。注意：参考图（含角色设定图等，以实际提交张数为准）达到 5 张及以上时，会自动改走支持多图的渠道 / 档位，单价随之变化。特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "BYT",
+      "available": true
+    },
+    {
+      "id": "seedance-2-0-special",
+      "publicId": "seedance-2-0-special",
+      "type": "video",
+      "name": "Seedance 2.0 · 特价按次",
+      "description": "真人脸直接过、稳定不卡脸的短剧首选。一口价固定 15 秒一条。三档：Mini 最便宜（性价比之选，默认）；Fast 出片更快；官方满血最稳（真人短剧首选，约 100% 成功率）。分辨率可选 480P / 720P。各档均支持文生、首帧生视频、首尾帧过渡，以及图 / 视频 / 音频多模态参考（图≤9 + 视频≤3 + 音频≤3）。特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "BYT",
+      "available": true
+    },
+    {
+      "id": "seedance-2-0-manju-special",
+      "publicId": "seedance-2-0-manju-special",
+      "type": "video",
+      "name": "Seedance 2.0 · 漫剧特价",
+      "description": "可过真人脸：上传真人照片作首帧，人物形象带得住，漫剧 / 短剧首选。Seedance 2.0 快速版，5 / 10 / 15 秒同价，720P 含音轨，可传首尾帧或最多 9 张参考图。特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "BYT",
+      "available": true
+    },
+    {
+      "id": "seedance-2-0-ecom-special",
+      "publicId": "seedance-2-0-ecom-special",
+      "type": "video",
+      "name": "Seedance 2.0 · 电商特价",
+      "description": "满血九图主推：效果最好的满血 9 图档支持真人照片，商品图或真人模特照（最多 9 张）生成展示视频，也可纯文生。5/10/15 秒可选，720P 含音轨。特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "BYT",
+      "available": true
+    },
+    {
+      "id": "wan-3-0",
+      "publicId": "wan-3-0",
+      "type": "video",
+      "name": "Wan 3.0",
+      "description": "阿里通义万相 3.0 —— all-in-one 视频生成，统一支持参考 / 编辑 / 复刻 / 驱动：图片 / 视频 / 音频四模态参考融合，生产级角色一致性、音画真实。清晰度 480P / 720P / 1080P，时长最长 30 秒（原生），画面比例 9:16 / 16:9 / 3:4 / 4:3 / 1:1 可选。按秒计费，实际价格以下单时的估价为准。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "minimax-h3",
+      "publicId": "minimax-h3",
+      "type": "video",
+      "name": "MiniMax H3",
+      "description": "MMX H3 视频模型，2K 超清输出并自带原生音频，支持文生视频、首帧/首尾帧控制，以及参考图+参考视频+参考音频的多模态参考生成，4~15 秒任意时长。",
+      "provider": "MMX",
+      "available": true
+    },
+    {
+      "id": "veo-3-1-manju-special",
+      "publicId": "vo-3-1-manju-special",
+      "type": "video",
+      "name": "VO-3.1 · 漫剧特价",
+      "description": "一口价 8 秒，时长不额外加价。支持纯文生、首帧延伸、首尾帧过渡与参考素材。720P 出片。特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "veo-4-omni-manju-special",
+      "publicId": "vo-4-omni-manju-special",
+      "type": "video",
+      "name": "VO-4 Omni · 漫剧特价",
+      "description": "上传最多 7 张参考图带住人物形象，适合漫剧分镜。一口价 10 秒，720P。批量生成可提前联系客服包场。特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "GOO",
+      "available": false
+    },
+    {
+      "id": "wan-3-0-special",
+      "publicId": "wan-3-0-special",
+      "type": "video",
+      "name": "Wan 3.0 · 特价按次",
+      "description": "阿里通义万相 3.0 特价按次：一口价，**5-30 秒任选且同价**（默认 30 秒）。720P / 1080P，可纯文字生成，也可上传参考图做首帧或参考生。支持最多 9 张参考图（短边 ≥240 像素）、最多 3 段参考视频（合计 ≤15 秒，且参考视频时长 + 输出时长 ≤ 30 秒，放参考视频时请把视频时长调短），用于人物、动作与运镜参考。 特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "grok-imagine-1-5-manju-special",
+      "publicId": "gk-imagine-1-5-manju-special",
+      "type": "video",
+      "name": "GK-1.5 · 漫剧特价",
+      "description": "一口价 15 秒长镜头。上传一张图作画面起点，或用作参考素材融合生成。特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "XAI",
+      "available": false
+    },
+    {
+      "id": "grok-imagine-video-manju-special",
+      "publicId": "gk-imagine-video-manju-special",
+      "type": "video",
+      "name": "GK-1.0 · 漫剧特价",
+      "description": "最多 7 张参考图带住人物形象，多角色分镜适用。一口价 10 秒，也可纯文字直接生成。特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "XAI",
+      "available": false
+    },
+    {
+      "id": "pixverse-c1",
+      "publicId": "pixverse-c1",
+      "type": "video",
+      "name": "PixVerse C1 · 过人脸",
+      "description": "PixVerse C1：支持真人照片首帧生视频或纯文字生成，5 或 8 秒，720P 或 1080P。竖屏或横屏。",
+      "provider": "PIX",
+      "available": true
+    },
+    {
+      "id": "sora-2-official",
+      "publicId": "sr-2-official",
+      "type": "video",
+      "name": "SR-2 官方无水印",
+      "description": "SR-2 无水印版，输出成片不含官方水印，干净可商用。支持纯文生视频或上传 1 张首帧图（图生视频）。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "omni-flash-1-1",
+      "publicId": "omni-flash-1-1",
+      "type": "video",
+      "name": "Omni Flash 1.1",
+      "description": "GM Omni Flash 1.1（厂商 2026-08 换代版，官方模型名 gemini-omni-1.1-flash）：文生 / 首帧图生 / 首尾帧过渡 / 多图参考融合（最多 7 张），固定 10 秒，720P / 1080P 可选，横竖屏可选，成片自带同步音频。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "veo-4-omni",
+      "publicId": "vo-4-omni",
+      "type": "video",
+      "name": "VO-4 Omni",
+      "description": "GM Omni Flash（市场常称 VO-4 / 4-Omni）统一多模态视频模型：文生 / 图生 / 多图参考融合 / 视频延长，生成带同步音频的视频。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "veo-3.1",
+      "publicId": "vo-3.1",
+      "type": "video",
+      "name": "VO-3.1",
+      "description": "GM 系列推出的高可控性视频模型，凭借独特的“首尾帧控制”技术（补全起始与结束画面）和精准运镜指令，能生成自带背景音乐的专业级视频。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "seedance-2-0-9tu-special",
+      "publicId": "seedance-2-0-9tu-special",
+      "type": "video",
+      "name": "Seedance 2.0 · 九图特价",
+      "description": "满血九图专线：支持真人照片，上传最多 9 张参考图生成高质量视频。15 秒 720P 含音轨，竖屏或横屏。特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "BYT",
+      "available": true
+    },
+    {
+      "id": "grok-imagine-1-5-7tu-special",
+      "publicId": "gk-imagine-1-5-7tu-special",
+      "type": "video",
+      "name": "GK Imagine 1.5 Pro",
+      "description": "最多 14 图参考 · 全网最低价 · 无限并发。文生图生都支持，可选时长、清晰度和画面比例随所选渠道和参数变化，成片自带音轨。",
+      "provider": "XAI",
+      "available": true
+    },
+    {
+      "id": "grok-imagine-1.5",
+      "publicId": "gk-imagine-1.5",
+      "type": "video",
+      "name": "GK Imagine 1.5",
+      "description": "GK 系列全新 GK Imagine 1.5 视频模型，支持图生/文生视频。可选时长、清晰度、画面比例和参考图数量随所选渠道和参数变化，快速生成。",
+      "provider": "XAI",
+      "available": true
+    },
+    {
+      "id": "grok-imagine-video",
+      "publicId": "gk-imagine-video",
+      "type": "video",
+      "name": "GK Imagine 1.0",
+      "description": "GK Imagine 1.0 视频模型，支持灵活画幅与多档画质，快速生成动态视频。",
+      "provider": "XAI",
+      "available": true
+    },
+    {
+      "id": "kling-v3",
+      "publicId": "kling-v3",
+      "type": "video",
+      "name": "可灵 V3",
+      "description": "快手可灵 V3 视频模型，支持文生视频、首帧图生视频与首尾帧控制（部分线路），标准 720P / 专业 1080P，可同步生成音轨。",
+      "provider": "KUA",
+      "available": true
+    },
+    {
+      "id": "kling-v3-motion-control",
+      "publicId": "kling-v3-motion-control",
+      "type": "video",
+      "name": "可灵 V3 运动控制",
+      "description": "可灵 V3 运动控制视频模型：上传一段运动参考视频，AI 将视频中的运动/动作迁移到根据提示词生成的主体上，可选上传主体参考图。适合让角色复刻指定舞蹈、动作。",
+      "provider": "KUA",
+      "available": true
+    },
+    {
+      "id": "kling-v3-omni-cankao",
+      "publicId": "kling-v3-omni-cankao",
+      "type": "video",
+      "name": "可灵 V3 Omni 参考生",
+      "description": "可灵 V3 Omni 参考生模式，支持纯文生视频或上传1-7张参考图片，AI参考图片风格/内容智能分镜生成有声视频，标准/高品质双模式，5-15秒。",
+      "provider": "KUA",
+      "available": true
+    },
+    {
+      "id": "kling-3.0-turbo",
+      "publicId": "kling-3.0-turbo",
+      "type": "video",
+      "name": "可灵 3.0 Turbo",
+      "description": "快手可灵 3.0 Turbo 轻量化极速视频模型，在保障人物动作稳定连贯的前提下大幅提升出片速度、降低成本，适合大批量短视频素材生产。支持文生视频与首帧图生视频，720P，3-15 秒；可选同步生成音轨（部分线路）。",
+      "provider": "KUA",
+      "available": true
+    },
+    {
+      "id": "pixverse-v6",
+      "publicId": "pixverse-v6",
+      "type": "video",
+      "name": "PixVerse V6",
+      "description": "PixVerse V6 视频生成模型，支持文生视频与首帧图生视频，720P / 1080P 两档，时长 5-8 秒，画面稳定、运动自然，适合短视频与创意素材生产。",
+      "provider": "PIX",
+      "available": true
+    },
+    {
+      "id": "happyhorse-1-1",
+      "publicId": "happyhorse-1-1",
+      "type": "video",
+      "name": "HappyHorse 1.1",
+      "description": "HappyHorse 1.1 视频模型，支持文生视频、首帧图生、多图参考生成，自动根据所选模式路由，进一步提升文本语义理解、镜头调度与动态生成，人物动作、场景氛围、视觉美感与物理运动更流畅自然、一致性更高。720P/1080P，5~15 秒（部分线路固定出约 5 秒 1080P），原生音频（首帧图生分辨率/画幅跟随参考图）。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "veo-4-omni-v2v",
+      "publicId": "vo-4-omni-v2v",
+      "type": "video",
+      "name": "Omni 视频转视频",
+      "description": "视频转视频（V2V，VO Omni）：上传源视频（最多 2 段）+ 参考图（最多 2 张）混合输入，用提示词描述期望的融合方式生成新视频。输出无水印。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "happyhorse-1-0",
+      "publicId": "happyhorse-1-0",
+      "type": "video",
+      "name": "HappyHorse 1.0",
+      "description": "HappyHorse 1.0 视频模型，支持文生视频、首帧图生、多图参考与视频编辑，自动选择生成方式，720P/1080P，3-15 秒，原生音频。",
+      "provider": "ALI",
+      "available": false
+    },
+    {
+      "id": "viduq3",
+      "publicId": "viduq3",
+      "type": "video",
+      "name": "Vidu Q3",
+      "description": "Vidu 推出的 Q3 系列视频生成模型，支持文生视频、首帧图生视频、首尾帧过渡视频三种模式。内置音视频同步直出能力，生成的视频自带台词和音效。提供快速(turbo)和高质量(pro)两种版本，最长支持16秒视频生成。",
+      "provider": "VID",
+      "available": true
+    },
+    {
+      "id": "wan-2-6",
+      "publicId": "wan-2-6",
+      "type": "video",
+      "name": "Wan 2.6",
+      "description": "阿里万相 2.6 视频生成，支持文生视频与图生视频，1080P 画质自带音轨。快速档价格减半（仅图生视频）。",
+      "provider": "ALI",
+      "available": false
+    },
+    {
+      "id": "minimax-hailuo-2-3",
+      "publicId": "minimax-hailuo-2-3",
+      "type": "video",
+      "name": "MiniMax 海螺 2.3",
+      "description": "MMX 海螺 2.3 视频模型，支持文生视频与首帧图生视频，768p/1080p 清晰度，6/10 秒时长。",
+      "provider": "MMX",
+      "available": true
+    },
+    {
+      "id": "grok-video-3",
+      "publicId": "gk-video-3",
+      "type": "video",
+      "name": "GK Video 3",
+      "description": "GK 视频生成模型：文生 / 首帧，支持 10 种画幅（16:9、9:16、3:2、1:1 等），6~30 秒时长，720P 高清。",
+      "provider": "XAI",
+      "available": false
+    },
+    {
+      "id": "wan2.7-video",
+      "publicId": "wan2.7-video",
+      "type": "video",
+      "name": "Wan 2.7 视频",
+      "description": "阿里 Wan 2.7 视频生成模型，适合中文视频生成与多风格动态画面，支持文生、首帧、首尾帧与视频续写。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "grok-imagine-video-special",
+      "publicId": "gk-imagine-video-special",
+      "type": "video",
+      "name": "GK-1.0 多图 · 特价",
+      "description": "10 秒多图档：最多 7 张参考图锁人物与场景，按次一口价。也支持纯文生与单图首帧。720P 高清，横竖屏任选，成片自带音轨。想要 15 秒单图请选 GK-1.5 图生特价。特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "XAI",
+      "available": true
+    },
+    {
+      "id": "grok-imagine-1.5-special",
+      "publicId": "gk-imagine-1.5-special",
+      "type": "video",
+      "name": "GK-1.5 图生 · 特价",
+      "description": "上传 1 张参考图生成视频，按次一口价。720P 高清；可用时长、画面比例和生成模式随所选渠道和参数变化，成片自带音轨。特价版稳定性一般，可能出现等待时间较长或上游拥挤报错，请耐心使用；如需稳定办公请选择官方直连。",
+      "provider": "XAI",
+      "available": true
+    },
+    {
+      "id": "aliyun-video-superres",
+      "publicId": "aliyun-video-superres",
+      "type": "video",
+      "name": "阿里云视频超分",
+      "description": "对已有视频做超分辨率放大 (固定 2 倍, 最高 4K), 提升清晰度, 区别于生成式模型。",
+      "provider": "ALI",
+      "available": true
+    },
+    {
+      "id": "kling-avatar",
+      "publicId": "kling-avatar",
+      "type": "video",
+      "name": "可灵 · 数字人",
+      "description": "可灵数字人：上传一张人物形象图和一段音频，生成人物开口说话的视频，口型跟随音频，视频时长等于音频时长。适合口播、配音讲解、虚拟主播。",
+      "provider": "KUA",
+      "available": true
+    },
+    {
+      "id": "kling-lip-sync",
+      "publicId": "kling-lip-sync",
+      "type": "video",
+      "name": "可灵 · 对口型",
+      "description": "可灵对口型：上传一段单人说话视频和一段新音频，把视频里人物的嘴型换成跟随新音频，其余画面保持不变，视频时长不变。适合换台词、多语言配音。",
+      "provider": "KUA",
+      "available": true
+    },
+    {
+      "id": "kling-v4",
+      "publicId": "kling-v4",
+      "type": "video",
+      "name": "可灵 4.0",
+      "description": "快手可灵 4.0 旗舰视频模型，3.0 Omni 的多模态参考并入主模型：支持纯文生视频，或上传最多 10 张参考图片（人物 / 物品 / 场景）融合生成，部分线路支持参考视频（动作 / 运镜参考）与参考音频（指定说话人音色，台词写在提示词里）；成片通常自带音轨，带参考视频时可能无声。原生 720P（部分线路支持 1080P），时长 3-30 秒，多种画面比例可选。按秒计费，实际价格以下单时的估价为准。",
+      "provider": "KUA",
+      "available": true
+    },
+    {
+      "id": "seedance-video-edit",
+      "publicId": "seedance-video-edit",
+      "type": "video",
+      "name": "自研·视频编辑",
+      "description": "自研·视频编辑：上传 1 段视频（最长 30 秒）和 1–9 张参考图，用提示词说明要把视频里的人物或物体换成哪张图的内容（例如：把@视频1中的男人换成@图片1）。成片的时长与声音跟随原视频，按次一口价。",
+      "provider": "BYT",
+      "available": false
+    },
+    {
+      "id": "speech-2.8",
+      "publicId": "speech-2.8",
+      "type": "audio",
+      "name": "海螺 语音克隆 2.8",
+      "description": "MMX 海螺语音克隆 2.8，上传一段音频即可复刻专属音色，首次激活后永久可用。提供高音质 HD 与速度优先 Turbo 两档，支持语速、变声、情绪与音效精细调节，适合有声读物、配音与播客。",
+      "provider": "MMX",
+      "available": true
+    },
+    {
+      "id": "music",
+      "publicId": "music",
+      "type": "audio",
+      "name": "Suno 音乐生成",
+      "description": "Suno AI 音乐生成，从文本提示创作完整音乐，支持含人声歌曲与纯音乐器乐。可自定义歌词、风格标签与标题，或用灵感模式自动作词作曲，适合短视频 BGM、概念音乐与创意配乐。",
+      "provider": "MMX",
+      "available": true
+    },
+    {
+      "id": "gemini-3.1-flash-tts",
+      "publicId": "gm-3.1-flash-tts",
+      "type": "audio",
+      "name": "GM-3.1 Flash TTS",
+      "description": "GM-3.1 Flash 原生文字转语音模型，30 种预置音色、24 种语言，支持双人对话与自然语言语气控制，速度更快、价格更优。适合有声小说、长文本朗读与多角色配音。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "gemini-2.5-pro-tts",
+      "publicId": "gm-2.5-pro-tts",
+      "type": "audio",
+      "name": "GM-2.5 Pro TTS",
+      "description": "GM-2.5 Pro 原生文字转语音模型，支持 30 种预置音色与 24 种语言，可双人对话朗读，并支持用自然语言描述语气与情绪。适合有声小说、长文本朗读与多角色配音。",
+      "provider": "GOO",
+      "available": true
+    },
+    {
+      "id": "gpt-4o-mini-tts",
+      "publicId": "gt-4o-mini-tts",
+      "type": "audio",
+      "name": "GT-4o Mini TTS",
+      "description": "GT-4o mini 新一代文字转语音模型，支持用自然语言指令调节情感、口音与语速，价格约为标准 TTS 的 1/24，适合高频语音合成场景。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "voice-design",
+      "publicId": "voice-design",
+      "type": "audio",
+      "name": "海螺 音色设计",
+      "description": "MMX 海螺音色设计，用一段文字描述想要的声音（如「低沉富有磁性的悬疑播音员」），AI 即可生成专属音色并返回试听音频。生成的音色可直接用于海螺语音克隆 2.8 配音，跨项目复用。",
+      "provider": "MMX",
+      "available": true
+    },
+    {
+      "id": "voice-clone",
+      "publicId": "voice-clone",
+      "type": "audio",
+      "name": "海螺 音色克隆",
+      "description": "MMX 海螺音色克隆，上传一段 10 秒以上的清晰人声样本即可复刻专属音色。克隆时一次性收取音色费，创建即激活、永久可用；生成的音色可直接用于海螺语音克隆 2.8 配音，跨项目复用。",
+      "provider": "MMX",
+      "available": true
+    },
+    {
+      "id": "whisper-1",
+      "publicId": "whisper-1",
+      "type": "audio",
+      "name": "GT 语音转文字",
+      "description": "GT 语音转文字模型，把一段音频转写成文字并给出每个词的起止时间，适合字幕生成、口播对齐与剪辑定位；支持中文、英文等多语种。",
+      "provider": "OPE",
+      "available": true
+    },
+    {
+      "id": "doubao-tts-2.0",
+      "publicId": "doubao-tts-2.0",
+      "type": "audio",
+      "name": "豆包 语音合成 2.0",
+      "description": "豆包语音合成 2.0，提供数十种精品预置音色，覆盖通用、视频配音、角色扮演、客服、有声阅读等场景，支持多情感与情绪强度调节、多语种，单次最多 10 万字。",
+      "provider": "BYT",
+      "available": true
+    }
+  ]
+}

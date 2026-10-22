@@ -54,14 +54,14 @@ test('separate gateway and portfolio retain the original visual entry and all pr
       assert.match(html, /href="\/sanxingdui\/"/)
     }
     const studio = renderToStaticMarkup(React.createElement(App, { initialView: 'studio' }))
-    assert.match(studio, /刘耀华 · 视频智能体/)
-    assert.match(studio, /MOMOCO 导演 · 复杂镜头/)
-    assert.match(studio, /交给 MOMOCO 导演拆解/)
-    assert.match(studio, /配音与试听确认/)
-    assert.match(studio, /github\.com\/ChenShuo2004\/cs-board/)
-    assert.match(studio, /本地 F5‑TTS \/ FFmpeg/)
+    assert.match(studio, /AI 创作工作台/)
+    assert.match(studio, /MOMOCO 导演/)
+    assert.match(studio, /GT Image 2 C/)
+    assert.match(studio, /体验码/)
     assert.doesNotMatch(studio, /克隆参考音色|API 设置/)
-    assert.equal((studio.match(/class="styleCard/g) ?? []).length, 12)
+    const whiteboard = renderToStaticMarkup(React.createElement(App, { initialView: 'whiteboard' }))
+    assert.match(whiteboard, /配音与试听确认/)
+    assert.equal((whiteboard.match(/class="styleCard/g) ?? []).length, 12)
   } finally {
     await vite.close()
   }
