@@ -7,8 +7,9 @@
   "preview_urls": false,
   "vars": {
     "RELAY_VERIFIED": "0",
+    "RELAY_TASK_ID": "0bbf0968-77ee-404a-86d8-eedaad8867a8",
     "PUBLIC_ORIGIN": "https://sunset377.github.io",
-    "EXPERIENCE_EXPIRES_AT": "2026-10-30T15:59:59Z"
+    "EXPERIENCE_EXPIRES_AT": "2026-10-23T17:56:44Z"
   },
   "d1_databases": [{
     "binding": "DB",

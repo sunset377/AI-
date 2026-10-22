@@ -1,6 +1,6 @@
 # 作品集模型工作台
 
-入口：`https://sunset377.github.io/AI-/?view=studio`。工作台前端留在 GitHub Pages，后台运行于独立 Cloudflare Worker，真实调用 `https://aigchub.token6688.com/v1`。不嵌入原站，不复制登录 Cookie，不读取上游私人会话。
+入口：`https://sunset377.github.io/AI-/?view=studio`。工作台前端留在 GitHub Pages，后台运行于独立 Cloudflare Worker。聊天协议走中转站 `/v1/chat/completions`，图片走 `/api/v1/model-runtime/cli/generations`。不嵌入原站，不复制登录 Cookie，不读取上游私人会话。
 
 ## 目录与权限
 
@@ -10,9 +10,11 @@
 
 `key get` 已证实 CLI 的 `key create` 产生了带 `cli_binding.task_id` 的任务凭据，**不是不依赖任务的普通 API Key**。任务预算当前为 0；聊天接口返回 `cli_budget_authorization_required`，所需预授权为 34 micro-USD。图片 OpenAI 兼容接口返回 `cli_operation_not_supported`，需要改接 CLI 模型运行时协议，不能直接把 `/v1/images/generations` 当成可用接入。
 
-已定位运行时路由 `/api/v1/model-runtime/cli/generations`，但请求协议尚未核实完整（返回 `Invalid generation input`）；不能把找到路由当成接通。预算授权请求已建立，平台要求账户本人网页确认。未确认前不重复提交付费调用。
+通过本机 CLI 的离线接收器（假密钥、仅监听回环地址、不转发请求）核实了图片提交协议：`{ task_id, request_id, input: { model_id, modality, params } }`。正确格式在零预算下返回 `cli_budget_authorization_required`；同一 request ID 的恢复记录返回 `{ generation_id: "", request_id, state: "starting" }`。没有成品或生成编号，不可当作成功，也不得更换 UUID 重投。
 
-当前 `RELAY_VERIFIED=0`，线上目录仍能浏览，但付费入口关闭。修复协议并完成用户授权的两次成功验收后才能改为 1。下文早期的“普通 API Key”描述应以本节实际证据为准。
+后台现已改用该提交协议：初始回执和生成编号存入 D1；访客的“查看任务状态”只 GET 原 request/generation，不再 POST。临时查询失败保留原回执，内部生成编号不下发访客。最终图片输出结构仍需取得真实回执核实，当前对未确认的最终输出保守显示 `uncertain`，不会假报完成。预算错误与余额耗尽也已区分。平台仍要求账户本人网页确认任务预算。
+
+当前 `RELAY_VERIFIED=0`，线上目录仍能浏览，但付费入口关闭。用户已明确授权一次简短聊天和一张 1K 图片的付费验收；平台预算确认尚未完成。核实最终回执并完成两次成功验收后才能向访客开放。
 
 ## 回退保障
 
@@ -32,7 +34,9 @@
 
 签名会话有效期 8 小时。同一会话每天最多聊天 6 次、图片 1 次；全站每天最多聊天 20 次、图片 3 次，按北京时间日期计数。上游拒绝或结果不确定的请求也占用一次体验次数，防止自动重试造成额外消费。
 
-Worker 本期开放至 `2026-10-30T15:59:59Z`（北京时间 10 月 30 日 23:59:59）。延长期限须修改 `wrangler.models.jsonc` 后重新部署。专用普通 API Key 总额度为 100000 micro-USD（0.10 USD），不是每位访客额度；上游按调用前余额检查，一次实际消费可能超过剩余额度，不能把此数值宣传为绝对结算上限。Key 无 video/audio 权限，并只允许两个指定模型。密钥的创建不扣生成费用。
+当前任务凭据到期时间为 `2026-10-23T17:56:44Z`（北京时间 10 月 24 日 01:56:44）；网关体验期限同步限制到该时刻，不再使用晚于凭据的日期。此凭据仅适用于短期验收，不是永久部署凭据。长期对外体验仍需平台支持的持久受限凭据，不能靠复制登录 Cookie、导出现有 Codex Provider Key 或循环建任务冒充长期接入。
+
+专用任务 API Key 总额度为 100000 micro-USD（0.10 USD），但任务预算仍为 0，两者不是同一额度；不是每位访客额度。上游按调用前余额检查，一次实际消费可能超过剩余额度，不能把 Key 额度宣传为绝对结算上限。Key 无 video/audio 权限，并只允许两个指定模型。密钥的创建不扣生成费用。
 
 ## 任务与费用
 
@@ -52,6 +56,8 @@ node scripts/provision-model-gateway.mjs --install
 npm run build -- --base=/AI-/
 ```
 
-首次创建凭据需先建立专用 TokenGo account task，把其 UUID 设置为 `RELAY_SETUP_TASK_ID` 再运行 provisioning 脚本；脚本会先自检 DPAPI，仅首次创建独立凭据，后续复用加密状态。首次配置中一枚未使用的临时凭据已撤销，当前凭据独立保存。任何不确定的创建或安装失败都应先查 key 元数据，不要循环创建。
+首次创建凭据需先建立专用 TokenGo account task，把其 UUID 设置为 `RELAY_SETUP_TASK_ID` 再运行 provisioning 脚本；Worker 的 `RELAY_TASK_ID` 必须与凭据绑定任务一致，体验到期不晚于任务到期。脚本会先自检 DPAPI，仅首次创建独立凭据，后续复用加密状态。首次配置中一枚未使用的临时凭据已撤销，当前凭据独立保存。任何不确定的创建或安装失败都应先查 key 元数据，不要循环创建。
 
 本地界面验收：`npm run preview -- --port 5190 --base=/AI-/`，再运行 `node scripts/verify-model-workbench.mjs`。该脚本使用隔离浏览器和模拟接口，不发生模型消费，截图仅为本地验收产物，不发布到作品集。
+
+本轮非付费检查：网关、首页及邀请相关 16 项测试通过，`/AI-/` 构建和 Wrangler dry-run 通过；线上目录返回 133 个模型、`ready:false`，付费入口 503。全站测试未通过：旧的默认首页、合作平台展示、历史人像展示 SSR 测试失败/超时；另一次限定运行证实 `interview-knowledge.test.js` 引用不存在的 `agentInterviewQuestionBank` 导出。此处未为通过旧断言而恢复已删除的个人信息或改写无关面试资料。

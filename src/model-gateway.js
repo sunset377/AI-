@@ -42,7 +42,20 @@ async function readJson(request, max = 30000) {
 }
 
 function publicJob(row) {
-  return { id: row.id, status: row.status, ...(row.result ? JSON.parse(row.result) : {}) }
+  const { relayGenerationId, ...result } = row.result ? JSON.parse(row.result) : {}
+  return { id: row.id, status: row.status, ...result }
+}
+
+function imageReceipt(data, requestId, modelId, previous = {}) {
+  const relayGenerationId = data.generation_id || previous.relayGenerationId
+  const result = { modelId, ...(typeof relayGenerationId === 'string' && relayGenerationId.length <= 200 ? { relayGenerationId } : {}) }
+  if (data.is_final === true) {
+    if (data.status === 'failed') return { status: 'failed', result: { ...result, error: '上游图片任务失败，请联系作者核查结算。' } }
+    // shortcut: final image output schema still requires a real receipt before enabling public calls.
+    return { status: 'uncertain', result: { ...result, error: '图片任务已结束，成品尚未核实，请联系作者，不要重复提交。' } }
+  }
+  if ((data.request_id === requestId && ['starting', 'pending', 'running'].includes(data.state)) || (typeof data.status === 'string' && data.is_final === false)) return { status: 'processing', result }
+  throw new Error('Unconfirmed image receipt')
 }
 
 export async function handleModelRequest(request, env, upstreamFetch = fetch) {
@@ -50,7 +63,7 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
   const origin = request.headers.get('origin')
   if (origin !== env.PUBLIC_ORIGIN) return json({ error: '该访问来源未获授权。' }, 403)
   if (request.method === 'OPTIONS') return new Response(null, { status: 204 })
-  const configured = Boolean(env.RELAY_API_KEY && env.SESSION_SECRET && env.INVITE_TOKEN && env.DB && env.RELAY_VERIFIED === '1')
+  const configured = Boolean(env.RELAY_API_KEY && env.RELAY_TASK_ID && env.SESSION_SECRET && env.INVITE_TOKEN && env.DB && env.RELAY_VERIFIED === '1')
   const expiry = Date.parse(env.EXPERIENCE_EXPIRES_AT || '')
   const expired = !Number.isFinite(expiry) || Date.now() >= expiry
   if (url.pathname === '/api/models' && request.method === 'GET') {
@@ -74,6 +87,18 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
   const jobId = url.pathname.match(/^\/api\/jobs\/([a-f0-9-]{36})$/)?.[1]
   if (jobId && request.method === 'GET') {
     const row = await env.DB.prepare('SELECT * FROM model_requests WHERE id = ? AND session = ?').bind(jobId, session.id).first()
+    if (row?.kind === 'image' && ['processing', 'uncertain'].includes(row.status)) {
+      const previous = row.result ? JSON.parse(row.result) : {}
+      try {
+        const path = previous.relayGenerationId ? '/generations/' + encodeURIComponent(previous.relayGenerationId) : '/requests/' + jobId
+        const response = await upstreamFetch('https://aigchub.token6688.com/api/v1/model-runtime/cli' + path, { method: 'GET', headers: { authorization: `Bearer ${env.RELAY_API_KEY}` }, signal: AbortSignal.timeout(20000) })
+        if (response.ok) {
+          const next = imageReceipt(await readJson(response, 2_000_000), jobId, previous.modelId, previous)
+          row.status = next.status; row.result = JSON.stringify(next.result)
+          await env.DB.prepare('UPDATE model_requests SET status = ?, result = ? WHERE id = ?').bind(row.status, row.result, jobId).run()
+        } else await response.body?.cancel()
+      } catch { /* Status queries never resubmit paid work or discard the previous receipt. */ }
+    }
     return row ? json(publicJob(row)) : json({ error: '未找到当前访客的任务。' }, 404)
   }
   if (!['/api/chat', '/api/images'].includes(url.pathname)) return json({ error: '该功能未向访客开放。' }, 403)
@@ -94,33 +119,32 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
   if (!reserved) return json({ error: '今日体验次数已用完，或同一请求正在处理。' }, 429)
   const body = input.type === 'chat'
     ? { model: input.modelId, messages: [{ role: 'system', content: '你是刘耀华作品集的 AI 创作助手。请用中文清晰简洁地回答用户的问题。' }, ...input.messages], stream: false, max_tokens: 600 }
-    : { model: input.modelId, prompt: input.prompt, size: input.size, n: 1, quality: 'medium', response_format: 'url' }
+    : { task_id: env.RELAY_TASK_ID, request_id: input.requestId, input: { model_id: input.modelId, modality: 'image', params: { prompt: input.prompt, size: input.size, count: 1, quality: 'medium', mode: 'text-to-image', output_format: 'jpeg' } } }
   let result, status
   try {
-    const response = await upstreamFetch(base + (input.type === 'chat' ? '/chat/completions' : '/images/generations'), {
+    const response = await upstreamFetch(input.type === 'chat' ? base + '/chat/completions' : 'https://aigchub.token6688.com/api/v1/model-runtime/cli/generations', {
       method: 'POST', headers: { authorization: `Bearer ${env.RELAY_API_KEY}`, 'content-type': 'application/json', 'x-request-id': input.requestId },
       body: JSON.stringify(body), signal: AbortSignal.timeout(input.type === 'chat' ? 60_000 : 180_000),
     })
     if (!response.ok) {
-      await response.body?.cancel()
+      let code
+      try { code = (await readJson(response, 4000)).error?.code } catch { /* Never expose the provider response. */ }
       console.error(JSON.stringify({ event: 'relay_rejected', status: response.status, id: input.requestId }))
       status = response.status >= 500 ? 'uncertain' : 'failed'
-      result = { error: response.status === 402 ? '作者的体验额度已用完，请联系作者。' : response.status === 429 ? '模型当前繁忙，请稍后查看任务。' : '上游未完成本次调用，请联系作者核查。' }
+      result = { error: code === 'cli_budget_authorization_required' ? '作者尚未完成平台预算授权，请联系作者。' : response.status === 402 ? '作者的体验额度已用完，请联系作者。' : response.status === 429 ? '模型当前繁忙，请稍后查看任务。' : '上游未完成本次调用，请联系作者核查。' }
     } else {
-      const data = await readJson(new Request('https://response.invalid', { method: 'POST', headers: { 'content-type': 'application/json' }, body: response.body, duplex: 'half' }), 2_000_000)
+      const data = await readJson(response, 2_000_000)
       const content = data.choices?.[0]?.message?.content
-      const imageUrl = data.data?.[0]?.url
-      if (input.type === 'chat' && typeof content === 'string' && content.trim()) result = { text: content.slice(0, 12000), modelId: input.modelId }
-      else if (input.type === 'image' && typeof imageUrl === 'string' && imageUrl.startsWith('https://')) result = { imageUrl, modelId: input.modelId }
+      if (input.type === 'image') ({ result, status } = imageReceipt(data, input.requestId, input.modelId))
+      else if (typeof content === 'string' && content.trim()) { result = { text: content.slice(0, 12000), modelId: input.modelId }; status = 'complete' }
       else throw new Error('No confirmed result')
-      status = 'complete'
     }
   } catch {
     status = 'uncertain'
-    result = { error: '结果尚未确认，请保留任务记录并联系作者核查，避免重复扣款。' }
+    result = { modelId: input.modelId, error: '结果尚未确认，请保留任务记录并联系作者核查，避免重复扣款。' }
   }
   await env.DB.prepare('UPDATE model_requests SET status = ?, result = ? WHERE id = ?').bind(status, JSON.stringify(result), input.requestId).run()
-  return json({ id: input.requestId, status, ...result })
+  return json(publicJob({ id: input.requestId, status, result: JSON.stringify(result) }))
 }
 
 export default {

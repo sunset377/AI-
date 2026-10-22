@@ -8,7 +8,7 @@ const origin = 'https://sunset377.github.io'
 function setup() {
   const db = new DatabaseSync(':memory:')
   db.exec(readFileSync(new URL('../migrations/models/0001_requests.sql', import.meta.url), 'utf8'))
-  const env = { RELAY_VERIFIED: '1', PUBLIC_ORIGIN: origin, RELAY_API_KEY: 'fixture-key', SESSION_SECRET: 'test-session-secret', INVITE_TOKEN: 'test-invite', EXPERIENCE_EXPIRES_AT: '2099-01-01', DB: {
+  const env = { RELAY_VERIFIED: '1', RELAY_TASK_ID: 'fixture-task', PUBLIC_ORIGIN: origin, RELAY_API_KEY: 'fixture-key', SESSION_SECRET: 'test-session-secret', INVITE_TOKEN: 'test-invite', EXPERIENCE_EXPIRES_AT: '2099-01-01', DB: {
     prepare(sql) { return { bind(...args) { return { async first() { return db.prepare(sql).get(...args) || null }, async run() { return db.prepare(sql).run(...args) } } } } },
   } }
   const request = (path, body, token, extra = {}) => new Request('https://gateway.test' + path, { method: body ? 'POST' : 'GET', headers: { origin, ...(body ? { 'content-type': 'application/json' } : {}), ...(token ? { authorization: `Bearer ${token}` } : {}), ...extra }, ...(body ? { body: JSON.stringify(body) } : {}) })
@@ -82,16 +82,43 @@ test('one image per session, fixed single-image parameters, and a hard global im
   const { env, request, session } = setup(); const token = await session()
   let calls = 0
   const upstream = async (url, options) => {
-    calls++; assert.equal(url, 'https://aigchub.token6688.com/v1/images/generations')
-    assert.equal(JSON.parse(options.body).n, 1)
-    assert.equal(JSON.parse(options.body).quality, 'medium')
-    return Response.json({ data: [{ url: 'https://delivery.test/fixture.jpg' }] })
+    calls++; assert.equal(url, 'https://aigchub.token6688.com/api/v1/model-runtime/cli/generations')
+    const body = JSON.parse(options.body)
+    assert.equal(body.task_id, 'fixture-task')
+    assert.equal(body.input.modality, 'image')
+    assert.equal(body.input.params.count, 1)
+    assert.equal(body.input.params.quality, 'medium')
+    return Response.json({ request_id: body.request_id, generation_id: 'fixture-generation', state: 'running' })
   }
-  assert.equal((await (await handleModelRequest(request('/api/images', image(), token), env, upstream)).json()).status, 'complete')
+  assert.equal((await (await handleModelRequest(request('/api/images', image(), token), env, upstream)).json()).status, 'processing')
   assert.equal((await handleModelRequest(request('/api/images', image(), token), env, upstream)).status, 429)
   for (let i = 0; i < 2; i++) await handleModelRequest(request('/api/images', image(), await session()), env, upstream)
   assert.equal((await handleModelRequest(request('/api/images', image(), await session()), env, upstream)).status, 429)
   assert.equal(calls, 3)
+})
+
+test('image recovery only reads the original request and never exposes upstream internals', async () => {
+  const { env, request, session } = setup(); const token = await session(); const body = image()
+  let writes = 0; let reads = 0
+  const upstream = async (url, options) => {
+    if (options.method === 'POST') { writes++; return Response.json({ request_id: body.requestId, generation_id: '', state: 'starting' }) }
+    reads++; assert.equal(url, 'https://aigchub.token6688.com/api/v1/model-runtime/cli/requests/' + body.requestId)
+    return Response.json({ request_id: body.requestId, generation_id: '', state: 'starting' })
+  }
+  const first = await (await handleModelRequest(request('/api/images', body, token), env, upstream)).json()
+  assert.equal(first.status, 'processing')
+  assert.doesNotMatch(JSON.stringify(first), /fixture-task|generation_id|request_id/)
+  await handleModelRequest(request('/api/images', body, token), env, upstream)
+  const recovered = await (await handleModelRequest(request('/api/jobs/' + body.requestId, null, token), env, upstream)).json()
+  assert.equal(recovered.status, 'processing'); assert.equal(writes, 1); assert.equal(reads, 1)
+  await handleModelRequest(request('/api/jobs/' + body.requestId, null, await session()), env, () => assert.fail('Another visitor cannot query supplier'))
+})
+
+test('budget authorization required is not misreported as depleted wallet balance', async () => {
+  const { env, request, session } = setup(); const token = await session()
+  const result = await (await handleModelRequest(request('/api/chat', chat(), token), env, async () => Response.json({ error: { code: 'cli_budget_authorization_required', message: 'private details' } }, { status: 402 }))).json()
+  assert.equal(result.status, 'failed'); assert.match(result.error, /预算授权/)
+  assert.doesNotMatch(result.error, /已用完|private details/)
 })
 
 test('network uncertainty is persisted, with no automatic paid retry', async () => {
@@ -101,6 +128,19 @@ test('network uncertainty is persisted, with no automatic paid retry', async () 
   assert.equal(first.status, 'uncertain')
   await handleModelRequest(request('/api/images', body, token), env, fail)
   assert.equal(calls, 1)
-  const recovery = await (await handleModelRequest(request('/api/jobs/' + body.requestId, null, token), env)).json()
+  const recovery = await (await handleModelRequest(request('/api/jobs/' + body.requestId, null, token), env, async (_url, options) => { assert.equal(options.method, 'GET'); throw new Error('Read unavailable') })).json()
   assert.deepEqual(recovery, first)
+})
+
+test('image status query failures preserve the existing receipt, and an unverified final payload is never called complete', async () => {
+  const { env, request, session } = setup(); const token = await session(); const body = image()
+  const first = await (await handleModelRequest(request('/api/images', body, token), env, async () => Response.json({ request_id: body.requestId, generation_id: 'private-generation', state: 'running' }))).json()
+  const unavailable = await (await handleModelRequest(request('/api/jobs/' + body.requestId, null, token), env, async (url, options) => {
+    assert.match(url, /\/generations\/private-generation$/); assert.equal(options.method, 'GET')
+    return Response.json({ error: { code: 'unavailable' } }, { status: 503 })
+  })).json()
+  assert.deepEqual(unavailable, first)
+  const unverified = await (await handleModelRequest(request('/api/jobs/' + body.requestId, null, token), env, async () => Response.json({ status: 'succeeded', is_final: true, output: { unknown: 'shape' } }))).json()
+  assert.equal(unverified.status, 'uncertain'); assert.equal(unverified.imageUrl, undefined)
+  assert.doesNotMatch(JSON.stringify(unverified), /private-generation|unknown/)
 })

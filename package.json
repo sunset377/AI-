@@ -11,7 +11,7 @@
     "serve:demo": "node server/portfolio-server.js",
     "test:replica": "node --test test/replica.test.js test/replica-template.test.js test/replica-drafts.test.js",
     "verify:replica": "node scripts/verify-replica.mjs",
-    "test:deployment": "node --test --test-concurrency=1",
+    "test:deployment": "node --test --test-concurrency=1 test/*.test.js",
     "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
