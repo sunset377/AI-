@@ -136,8 +136,8 @@ test('template editor exposes an always-ready director composer, evidence and ex
   const { renderToStaticMarkup } = await import('react-dom/server')
   const vite = await createServer({ appType: 'custom', cacheDir: '.codex-run/replica-tests/template-cache', server: { middlewareMode: true, hmr: false } })
   try {
-    const { default: TemplateEditor } = await vite.ssrLoadModule('/src/components/ReplicaWorkbench/TemplateEditor.jsx')
-    const html = renderToStaticMarkup(React.createElement(TemplateEditor, { health: { ready: false }, requestApi: async () => {}, mediaUrl: (url) => url, onJob: () => {} }))
+    const { default: TemplateEditor, directorSendBlock } = await vite.ssrLoadModule('/src/components/ReplicaWorkbench/TemplateEditor.jsx')
+    const html = renderToStaticMarkup(React.createElement(TemplateEditor, { health: { ready: false, planning: { ready: true }, render: { ready: false } }, requestApi: async () => {}, mediaUrl: (url) => url, onJob: () => {} }))
     assert.match(html, /告诉导演你想做什么/)
     assert.match(html, /aria-label="告诉导演你想做什么"/)
     assert.match(html, /添加参考视频/); assert.match(html, /新建会话/); assert.match(html, /恢复会话/)
@@ -146,9 +146,15 @@ test('template editor exposes an always-ready director composer, evidence and ex
     assert.match(html, /确认当前方案/); assert.match(html, /开场钩子文案/); assert.match(html, /利益点文案/)
     assert.match(html, /本地向导/); assert.doesNotMatch(html, /value="api"/)
     assert.doesNotMatch(html, /aria-label="告诉导演你想做什么"[^>]*disabled/)
+    assert.match(html, /仍可文字规划/)
     assert.match(html, /disabled=""[^>]*>制作成片/)
     assert.match(html, /没有 OCR\/ASR/); assert.match(html, /role="status"/)
     assert.doesNotMatch(html, /已识别剧情|已识别语音|type="password"|API KEY|自定义 URL/)
+    assert.equal(directorSendBlock({ requirement: '', chatBusy: false, dirty: false, planningReady: true }), '请输入想法后再发送')
+    assert.equal(directorSendBlock({ requirement: '做个视频', chatBusy: true }), '当前任务正在处理，请稍候再发送')
+    assert.equal(directorSendBlock({ requirement: '做个视频', dirty: true }), '先保存修改，再与导演对话')
+    assert.equal(directorSendBlock({ requirement: '做个视频', planningReady: false }), '执行服务未连接；连接后才能发送规划')
+    assert.equal(directorSendBlock({ requirement: '做个视频' }), '')
   } finally { await vite.close() }
 })
 

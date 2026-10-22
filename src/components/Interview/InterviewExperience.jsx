@@ -111,7 +111,7 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
         </button>
         <div className="interviewIdentity">
           <img src={assetPath('assets/hero-avatar.jpg')} alt="刘耀华" />
-          <span><strong>辞.</strong><small>AI INTERVIEW / ONLINE</small></span>
+          <span><strong>刘耀华</strong><small>AI INTERVIEW / ONLINE</small></span>
         </div>
         <button className="interviewPortfolioLink" type="button" onClick={onOpenPortfolio} aria-label="查看作品集">
           <span className="interviewNavLabel">查看作品集</span><span aria-hidden="true">↗</span>
@@ -130,7 +130,7 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
             回答会综合刘耀华的教育背景、作品集与真实项目，并主动关联 Agent 工作流、Web 产品交付和岗位匹配度。
           </p>
           <dl className="interviewFacts">
-            <div><dt>定位</dt><dd>AI Agent 开发 / 工作流 / FDE</dd></div>
+            <div><dt>定位</dt><dd>AI 信息流 / Agent 开发 / AIGC 赋能</dd></div>
             <div><dt>实战</dt><dd>60+部短剧 · 开源Skill · 自动化生产线</dd></div>
             <div><dt>状态</dt><dd><span /> AI助手时刻在线</dd></div>
           </dl>
@@ -154,7 +154,7 @@ function InterviewExperience({ assetPath, onBack, onOpenPortfolio }) {
           <div className="interviewTranscript" ref={transcriptRef} aria-live="polite">
             {messages.map((message, index) => (
               <article className={`interviewMessage is-${message.role}`} key={`${message.role}-${index}`}>
-                <span>{message.role === 'assistant' ? '辞.AI' : '你'}</span>
+                <span>{message.role === 'assistant' ? '刘耀华.AI' : '你'}</span>
                 <p>
                   {message.content}
                   {isStreaming && index === messages.length - 1 ? <i aria-label="正在回答" /> : null}

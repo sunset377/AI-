@@ -19,11 +19,27 @@ function hypitLauncher() {
 }
 
 export async function runTool(program, args, options = {}) {
-  return execute(program, args, { windowsHide: true, timeout: 180_000, maxBuffer: 4 * 1024 * 1024, ...options })
+  const env = { ...process.env, ...options.env }
+  if (process.platform === 'win32' && env.USERPROFILE) {
+    for (const key of ['TEMP', 'TMP']) if (env[key]?.includes('%USERPROFILE%')) env[key] = env[key].replaceAll('%USERPROFILE%', env.USERPROFILE)
+  }
+  return execute(program, args, { windowsHide: true, timeout: 180_000, maxBuffer: 4 * 1024 * 1024, ...options, env })
 }
 
 export async function runHypit(args, options) {
   return runTool(process.execPath, [hypitLauncher(), ...args], { cwd: HYPIT_PROJECT, ...options })
+}
+
+export async function probeVideoDuration(inputPath) {
+  const result = await runTool(process.env.FFPROBE_PATH || 'ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', inputPath], { timeout: 15_000 })
+  const seconds = Number(String(result.stdout).trim())
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : null
+}
+
+export async function trimReplicaVideo(inputPath, outputPath, seconds = 30) {
+  // 重编码以精确停在指定秒数；输出为独立副本，不修改原视频。
+  await runTool(process.env.FFMPEG_PATH || 'ffmpeg', ['-y', '-i', inputPath, '-t', String(seconds), '-c:v', 'libx264', '-preset', 'veryfast', '-c:a', 'aac', '-movflags', '+faststart', outputPath], { timeout: 120_000 })
+  return outputPath
 }
 
 export async function checkReplicaTools() {

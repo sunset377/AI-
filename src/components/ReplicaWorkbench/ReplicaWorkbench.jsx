@@ -1,3 +1,4 @@
+import WhiteboardStudio from './WhiteboardStudio'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { REPLICA_LIMITS, planReplica, validateReplicaOptions } from '../../replica'
 import './ReplicaWorkbench.css'
@@ -92,8 +93,10 @@ export default function ReplicaWorkbench({ onBack }) {
   const [duration, setDuration] = useState(0)
   const [options, setOptions] = useState({ opening: 'fast', highlightStart: 0, title: '', captions: '', style: 'blue', keepAudio: true })
   const [health, setHealth] = useState(null)
+  const [whiteboardHandoff, setWhiteboardHandoff] = useState(null)
   const [checking, setChecking] = useState(false)
   const [jobs, setJobs] = useState([])
+  const [audit, setAudit] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -122,8 +125,8 @@ export default function ReplicaWorkbench({ onBack }) {
     try {
       const result = await requestApi('/health')
       setHealth(result)
-      if (result.ready) { setJobs((await requestApi('/jobs')).jobs); setPollError('') }
-    } catch (error) { setHealth({ ready: false, error: error.message }) }
+      if (result.ready) { setJobs((await requestApi('/jobs')).jobs); setAudit((await requestApi('/audit?limit=50')).entries); setPollError('') }
+    } catch (error) { setHealth({ ready: false, planning: { ready: false }, render: { ready: false }, error: error.message }) }
     finally { setChecking(false) }
   }
 
@@ -194,6 +197,7 @@ export default function ReplicaWorkbench({ onBack }) {
         <nav className="rwNav" aria-label="工作台导航">
           {[
             ['template', 'R', '导演 Agent', '想法 · 对话 · 方案 · 成片'],
+            ['whiteboard', '声', '白板与音频库', '试听 · 成品旁白 · 白板视频'],
             ['create', '剪', '原片剪辑包装', '旧版 · 节奏 · 字幕包装'],
             ['result', '▶', '结果工作台', '真实成片 · 原片对比'],
             ['history', '记', '运行记录', '状态 · 任务 · 文件管理'],
@@ -210,7 +214,9 @@ export default function ReplicaWorkbench({ onBack }) {
         {error && <p className="rwAlert" role="alert">{error}</p>}
         {pollError && <p className="rwAlert" role="alert">{pollError} 已提交任务不会自动重试。<button type="button" onClick={connect}>重新连接</button></p>}
 
-        <div hidden={tab !== 'template'}><TemplateEditor health={health} requestApi={requestApi} mediaUrl={mediaUrl} jobBusy={busy} onJob={(job) => { setJobs((all) => [job, ...all]); setSelectedId(job.id); setTab('result') }} /></div>
+        <div hidden={tab !== 'template'}><TemplateEditor onWhiteboard={(copy) => { setWhiteboardHandoff({ copy }); setTab('whiteboard') }} health={health} requestApi={requestApi} mediaUrl={mediaUrl} jobBusy={busy} onJob={(job) => { setJobs((all) => [job, ...all]); setSelectedId(job.id); setTab('result') }} /></div>
+
+        <div hidden={tab !== 'whiteboard'}><WhiteboardStudio requestApi={requestApi} mediaUrl={mediaUrl} handoff={whiteboardHandoff} /></div>
 
         {tab === 'create' && <>
           <div className="rwCreateGrid">
@@ -219,7 +225,7 @@ export default function ReplicaWorkbench({ onBack }) {
               <input ref={fileInput} className="rwFileInput" type="file" accept="video/mp4,video/quicktime,video/webm,.m4v" aria-label="选择参考视频" disabled={busy} onChange={(event) => { choose(event.target.files[0]); event.target.value = '' }} />
               {url ? <div className="rwUploaded"><video src={url} controls playsInline preload="metadata" aria-label="参考视频原片" onLoadedMetadata={(event) => {
                 const value = event.currentTarget.duration
-                if (!Number.isFinite(value) || value < 0.5 || value > REPLICA_LIMITS.seconds + 0.05) { setDuration(0); setError('请选择 0.5～30 秒的视频，建议先用 3～5 秒片段。') } else { setDuration(value); setError('') }
+                if (!Number.isFinite(value) || value < 0.5 || value > REPLICA_LIMITS.seconds + 0.05) { setDuration(0); setError(`视频时长 ${Number.isFinite(value) ? value.toFixed(1) : '未知'} 秒，最长 ${REPLICA_LIMITS.seconds} 秒；请更换视频，或改用导演 Agent 截取前 ${REPLICA_LIMITS.seconds} 秒。`) } else { setDuration(value); setError('') }
               }} onError={() => { setDuration(0); setError('浏览器无法播放这段视频，请更换为 H.264 编码的 MP4。') }} /><div className="rwFileMeta"><strong>{file?.name}</strong><span>{duration ? `${duration.toFixed(1)} 秒 · ` : ''}{(file.size / 1024 / 1024).toFixed(1)} MB</span></div><button type="button" className="rwSecondary" disabled={busy} onClick={() => fileInput.current.click()}>更换视频</button></div> :
                 <button className={`rwDropzone${dragging ? ' isDragging' : ''}`} type="button" disabled={busy} onClick={() => fileInput.current.click()} onDragOver={(event) => { event.preventDefault(); setDragging(true) }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); choose(event.dataTransfer.files[0]) }}><span className="rwUploadIcon">↑</span><strong>把源视频放在这里</strong><span>拖入文件，或点击选择视频</span><small>MP4 / MOV / WebM · 最长 30 秒 · 最大 25 MB<br />建议用 3～5 秒片段开始体验</small><span className="rwChooseButton">选择视频 ↗</span></button>}
               <div className="rwSourceNote"><span>原片画面保留</span><p>调整剪辑顺序和节奏，不自动替换人物、场景或声音身份。</p></div>
@@ -240,21 +246,24 @@ export default function ReplicaWorkbench({ onBack }) {
         </>}
 
         {tab === 'result' && <section className="rwPanel rwResults">
-          <div className="rwPanelHead"><div><p className="rwEyebrow">REAL OUTPUT</p><h2>{currentJob?.filename || '等待你的第一个版本'}</h2></div>{currentJob && <span className="rwPill rwFree">¥ 0 模型费</span>}</div>
+          <div className="rwPanelHead"><div><p className="rwEyebrow">REAL OUTPUT</p><h2>{currentJob?.filename || '等待你的第一个版本'}</h2></div>{currentJob && <span className={`rwPill ${currentJob.kind === 'video' ? '' : 'rwFree'}`}>{currentJob.kind === 'video' ? 'MiniMax 按量计费' : '¥ 0 模型费'}</span>}</div>
           {!currentJob ? <div className="rwEmpty"><span className="rwUploadIcon">▶</span><h3>先制作一个版本</h3><p>实际成片完成后，会在这里显示对比和下载。</p><button className="rwPrimary" type="button" onClick={() => setTab('create')}>去上传视频 →</button></div> : <>
             <div className={`rwJobStatus ${currentJob.status === 'failed' ? 'isFailed' : ''}`} role="status"><strong>{currentJob.message}</strong><span>{currentJob.progress}%</span><progress max="100" value={currentJob.progress} /></div>
+            {currentJob.directorPlan && <div className="rwTaskCard"><p className="rwEyebrow">TASK PLAN</p><p className="rwTaskPlan">方案已定：{currentJob.directorPlan.route.kind === 'hypit-template' ? `本地 Hypit 模板 · ${currentJob.directorPlan.canvas.width}×${currentJob.directorPlan.canvas.height} · ${currentJob.directorPlan.canvas.duration} 秒 · 零模型费` : `${currentJob.directorPlan.canvas.width}×${currentJob.directorPlan.canvas.height} · ${currentJob.directorPlan.canvas.duration} 秒 · ${currentJob.video?.model || 'MiniMax-H3'} 云端生成`}，现在生成。</p>{currentJob.directorPlan.prompt && <details className="rtSection"><summary>视频指令</summary><p className="rtTaskPrompt">{currentJob.directorPlan.prompt}</p></details>}</div>}
             <ResultComparison currentJob={currentJob} mediaUrl={mediaUrl} />
-            <div className="rwResultFoot"><p>{currentJob.result ? `${currentJob.result.width} × ${currentJob.result.height} · ${currentJob.result.duration.toFixed(1)} 秒 · ${currentJob.result.audio ? '含所选音轨' : '无音轨'}` : '不会用演示视频替代生成结果。'}</p><div>{currentJob.resultUrl && <a className="rwPrimary" href={`${mediaUrl(currentJob.resultUrl)}?download=1`}>下载 MP4 ↓</a>}<button type="button" className="rwSecondary" disabled={busy} onClick={() => { setSelectedId(null); setTab(currentJob.kind === 'template' ? 'template' : 'create') }}>调整并新建版本</button></div></div>
+            {currentJob.status === 'complete' && currentJob.directorPlan?.shots?.length > 0 && <div className="rwQcCard"><p className="rwEyebrow">OUTPUT CHECK</p><h3>成片质检 · 镜头核对</h3><ol>{currentJob.directorPlan.shots.map((shot) => <li key={shot.id}><strong>{shot.start.toFixed(0)}–{shot.end.toFixed(0)} 秒</strong><span>{shot.task}{shot.visual ? ` · ${shot.visual.slice(0, 60)}` : ''}</span></li>)}</ol><p className="rwHint">以上为提交时的镜头规划；生成结果以实际画面为准。当前版本未接入 AI 逐帧质检，不声称自动验证文字与字幕。</p></div>}
+            <div className="rwResultFoot"><p>{currentJob.result ? (currentJob.kind === 'video' ? `${currentJob.video?.resolution || 'MiniMax'} · ${currentJob.result.duration.toFixed(1)} 秒 · 云端生成` : `${currentJob.result.width} × ${currentJob.result.height} · ${currentJob.result.duration.toFixed(1)} 秒 · ${currentJob.result.audio ? '含所选音轨' : '无音轨'}`) : '不会用演示视频替代生成结果。'}</p><div>{currentJob.resultUrl && <a className="rwPrimary" href={`${mediaUrl(currentJob.resultUrl)}?download=1`}>下载 MP4 ↓</a>}<button type="button" className="rwSecondary" disabled={busy} onClick={() => { setSelectedId(null); setTab(currentJob.kind === 'template' || currentJob.kind === 'video' ? 'template' : 'create') }}>调整并新建版本</button></div></div>
             {currentJob.plan && <div className="rwTimeline"><p className="rwEyebrow">复刻执行方案</p>{currentJob.plan.kind === 'template' ? currentJob.plan.events.map((cue, index) => <div key={index}><span>{String(index + 1).padStart(2, '0')}</span><strong>{({ title: '开场钩子', benefit: '利益点', action: '行动引导' })[cue.field]}</strong><small>{cue.start.toFixed(2)}–{cue.end.toFixed(2)} 秒 · 模板重绘</small></div>) : currentJob.plan.segments.map((segment, index) => <div key={index}><span>{String(index + 1).padStart(2, '0')}</span><strong>原片 {segment.start.toFixed(2)}–{segment.end.toFixed(2)} 秒</strong><small>{segment.rate} 倍速 · 原片画面</small></div>)}</div>}
           </>}
         </section>}
 
-        {tab === 'history' && <section className="rwPanel rwHistory"><div className="rwPanelHead"><div><p className="rwEyebrow">RUN HISTORY</p><h2>本浏览器的运行记录</h2></div><button className="rwSecondary" type="button" disabled={checking} onClick={connect}>刷新</button></div>{!jobs.length ? <div className="rwEmpty"><h3>还没有运行记录</h3><p>创建一次真实任务后，状态和成片会出现在这里。</p></div> : jobs.map((job) => <article className="rwHistoryRow" key={job.id}><div><strong>{job.filename}</strong><small>{new Date(job.createdAt).toLocaleString('zh-CN')} · {job.message}</small></div><span className="rwPill">{({ complete: '已完成', failed: '失败', queued: '等待中', validating: '检查中', planning: '计划中', processing: '剪辑中', packaging: '包装中' })[job.status]}</span><div className="rwHistoryActions"><button type="button" onClick={() => { setSelectedId(job.id); setTab('result') }}>查看</button><button type="button" disabled={!['complete', 'failed'].includes(job.status)} onClick={() => remove(job)}>删除文件</button></div></article>)}<p className="rwHint">删除会移除该任务的上传和成片文件，无法撤销。原始文件仍保留在你的电脑中。</p></section>}
+        {tab === 'history' && <section className="rwPanel rwHistory"><div className="rwPanelHead"><div><p className="rwEyebrow">RUN HISTORY</p><h2>本浏览器的运行记录</h2></div><button className="rwSecondary" type="button" disabled={checking} onClick={connect}>刷新</button></div>{!jobs.length ? <div className="rwEmpty"><h3>还没有运行记录</h3><p>创建一次真实任务后，状态和成片会出现在这里。</p></div> : jobs.map((job) => <article className="rwHistoryRow" key={job.id}><div><strong>{job.filename}</strong><small>{new Date(job.createdAt).toLocaleString('zh-CN')} · {job.message}</small></div><span className="rwPill">{({ complete: '已完成', failed: '失败', queued: '等待中', validating: '检查中', planning: '计划中', processing: '剪辑中', packaging: '包装中' })[job.status]}</span><div className="rwHistoryActions"><button type="button" onClick={() => { setSelectedId(job.id); setTab('result') }}>查看</button><button type="button" disabled={!['complete', 'failed'].includes(job.status)} onClick={() => remove(job)}>删除文件</button></div></article>)}<p className="rwHint">删除会移除该任务的上传和成片文件，无法撤销。原始文件仍保留在你的电脑中。</p><div className="rwAudit"><div className="rwPanelHead"><div><p className="rwEyebrow">CALL AUDIT</p><h2>模型调用审计</h2></div><span className="rwPill">{audit.length ? `${audit.length} 条` : '空'}</span></div>{!audit.length ? <p className="rwHint">每次外发对话、渲染、旁白或记忆写入都会记录在这里，含模型、费用与内容摘要。</p> : <ol className="rwAuditList">{audit.map((entry) => <li key={entry.id}><div><strong>{entry.summary}</strong><small>{new Date(entry.at).toLocaleString('zh-CN')} · {entry.provider} · {entry.model}</small></div><span className={`rwPill ${entry.fee ? '' : 'rwFree'}`}>{entry.fee ? `¥${entry.fee}（${entry.feeUnit}）` : entry.feeUnit}</span>{entry.failed && <span className="rwPill">未完成</span>}</li>)}</ol>}<p className="rwHint">审计与运行记录分开保存，只保留最近 300 条；费用为估算基准，实际以供应商账单为准。</p></div></section>}
 
         {tab === 'engine' && <>
           <div className="rwEngineGrid"><section className="rwEngineHero"><p className="rwEyebrow">LOCAL FIRST · HYPIT</p><h2>先用原片，<br />再为新镜头付费。</h2><p>开头剪辑、节奏重排交给 Hypit。字幕和轻包装在本地完成，不需要视频模型密钥。</p><span className="rwEngineGlyph">H</span><div className="rwEngineTags"><span>HYPIT</span><span>LOCAL</span><span>ZERO MODEL FEE</span></div></section><section className="rwPanel rwConnection"><p className="rwEyebrow">EXECUTION STATUS</p><h2>视频执行服务</h2><span className={`rwStatus ${health?.ready ? 'isReady' : ''}`}><i />{health?.ready ? `Hypit ${health.version}` : '尚未连接'}</span><p>{health?.ready ? '视频会上传到当前执行服务，Hypit 在服务所在电脑上制作。' : health?.error || '正在检查连接…'}</p><button className="rwPrimary" type="button" disabled={checking} onClick={connect}>{checking ? '检查中…' : '重新检查连接'} →</button></section></div>
-          <section className="rwPanel rwUpgrade"><div><p className="rwEyebrow">OPTIONAL MODEL UPGRADE</p><h2>复杂镜头，之后按需升级</h2><p>换人物、新场景和复杂动作需要视频生成模型。当前版本已实现原片剪辑与包装；MiniMax H3 和其他模型的提交接口尚未接入，不会收集你的密钥或产生模型费用。</p></div><span className="rwPill">本期未启用</span></section>
-          <section className="rwPanel rwRuntimeHelp"><p className="rwEyebrow">LOCAL PREVIEW / DEPLOYMENT</p><h2>本机体验与在线使用</h2><p>在作品集项目运行 <code>npm run dev</code> 或 <code>npm run preview</code>，即可使用已安装的 Hypit 与 FFmpeg。静态网页不能独立分析或制作 MP4；公网执行服务尚未部署。</p><p>模板模式有六帧抽样及背景测量，没有 OCR/ASR。{health?.chat?.ready ? `可选对话模型：${health.chat.model}，每轮授权计费。` : '对话 API 未配置，本地向导仍可使用。'}原版导演 Skill：{health?.chat?.directorReady ? '已读取，用于规划' : '未读取'}。本人 F5：{health?.voice?.ready ? '文件准备就绪，仍需实际试听认可' : health?.voice?.reasons?.join('；') || '尚未准备好'}。</p></section>
+          <section className="rwPanel rwUpgrade"><div><p className="rwEyebrow">OPTIONAL MODEL UPGRADE</p><h2>复杂镜头，按需付费升级</h2><p>{health?.video?.ready ? `换人物、新场景和复杂动作由 ${health.video.model} 云端生成：方案确认后提交，按量计费（以供应商账单为准），成片自动下载到工作台。` : '换人物、新场景和复杂动作需要视频生成模型。当前版本已实现原片剪辑与包装；MiniMax H3 尚未配置密钥，不会产生模型费用。'}</p></div><span className={`rwPill ${health?.video?.ready ? 'rwFree' : ''}`}>{health?.video?.ready ? '已启用' : '本期未启用'}</span></section>
+          <section className="rwPanel rwRoutingTable"><div className="rwPanelHead"><div><p className="rwEyebrow">MODEL ROUTING</p><h2>显式模型路由目录</h2></div><span className="rwPill">本地优先</span></div>{health?.routing?.providers ? <div className="rwRouteGrid">{Object.values(health.routing.providers).map((provider) => <article key={provider.id}><div><strong>{provider.label}</strong><small>{provider.task}</small></div><span className={`rwPill ${provider.fee === 0 ? 'rwFree' : ''}`}>{provider.fee === 0 ? provider.feeUnit : provider.feeUnit}</span><p>{provider.note}</p>{provider.enabled ? <em>可用</em> : <em className="rwMuted">未启用</em>}</article>)}</div> : <p className="rwHint">连接执行服务后显示模型路由目录。</p>}<p className="rwHint">每次请求都会显式展示本次路由与预估费用；外发模型必须先确认，本地路径零模型费。</p></section>
+          <section className="rwPanel rwRuntimeHelp"><p className="rwEyebrow">LOCAL PREVIEW / DEPLOYMENT</p><h2>本机体验与在线使用</h2><p>在作品集项目运行 <code>npm run dev</code> 或 <code>npm run preview</code>，即可使用已安装的 Hypit 与 FFmpeg。静态网页不能独立分析或制作 MP4；公网执行服务尚未部署。</p><p>模板模式有六帧抽样及背景测量，没有 OCR/ASR。{health?.chat?.ready ? `可选对话模型：${health.chat.model}，每轮授权计费。` : '对话 API 未配置，本地向导仍可使用。'}{health?.video?.ready ? `复杂镜头模型：${health.video.model}，提交前展示预估、生成后自动下载。` : '复杂镜头模型未配置。'}原版导演 Skill：{health?.chat?.directorReady ? '已读取，用于规划' : '未读取'}。本人 F5：{health?.voice?.ready ? '文件准备就绪，仍需实际试听认可' : health?.voice?.reasons?.join('；') || '尚未准备好'}。</p></section>
         </>}
         <footer className="rwFooter"><span>HYPIT WORKBENCH / 原片低成本复刻</span><span>先看效果，再决定下一步。</span></footer>
       </div>

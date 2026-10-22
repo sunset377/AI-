@@ -1,0 +1,10 @@
+.videoPreview { position: relative; width: 100%; height: 100%; aspect-ratio: 16/9; overflow: hidden; background: #172033; }
+.videoPreview video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; opacity: 0; pointer-events: none; }
+.videoPreview.isStarted video { opacity: 1; pointer-events: auto; }
+.videoPreviewPlay { position: absolute; inset: 0; display: block; width: 100%; height: 100%; padding: 0; border: 0; background: #172033; cursor: pointer; }
+.videoPreviewPlay > img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.videoPreviewPlay > span { position: absolute; left: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border: 1px solid rgba(255,255,255,.35); border-radius: 6px; color: #fff; background: rgba(16,25,43,.88); font-size: 12px; transition: background 180ms; }
+.videoPreviewPlay:hover > span { background: #315cfd; }
+.videoPreviewError { position: absolute; right: 12px; top: 12px; left: 12px; margin: 0; padding: 12px; border-radius: 5px; color: #fff; background: #172033; font-size: 12px; line-height: 1.8; }
+.videoPreviewError a { margin-left: 10px; text-decoration: underline; }
+@media (max-width:540px) { .videoPreviewPlay > span { left: 12px; bottom: 12px; min-height: 36px; padding: 0 10px; font-size: 11px; } }

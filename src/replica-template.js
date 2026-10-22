@@ -56,7 +56,7 @@ export function guideTemplate(message, value, { pendingQuestion } = {}) {
     if (/背景|底色/.test(raw) && color) { patch.background = color; continue }
     if (/字|标题|利益|卖点|行动|底部/.test(raw) && color) {
       if (targets.length) for (const field of targets) patch[`${field}Color`] = color
-      else questions.push({ field: 'textColor', color, text: `文字改为 ${color}：标题、利益点、行动文案，还是全部文字？` })
+      else questions.push({ field: 'textColor', color, text: `文字改为 ${color}：应用到哪些文字？`, options: ['标题', '利益点', '行动文案', '全部文字'] })
       continue
     }
     if (/弹跳|淡入/.test(raw)) { patch.textMotion = /弹跳/.test(raw) ? 'bounce' : 'fade'; continue }

@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { createReplicaApi } from '../server/replica-api.js'
+import { createAuditLog } from '../server/replica-audit.js'
 import { measureBackground } from '../server/replica-analysis.js'
 import { buildDirectorPlan } from '../src/replica-director.js'
 import { DEFAULT_TEMPLATE } from '../src/replica-template.js'
@@ -13,14 +14,15 @@ import { DEFAULT_TEMPLATE } from '../src/replica-template.js'
 const evidence = { metadata: { width: 720, height: 1280, duration: 4, hasAudio: false }, frames: [{ id: 0, at: 0 }], background: { color: '#70adeb', coverage: 1, stable: true }, changes: [], supported: true, unknowns: ['未识别文字或语音'] }
 const executablePlan = (template = { ...DEFAULT_TEMPLATE, title: '三秒看懂', benefit: '本地生成', action: '马上开始' }) => buildDirectorPlan({ requirements: ['制作一条文字卡短视频'], canvas: { width: 720, height: 1280, fps: 30 }, template })
 const makeExecutable = async (f, base, state, copy = '标题：三秒看懂；卖点：本地生成；行动：马上开始') => {
-  assert.equal((await f.request(`${base}/messages`, 'POST', { revision: state.revision, message: copy, mode: 'local' })).status, 202)
-  return f.wait(state.id)
+  const response = await f.request(`${base}/messages`, 'POST', { revision: state.revision, message: copy, mode: 'local' })
+  assert.equal(response.status, 200)
+  return response.json()
 }
 async function fixture(t, config = {}) {
   const directory = await mkdtemp(path.join(tmpdir(), 'replica-draft-test-'))
   const analyze = async (_, dir) => { await writeFile(path.join(dir, 'frame-0.png'), 'TEST-PNG'); return evidence }
   const render = async (_, dir, update) => { await writeFile(path.join(dir, 'result.mp4'), 'TEST-MEDIA'); await update({ status: 'complete', progress: 100 }) }
-  const middleware = await createReplicaApi({ directory, analyze, render, checkTools: async () => ({ ready: true }), ...config })
+  const middleware = await createReplicaApi({ directory, analyze, render, checkTools: async () => ({ ready: true }), probeDuration: async () => 4, audit: createAuditLog({ directory: path.join(directory, '.audit') }), ...config })
   const server = createServer((req, res) => middleware(req, res, () => { res.writeHead(404); res.end() }))
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
   const origin = `http://127.0.0.1:${server.address().port}`
@@ -116,7 +118,7 @@ test('schema 2 draft restores as cleanup template without rewriting its saved fi
   await writeFile(path.join(dir, 'input.mp4'), 'LEGACY')
   const saved = { id, owner, kind: 'draft', schemaVersion: 2, filename: 'legacy.mp4', createdAt: new Date().toISOString(), status: 'idle', message: '旧草稿', progress: 100, revision: 3, confirmedRevision: null, analysis: evidence, template: { background: '#70adeb', title: '旧标题', benefit: '', action: '', titleColor: '#ffffff', benefitColor: '#eab308', actionColor: '#ffffff', textMotion: 'fade', ringMotion: 'rotate', opening: 'simultaneous', duration: 4, audioMode: 'mute', narration: '' }, messages: [], pendingQuestion: null }
   await writeFile(path.join(dir, 'job.json'), JSON.stringify(saved, null, 2))
-  const middleware = await createReplicaApi({ directory: f.directory, checkTools: async () => ({ ready: true }) })
+  const middleware = await createReplicaApi({ directory: f.directory, checkTools: async () => ({ ready: true }), audit: createAuditLog({ directory: path.join(f.directory, '.audit') }) })
   const server = createServer((req, res) => middleware(req, res, () => { res.writeHead(404); res.end() }))
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
   t.after(() => new Promise((resolve) => server.close(resolve)))
@@ -191,7 +193,7 @@ test('draft capacity is bounded and restart keeps editable drafts but interrupts
   const queuedId = '11111111-1111-4111-8111-111111111111'
   await mkdir(path.join(f.directory, queuedId))
   await writeFile(path.join(f.directory, queuedId, 'job.json'), JSON.stringify({ id: queuedId, owner: 'restart', kind: 'draft', status: 'analyzing', revision: 1 }))
-  await createReplicaApi({ directory: f.directory })
+  await createReplicaApi({ directory: f.directory, audit: createAuditLog({ directory: path.join(f.directory, '.audit') }) })
   const { readFile } = await import('node:fs/promises')
   const recovered = JSON.parse(await readFile(path.join(f.directory, queuedId, 'job.json')))
   assert.equal(recovered.status, 'failed')
@@ -228,7 +230,7 @@ test('local dialogue separates requests from copy and resolves ambiguous text co
   await f.request(`${base}/analyze`, 'POST', { revision: 1 }); let state = await f.wait(d.id)
   const send = async (message) => {
     const response = await f.request(`${base}/messages`, 'POST', { revision: state.revision, message, mode: 'local' })
-    assert.equal(response.status, 202); state = await f.wait(d.id)
+    assert.equal(response.status, 200); state = await response.json()
   }
   await send('背景改绿色，字改黄色')
   assert.equal(state.template.background, '#22c55e'); assert.equal(state.template.title, '')
@@ -241,8 +243,8 @@ test('local dialogue separates requests from copy and resolves ambiguous text co
 test('text-only dialogue creates an executable plan and complex requests stay planning-only', async (t) => {
   const f = await fixture(t), created = await (await f.request('/drafts', 'POST', {})).json(), base = `/drafts/${created.id}`
   const first = await f.request(`${base}/messages`, 'POST', { revision: created.revision, message: '标题：三秒看懂；卖点：本地生成；行动：马上开始；使用通用文字卡', mode: 'local' })
-  assert.equal(first.status, 202)
-  let state = await f.wait(created.id)
+  assert.equal(first.status, 200)
+  let state = await first.json()
   assert.match(state.messages.at(-1).content, /依据描述，未分析原片/)
   assert.equal(state.reference, null)
   assert.equal(state.directorPlan.status, 'executable')
@@ -252,8 +254,8 @@ test('text-only dialogue creates an executable plan and complex requests stay pl
   state = await (await f.request(base)).json()
   assert.match(state.confirmedPlanHash, /^[a-f0-9]{64}$/)
 
-  assert.equal((await f.request(`${base}/messages`, 'POST', { revision: state.revision, message: '让真人唱歌跳舞', mode: 'local' })).status, 202)
-  state = await f.wait(created.id)
+  assert.equal((await f.request(`${base}/messages`, 'POST', { revision: state.revision, message: '让真人唱歌跳舞', mode: 'local' })).status, 200)
+  state = await (await f.request(base)).json()
   assert.equal(state.directorPlan.status, 'planning_only')
   assert.equal(state.directorPlan.route.kind, 'model-required')
   assert.ok(state.directorPlan.requirements.includes('让真人唱歌跳舞'))
@@ -261,6 +263,45 @@ test('text-only dialogue creates an executable plan and complex requests stay pl
   assert.equal(state.confirmedRevision, null)
   assert.equal(state.confirmedPlanHash, null)
   assert.equal((await f.request(`${base}/confirm`, 'POST', { revision: state.revision })).status, 409)
+})
+
+test('uploaded video over 30 seconds is rejected immediately with its actual duration', async (t) => {
+  const f = await fixture(t, { probeDuration: async () => 45 })
+  const form = new FormData(); form.append('video', new Blob(['long-video']), 'long.mp4')
+  const response = await f.request('/drafts', 'POST', form)
+  assert.equal(response.status, 422)
+  const body = await response.json()
+  assert.match(body.error, /45\.0 秒/)
+  assert.match(body.error, /最长 30 秒/)
+})
+
+test('trim endpoint returns an independent clipped copy and never modifies the source', async (t) => {
+  const f = await fixture(t, {
+    probeDuration: async () => 45,
+    trimVideo: async (source, output) => {
+      await writeFile(output, 'TRIMMED-MP4')
+      const original = await readFile(source, 'utf8')
+      assert.equal(original, 'long-video')
+      return output
+    },
+  })
+  const form = new FormData()
+  form.append('video', new File(['long-video'], 'long.mp4', { type: 'video/mp4' }))
+  form.append('seconds', '30')
+  const response = await f.request('/trim', 'POST', form)
+  assert.equal(response.status, 200)
+  assert.equal(response.headers.get('content-type'), 'video/mp4')
+  assert.match(await response.text(), /TRIMMED-MP4/)
+})
+
+test('trim endpoint rejects a video that already fits the 30 second limit', async (t) => {
+  const f = await fixture(t, { probeDuration: async () => 20, trimVideo: async () => { throw new Error('should not trim') } })
+  const form = new FormData()
+  form.append('video', new File(['short-video'], 'short.mp4', { type: 'video/mp4' }))
+  form.append('seconds', '30')
+  const response = await f.request('/trim', 'POST', form)
+  assert.equal(response.status, 400)
+  assert.match((await response.json()).error, /20\.0 秒/)
 })
 
 test('confirmed text-only plan becomes an immutable job without a fake input file', async (t) => {
@@ -301,7 +342,7 @@ test('render rejects a persisted confirmation whose director plan hash does not 
   await mkdir(dir)
   await writeFile(path.join(dir, 'job.json'), JSON.stringify({ id, owner, kind: 'draft', schemaVersion: 3, filename: '未命名视频方案', createdAt: new Date().toISOString(), status: 'idle', message: '', progress: 100, revision: 2, confirmedRevision: 2, confirmedPlanHash: '0'.repeat(64), reference: null, canvas: { width: 720, height: 1280, fps: 30 }, analysis: null, template: { ...DEFAULT_TEMPLATE, title: '三秒看懂', benefit: '本地生成', action: '马上开始' }, directorPlan: plan, messages: [], requirements: plan.requirements, unresolved: [], pendingQuestion: null }))
   let calls = 0
-  const middleware = await createReplicaApi({ directory, render: async () => { calls++ }, checkTools: async () => ({ ready: true }) })
+  const middleware = await createReplicaApi({ directory, render: async () => { calls++ }, checkTools: async () => ({ ready: true }), audit: createAuditLog({ directory: path.join(directory, '.audit') }) })
   const server = createServer((req, res) => middleware(req, res, () => { res.writeHead(404); res.end() }))
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
   t.after(async () => { await new Promise((resolve) => server.close(resolve)); await rm(directory, { recursive: true, force: true }) })
@@ -313,8 +354,8 @@ test('render rejects a persisted confirmation whose director plan hash does not 
 
 test('no-reference original audio and unresolved local questions cannot be confirmed', async (t) => {
   const f = await fixture(t), created = await (await f.request('/drafts', 'POST', {})).json(), base = `/drafts/${created.id}`
-  assert.equal((await f.request(`${base}/messages`, 'POST', { revision: created.revision, message: '标题：测试；字改黄色', mode: 'local' })).status, 202)
-  let state = await f.wait(created.id)
+  assert.equal((await f.request(`${base}/messages`, 'POST', { revision: created.revision, message: '标题：测试；字改黄色', mode: 'local' })).status, 200)
+  let state = await (await f.request(base)).json()
   assert.equal(state.pendingQuestion.field, 'textColor')
   assert.equal((await f.request(`${base}/confirm`, 'POST', { revision: state.revision })).status, 409)
   state = await (await f.request(base, 'PATCH', { revision: state.revision, template: { audioMode: 'original' } })).json()
@@ -349,8 +390,9 @@ test('invalid API director plan fails without changing the accepted template or 
     return { reply: '错误候选', patch: { background: '#22c55e' }, questions: [], plan: { ...plan, shots: plan.shots.map((shot, index) => index ? shot : { ...shot, start: 0.1 }) } }
   } })
   const created = await (await f.request('/drafts', 'POST', {})).json(), base = `/drafts/${created.id}`
-  await f.request(`${base}/messages`, 'POST', { revision: created.revision, message: '标题：三秒看懂；卖点：本地生成；行动：马上开始', mode: 'local' })
-  const accepted = await f.wait(created.id)
+  const localResponse = await f.request(`${base}/messages`, 'POST', { revision: created.revision, message: '标题：三秒看懂；卖点：本地生成；行动：马上开始', mode: 'local' })
+  assert.equal(localResponse.status, 200)
+  const accepted = await localResponse.json()
   assert.equal((await f.request(`${base}/messages`, 'POST', { revision: accepted.revision, message: '请继续', mode: 'api', consent: { provider: 'test-model', shareImages: false } })).status, 202)
   const failed = await f.wait(created.id, 'failed')
   assert.equal(calls, 1)

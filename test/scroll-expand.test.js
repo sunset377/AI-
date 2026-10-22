@@ -22,15 +22,15 @@ test('portfolio renders a scroll-expanding entrance into the image gallery', asy
     assert.doesNotMatch(html, /本次重新精选|旧图库已全部替换|本次重新收录/)
     assert.match(html, /assets\/portfolio-gallery\/gallery-003\.webp/)
 
-    const strengthsHtml = html.split('id="strengths"')[1]?.split('id="contact"')[0]
+    const strengthsHtml = html.split('id="strengths"')[1]?.split('id="eval"')[0]
     assert.ok(strengthsHtml, 'Expected a strengths section')
     const titles = [
-      'Agent 工作流设计',
-      'AI 应用前端实现',
-      '模型与工具协作',
-      '任务状态与异常处理',
-      '测试与上线验证',
-      'AI 漫剧导演统筹',
+      '多工具调度与长链状态管理',
+      '多模型 API 编排与成本闸门',
+      '确定性校验与可复现交付',
+      '失败恢复与对账机制',
+      '短剧场景的质量评测直觉',
+      '视觉与产品闭环能力',
     ]
     for (const [index, title] of titles.entries()) {
       assert.match(strengthsHtml, new RegExp(title))

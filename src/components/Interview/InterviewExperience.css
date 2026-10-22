@@ -528,13 +528,14 @@
 
   .interviewBack,
   .interviewPortfolioLink {
-    width: 42px;
-    padding: 0;
-    font-size: 18px;
+    width: auto;
+    min-width: 44px;
+    padding: 0 10px;
+    font-size: 12px;
   }
 
   .interviewNavLabel {
-    display: none;
+    display: inline;
   }
 
   .interviewIdentity {

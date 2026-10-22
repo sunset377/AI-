@@ -12,7 +12,7 @@ test('readView restores only supported public views', () => {
   assert.equal(readView({ search: '?view=unknown' }), 'gateway')
 })
 
-test('the default render makes AI interview the primary destination while retaining portfolio access', async () => {
+test('the default render makes the Agent workflow the primary destination while retaining interview access', async () => {
   const vite = await createServer({
     appType: 'custom',
     server: { middlewareMode: true, hmr: false },
@@ -22,12 +22,13 @@ test('the default render makes AI interview the primary destination while retain
     const { default: App } = await vite.ssrLoadModule('/src/App.jsx')
     const html = renderToStaticMarkup(React.createElement(App))
 
-    assert.match(html, /看作品/)
-    assert.match(html, /数字版/)
-    assert.match(html, /查看我的作品集/)
-    assert.match(html, /开始 AI 面试/)
-    assert.match(html, /class="gatewayPrimary"[^>]*>开始 AI 面试/)
-    assert.ok(html.indexOf('开始 AI 面试') < html.indexOf('查看我的作品集'))
+    assert.match(html, /可调度/)
+    assert.match(html, /和数字版的我聊聊/)
+    assert.match(html, /查看 Agent 流水线/)
+    assert.match(html, /AGENT WORKFLOW/)
+    assert.match(html, /SeaArt MoreShort/)
+    assert.match(html, /class="gatewayPrimary"[^>]*>查看 Agent 流水线/)
+    assert.ok(html.indexOf('查看 Agent 流水线') < html.indexOf('和数字版的我聊聊'))
     assert.match(html, /assets\/hero-avatar\.jpg/)
     assert.match(html, /assets\/portfolio-gallery\/gallery-003\.webp/)
     assert.match(html, />99<\/span><small>WORKS/)

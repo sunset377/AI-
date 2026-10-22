@@ -54,6 +54,85 @@ export function validateDirectorPlan(value) {
   return result
 }
 
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
+const even = (value) => clamp(Math.round(Number(value) / 2) * 2, 64, 1280)
+const plain = (value, max) => String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, max)
+
+function canvasFromFormat(format = '', fallbackDuration) {
+  const text = plain(format, 200)
+  let width = 720, height = 1280
+  const pair = text.match(/(\d{2,4})\s*[:：x×]\s*(\d{2,4})/)
+  if (pair) { width = even(pair[1]); height = even(pair[2]) }
+  else if (text.includes('16:9') || text.includes('横屏')) { width = 1280; height = 720 }
+  else if (text.includes('9:16') || text.includes('竖屏')) { width = 720; height = 1280 }
+  else if (text.includes('1:1')) { width = 720; height = 720 }
+  const duration = clamp(Number((text.match(/(\d{1,2})\s*秒/) || [])[1] || fallbackDuration || 4), 0.5, 30)
+  return { width, height, fps: 30, duration }
+}
+
+function shotsFromPlan(rawShots, duration) {
+  if (!Array.isArray(rawShots) || !rawShots.length) return []
+  const list = rawShots.slice(0, 30).map((raw) => {
+    const time = plain(raw?.time, 40)
+    const match = time.match(/(\d{1,2}):(\d{2})\s*[-–—~]\s*(\d{1,2}):(\d{2})/)
+    const text = plain(raw?.shot, 200)
+    const visual = plain([raw?.motion, raw?.overlay].filter(Boolean).join('；'), 500) || '复杂镜头画面'
+    return { time, match, text, visual, action: plain(raw?.motion, 300), overlay: plain(raw?.overlay, 200) }
+  }).filter((item) => item.text || item.match)
+  if (!list.length) return []
+  const total = list.length
+  return list.map((item, index) => {
+    let start = index * duration / total, end = (index + 1) * duration / total
+    if (item.match) {
+      const s = Number(item.match[1]) * 60 + Number(item.match[2])
+      const e = Number(item.match[3]) * 60 + Number(item.match[4])
+      if (Number.isFinite(s) && Number.isFinite(e) && e > s && e <= duration + 1e-6) { start = Math.max(0, s); end = e }
+    }
+    if (end <= start) end = start + 0.5
+    return { id: `shot-${index + 1}`, start, end, task: item.text, visual: item.visual, text: item.overlay, action: item.action, source: 'model' }
+  })
+}
+
+export function coerceDirectorPlan({ plan, requirements = [], canvas = { width: 720, height: 1280, fps: 30, duration: 4 } } = {}) {
+  const rawItems = (Array.isArray(requirements) ? requirements : []).map((item) => plain(item, 2000)).filter(Boolean)
+  const raw = plan && typeof plan === 'object' && !Array.isArray(plan) ? plan : {}
+  const goal = plain(raw.title, 2000) || rawItems.at(-1) || '未命名视频目标'
+  const items = rawItems.length ? rawItems : [goal]
+  const resolvedCanvas = canvasFromFormat(raw.format, canvas.duration)
+  const shots = shotsFromPlan(raw.shots, resolvedCanvas.duration)
+  const style = plain(raw.style, 500)
+  const deliverables = Array.isArray(raw.deliverables) ? raw.deliverables.map((item) => plain(item, 300)).filter(Boolean) : []
+  const prompt = [
+    `目标：${plain(raw.format, 500) || goal}`,
+    `画布：${resolvedCanvas.width}×${resolvedCanvas.height}，30fps，${resolvedCanvas.duration}秒`,
+    '生产路径：model-required（复杂真人/实拍/产品镜头由视频生成大模型出片）',
+    ...(style ? [`风格：${style}`] : []),
+    ...shots.map((shot) => `${shot.start.toFixed(2)}-${shot.end.toFixed(2)}秒｜${shot.visual}｜${shot.task}`),
+    ...(deliverables.length ? [`交付物：${deliverables.join('；')}`] : []),
+  ].join('\n').slice(0, 6000)
+  const candidate = {
+    schemaVersion: DIRECTOR_PLAN_VERSION,
+    status: 'planning_only',
+    goal,
+    requirements: items,
+    reference: null,
+    canvas: resolvedCanvas,
+    shots,
+    assets: [],
+    route: { kind: 'model-required', templateId: null },
+    audio: { mode: 'mute', source: 'none' },
+    prompt,
+    questions: [],
+    blockers: ['复杂真人/实拍镜头：本地 Hypit 只做图形文字卡；方案确认后由视频生成大模型（MiniMax H3）出片。'],
+  }
+  try {
+    return validateDirectorPlan(candidate)
+  } catch {
+    const fallback = { ...candidate, shots: [], prompt: goal.slice(0, 6000) }
+    return validateDirectorPlan(fallback)
+  }
+}
+
 export function buildDirectorPlan({ requirements, reference = null, canvas, template, questions = [], blockers = [] }) {
   const value = validateTemplate(template)
   const items = Array.isArray(requirements) ? requirements.map((item) => String(item).trim()).filter(Boolean) : []

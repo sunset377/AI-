@@ -9,8 +9,10 @@ export default defineConfig({
   define: { 'import.meta.env.VITE_DEEPSEEK_API_KEY': '""' },
   server: {
     host: '127.0.0.1',
+    port: 5174,
+    strictPort: true,
     watch: { ignored: ['**/server/hypit/jobs/**', '**/server/hypit/.hypit/**', '**/server/hypit/.browser-cache/**', '**/.codex-run/**'] },
-    fs: { deny: ['.env', '.env.*', '*.{crt,pem,key,p12,pfx,cer,der}', '.npmrc', '.yarnrc.yml', '**/.git/**', '**/server/hypit/jobs/**', '**/server/hypit/.hypit/**', '**/server/hypit/.browser-cache/**'] },
+    fs: { deny: ['**/.local-audio/**', '**/.backups/**', '.env', '.env.*', '*.{crt,pem,key,p12,pfx,cer,der}', '.npmrc', '.yarnrc.yml', '**/.git/**', '**/server/hypit/jobs/**', '**/server/hypit/.hypit/**', '**/server/hypit/.browser-cache/**'] },
     allowedHosts: ['terminal.local', 'localhost', '127.0.0.1'],
     proxy: {
       '^/api/(interview|storyboard)(?:$|\\?)': {

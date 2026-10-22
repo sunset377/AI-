@@ -11,6 +11,7 @@ import { readView } from '../src/navigation.js'
 import { planReplica, validateReplicaOptions, mapOutputToSource } from '../src/replica.js'
 import { createAss, createHypitSources } from '../server/replica-render.js'
 import { createReplicaApi } from '../server/replica-api.js'
+import { createAuditLog } from '../server/replica-audit.js'
 import { readReplicaMetadata } from '../server/replica-analysis.js'
 
 const options = { opening: 'fast', highlightStart: 0, style: 'blue', title: '新开场', captions: '第一句\n第二句', keepAudio: true }
@@ -86,7 +87,7 @@ test('replica route and SSR keep the blue workbench available without a backend 
 test('local API enforces origin, owner, upload bounds, media ranges and terminal deletion', async (t) => {
   const directory = await mkdtemp(path.join(tmpdir(), 'replica-api-test-'))
   let renders = 0
-  const middleware = await createReplicaApi({ directory, checkTools: async () => ({ ready: true, version: 'test' }), render: async (job, taskDir, update) => {
+  const middleware = await createReplicaApi({ directory, checkTools: async () => ({ ready: true, version: 'test' }), audit: createAuditLog({ directory: path.join(directory, '.audit') }), render: async (job, taskDir, update) => {
     renders++
     await writeFile(path.join(taskDir, 'result.mp4'), 'TEST-MEDIA-ONLY')
     await update({ status: 'complete', progress: 100 })

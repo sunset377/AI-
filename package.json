@@ -8,6 +8,7 @@
     "dev:cloudflare": "npm run build && wrangler dev",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
+    "serve:demo": "node server/portfolio-server.js",
     "test:replica": "node --test test/replica.test.js test/replica-template.test.js test/replica-drafts.test.js",
     "verify:replica": "node scripts/verify-replica.mjs",
     "test:deployment": "node --test --test-concurrency=1",
