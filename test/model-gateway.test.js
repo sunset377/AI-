@@ -8,7 +8,7 @@ const origin = 'https://sunset377.github.io'
 function setup() {
   const db = new DatabaseSync(':memory:')
   db.exec(readFileSync(new URL('../migrations/models/0001_requests.sql', import.meta.url), 'utf8'))
-  const env = { PUBLIC_ORIGIN: origin, RELAY_API_KEY: 'fixture-key', SESSION_SECRET: 'test-session-secret', INVITE_TOKEN: 'test-invite', EXPERIENCE_EXPIRES_AT: '2099-01-01', DB: {
+  const env = { RELAY_VERIFIED: '1', PUBLIC_ORIGIN: origin, RELAY_API_KEY: 'fixture-key', SESSION_SECRET: 'test-session-secret', INVITE_TOKEN: 'test-invite', EXPERIENCE_EXPIRES_AT: '2099-01-01', DB: {
     prepare(sql) { return { bind(...args) { return { async first() { return db.prepare(sql).get(...args) || null }, async run() { return db.prepare(sql).run(...args) } } } } },
   } }
   const request = (path, body, token, extra = {}) => new Request('https://gateway.test' + path, { method: body ? 'POST' : 'GET', headers: { origin, ...(body ? { 'content-type': 'application/json' } : {}), ...(token ? { authorization: `Bearer ${token}` } : {}), ...extra }, ...(body ? { body: JSON.stringify(body) } : {}) })
@@ -43,6 +43,13 @@ test('invitation and signed sessions are required; CORS is restricted', async ()
   const valid = await gateway.fetch(request('/api/models'), env)
   assert.equal(valid.headers.get('access-control-allow-origin'), origin)
   assert.equal((await handleModelRequest(request('/api/chat', chat()), { ...env, EXPERIENCE_EXPIRES_AT: 'invalid' })).status, 403)
+})
+
+test('unverified relay does not advertise ready or allow charges', async () => {
+  const { env, request } = setup()
+  const disabled = { ...env, RELAY_VERIFIED: '0' }
+  assert.equal((await (await handleModelRequest(request('/api/models'), disabled)).json()).ready, false)
+  assert.equal((await handleModelRequest(request('/api/chat', chat()), disabled, () => assert.fail('No provider call allowed'))).status, 503)
 })
 
 test('video, arbitrary models, high resolution, bulk counts and system overrides never reach provider', async () => {

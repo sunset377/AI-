@@ -4,6 +4,22 @@
 
 ## 目录与权限
 
+### 2026-10-23 实际验收更正
+
+两次用户授权的真实调用都被上游拒绝，余额保持 2.603534 算力，专用凭据下没有消费记录。不能宣称真实聊天、出图或扣款闭环已通过。
+
+`key get` 已证实 CLI 的 `key create` 产生了带 `cli_binding.task_id` 的任务凭据，**不是不依赖任务的普通 API Key**。任务预算当前为 0；聊天接口返回 `cli_budget_authorization_required`，所需预授权为 34 micro-USD。图片 OpenAI 兼容接口返回 `cli_operation_not_supported`，需要改接 CLI 模型运行时协议，不能直接把 `/v1/images/generations` 当成可用接入。
+
+已定位运行时路由 `/api/v1/model-runtime/cli/generations`，但请求协议尚未核实完整（返回 `Invalid generation input`）；不能把找到路由当成接通。预算授权请求已建立，平台要求账户本人网页确认。未确认前不重复提交付费调用。
+
+当前 `RELAY_VERIFIED=0`，线上目录仍能浏览，但付费入口关闭。修复协议并完成用户授权的两次成功验收后才能改为 1。下文早期的“普通 API Key”描述应以本节实际证据为准。
+
+## 回退保障
+
+完整 Git 历史与工作区源码快照保存在本机 `.backups/portfolio-2026-10-22T18-28-52-024Z/`。Git bundle 已校验，并克隆到该目录的 `restore-check/`；改造前 `3c6c907` 的 `src/App.jsx` 与原仓库逐字一致。271 份源码、配置和文档副本逐文件通过 SHA256 比对；未提交代码也在快照中。依赖、缓存、生成媒体与忽略的私密凭据保留原处，不重复归档或上传。
+
+`scripts/backup-portfolio.mjs` 可重新生成独立快照。恢复时克隆 bundle 到新目录，或使用 working-source/ 副本；不要覆盖当前工作区。
+
 `scripts/sync-model-catalog.mjs` 通过本机已授权的 `tokengo ... --agent codex` 读取聊天、图片、视频和音频目录，生成 `src/model-catalog.json`。目录可浏览不等于开放调用。
 
 当前白名单：DeepSeek V4.1 Flash 聊天、GT Image 2 C 文生图。图片仅一张、1K 档、medium；禁止上传和外部参考图。视频、音频和其他模型由后台拒绝。MOMOCO 导演及白板工坊保留独立入口，未在此公共网关中代理其本机执行接口。

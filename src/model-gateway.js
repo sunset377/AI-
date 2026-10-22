@@ -50,7 +50,7 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
   const origin = request.headers.get('origin')
   if (origin !== env.PUBLIC_ORIGIN) return json({ error: '该访问来源未获授权。' }, 403)
   if (request.method === 'OPTIONS') return new Response(null, { status: 204 })
-  const configured = Boolean(env.RELAY_API_KEY && env.SESSION_SECRET && env.INVITE_TOKEN && env.DB)
+  const configured = Boolean(env.RELAY_API_KEY && env.SESSION_SECRET && env.INVITE_TOKEN && env.DB && env.RELAY_VERIFIED === '1')
   const expiry = Date.parse(env.EXPERIENCE_EXPIRES_AT || '')
   const expired = !Number.isFinite(expiry) || Date.now() >= expiry
   if (url.pathname === '/api/models' && request.method === 'GET') {
