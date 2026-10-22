@@ -18,6 +18,26 @@
   gap: 9px;
 }
 
+.controlPanel .directorHandoff {
+  width: 100%;
+  margin-top: 9px;
+  border-color: #8ea5d2;
+  color: #234b91;
+  font-weight: 800;
+}
+
+.controlPanel .directorHandoff:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.directorHandoffNote {
+  margin: 8px 4px 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
 .shell {
   max-width: 1500px;
   padding-left: 22px;

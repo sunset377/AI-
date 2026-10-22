@@ -1,5 +1,4 @@
 import { createWhiteboardApi } from './whiteboard-api.js'
-import { videoEstimate } from '../src/video-cost.js'
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { createReadStream, existsSync, readFileSync } from 'node:fs'
 import { copyFile, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises'
@@ -15,7 +14,7 @@ import { checkReplicaVoice, createVoicePreview, validateProsody } from './replic
 import { createRagClient } from './replica-rag.js'
 import { PROVIDERS, estimateChatCost, routeFor } from './replica-routing.js'
 import { createAuditLog } from './replica-audit.js'
-import { createVideoTask, downloadVideo, queryVideoTask, ratioForCanvas, readVideoConfig, videoHealth } from './replica-video.js'
+import { planVideoTask, ratioForCanvas, readVideoConfig, resumeVideoTask, submitVideoTask, videoHealth } from './replica-video.js'
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -41,7 +40,7 @@ function loadLocalEnv(root = projectRoot) {
   }
 }
 
-const finalStates = new Set(['complete', 'failed'])
+const finalStates = new Set(['complete', 'failed', 'submission_uncertain'])
 const idPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 const digest = (value) => createHash('sha256').update(value).digest('hex')
 const defaultCanvas = () => ({ width: 720, height: 1280, fps: 30 })
@@ -89,7 +88,7 @@ function sendJson(response, status, body) {
   response.end(JSON.stringify(body))
 }
 
-export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'jobs'), render = renderReplica, checkTools = checkReplicaTools, analyze = analyzeReplica, probeDuration = probeVideoDuration, trimVideo = trimReplicaVideo, chatConfig, chat = chatReplica, checkVoice = checkReplicaVoice, voice = createVoicePreview, ragClient = createRagClient(), audit = createAuditLog({ directory: path.join(HYPIT_PROJECT, 'jobs', '.audit') }), videoConfig, submitVideo = createVideoTask, queryVideo = queryVideoTask, fetchVideo = downloadVideo } = {}) {
+export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'jobs'), render = renderReplica, checkTools = checkReplicaTools, analyze = analyzeReplica, probeDuration = probeVideoDuration, trimVideo = trimReplicaVideo, chatConfig, chat = chatReplica, checkVoice = checkReplicaVoice, voice = createVoicePreview, ragClient = createRagClient(), audit = createAuditLog({ directory: path.join(HYPIT_PROJECT, 'jobs', '.audit') }), videoConfig, planVideo = planVideoTask, submitVideo = submitVideoTask, resumeVideo = resumeVideoTask } = {}) {
   loadLocalEnv()
   await mkdir(directory, { recursive: true })
   chatConfig ||= await readReplicaChatConfig()
@@ -127,6 +126,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
         job.requirements ||= []
         job.unresolved ||= []
         job.confirmedPlanHash ||= null
+        job.videoPlan ||= null
       }
       if (job.kind === 'draft' ? draftBusy(job) : !finalStates.has(job.status)) {
         Object.assign(job, { status: 'failed', message: '执行服务已重启，此任务已中断。请重新创建任务。' })
@@ -137,7 +137,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
   }
 
   function publicJob(job) {
-    const { owner, ...visible } = job
+    const { owner, manifestPath, ...visible } = job
     return { ...visible, inputUrl: job.reference === null ? null : `/api/replica/jobs/${job.id}/input`, resultUrl: job.status === 'complete' ? `/api/replica/jobs/${job.id}/result` : null }
   }
 
@@ -145,7 +145,9 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
     const { id, schemaVersion, filename, createdAt, status, message, progress, revision, confirmedRevision, confirmedPlanHash, reference, canvas, analysis, template, directorPlan, messages, pendingQuestion, error } = draft
     const preview = draft.voicePreview
     const voicePreview = preview ? { id: preview.id, sha256: preview.sha256, duration: preview.duration, cues: preview.cues, prosody: preview.prosody, approved: preview.approved, revision: preview.revision, url: `/api/replica/drafts/${id}/voice/${preview.id}` } : null
-    return { id, kind: 'draft', schemaVersion, filename, createdAt, status, message, progress, revision, confirmedRevision, confirmedPlanHash, reference, canvas, analysis, template, directorPlan, messages, pendingQuestion, error, voicePreview, inputUrl: reference ? `/api/replica/drafts/${id}/input` : null, frames: analysis?.frames.map((frame) => ({ ...frame, url: `/api/replica/drafts/${id}/frames/${frame.id}` })) || [] }
+    const plan = draft.videoPlan
+    const videoPlan = plan && plan.planHash === confirmedPlanHash ? { model: plan.model, duration: plan.duration, resolution: plan.resolution, ratio: plan.ratio, estimate: plan.estimate } : null
+    return { id, kind: 'draft', schemaVersion, filename, createdAt, status, message, progress, revision, confirmedRevision, confirmedPlanHash, reference, canvas, analysis, template, directorPlan, videoPlan, messages, pendingQuestion, error, voicePreview, inputUrl: reference ? `/api/replica/drafts/${id}/input` : null, frames: analysis?.frames.map((frame) => ({ ...frame, url: `/api/replica/drafts/${id}/frames/${frame.id}` })) || [] }
   }
 
   async function jsonBody(request) {
@@ -253,7 +255,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           if (Object.keys(body).length) return sendJson(response, 400, { error: '新会话不接受额外字段。' })
           const id = randomUUID(), draftDirectory = path.join(directory, id)
           await mkdir(draftDirectory)
-          const draft = { id, owner, kind: 'draft', schemaVersion: 3, filename: '未命名视频方案', createdAt: new Date().toISOString(), status: 'idle', message: '告诉导演你想做什么；参考视频可稍后添加。', progress: 0, revision: 1, confirmedRevision: null, confirmedPlanHash: null, reference: null, canvas: defaultCanvas(), analysis: null, template: { ...DEFAULT_TEMPLATE }, directorPlan: null, messages: [], requirements: [], unresolved: [], pendingQuestion: null }
+          const draft = { id, owner, kind: 'draft', schemaVersion: 3, filename: '未命名视频方案', createdAt: new Date().toISOString(), status: 'idle', message: '告诉导演你想做什么；参考视频可稍后添加。', progress: 0, revision: 1, confirmedRevision: null, confirmedPlanHash: null, videoPlan: null, reference: null, canvas: defaultCanvas(), analysis: null, template: { ...DEFAULT_TEMPLATE }, directorPlan: null, messages: [], requirements: [], unresolved: [], pendingQuestion: null }
           await persist(draft); drafts.set(id, draft); return sendJson(response, 201, publicDraft(draft))
         }
         const length = Number(request.headers['content-length'])
@@ -280,7 +282,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
             return sendJson(response, 422, { error: `视频时长 ${uploadedSeconds.toFixed(1)} 秒，最长 ${REPLICA_LIMITS.seconds} 秒；请缩短后重新上传。` })
           }
           const filename = path.basename(video.name).slice(0, 200)
-          const draft = { id, owner, kind: 'draft', schemaVersion: 3, filename, createdAt: new Date().toISOString(), status: 'idle', message: '请先分析参考，再告诉导演你的目标。', progress: 0, revision: 1, confirmedRevision: null, confirmedPlanHash: null, reference: { filename, metadata: null }, canvas: defaultCanvas(), analysis: null, template: { ...DEFAULT_TEMPLATE }, directorPlan: null, messages: [], requirements: [], unresolved: [], pendingQuestion: null }
+          const draft = { id, owner, kind: 'draft', schemaVersion: 3, filename, createdAt: new Date().toISOString(), status: 'idle', message: '请先分析参考，再告诉导演你的目标。', progress: 0, revision: 1, confirmedRevision: null, confirmedPlanHash: null, videoPlan: null, reference: { filename, metadata: null }, canvas: defaultCanvas(), analysis: null, template: { ...DEFAULT_TEMPLATE }, directorPlan: null, messages: [], requirements: [], unresolved: [], pendingQuestion: null }
           await persist(draft); drafts.set(id, draft); return sendJson(response, 201, publicDraft(draft))
         } finally { uploading--; uploads.delete(owner); if (draftDirectory && !drafts.has(path.basename(draftDirectory))) await rm(draftDirectory, { recursive: true, force: true }) }
       }
@@ -459,12 +461,25 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           let plan
           try { plan = validateDirectorPlan(draft.directorPlan) } catch { return sendJson(response, 409, { error: '请先完成可执行导演方案。' }) }
           if (plan.questions.length || draft.pendingQuestion || (plan.route.kind === 'hypit-template' && plan.blockers.length)) return sendJson(response, 409, { error: '请先解决未处理需求，再确认方案。' })
+          const planHash = digest(JSON.stringify(plan))
           if (plan.route.kind === 'hypit-template') {
             if (plan.status !== 'executable' || (!draft.reference && draft.template.audioMode === 'original') || (draft.template.audioMode === 'voice' && (!draft.voicePreview?.approved || draft.voicePreview.revision !== draft.revision))) return sendJson(response, 409, { error: '请先解决未处理需求、声音或生产路径。' })
           } else if (!plan.prompt || !plan.prompt.trim()) {
             return sendJson(response, 409, { error: '复杂镜头方案尚未完善，无法确认提交。' })
+          } else {
+            const ratio = ratioForCanvas(plan.canvas.width, plan.canvas.height)
+            const planDirectory = path.join(dir, `h3-plan-${draft.revision}-${randomBytes(4).toString('hex')}`)
+            try {
+              await mkdir(planDirectory)
+              const { manifestPath, job } = await planVideo({ prompt: plan.prompt, duration: plan.canvas.duration, resolution: '768P', ratio, directory: planDirectory }, videoConfig)
+              draft.videoPlan = { planHash, manifestPath, model: job.request.model, duration: job.request.duration, resolution: job.request.resolution, ratio: job.request.ratio, estimate: job.estimate }
+            } catch (error) {
+              await rm(planDirectory, { recursive: true, force: true }).catch(() => {})
+              return sendJson(response, 409, { error: error.message })
+            }
           }
-          draft.confirmedRevision = draft.revision; draft.confirmedPlanHash = digest(JSON.stringify(plan)); await persist(draft); return sendJson(response, 200, publicDraft(draft))
+          if (plan.route.kind === 'hypit-template') draft.videoPlan = null
+          draft.confirmedRevision = draft.revision; draft.confirmedPlanHash = planHash; await persist(draft); return sendJson(response, 200, publicDraft(draft))
         }
         if (operation === 'video-submit') {
           if (!videoHealth(videoConfig).ready) return sendJson(response, 409, { error: 'MiniMax H3 未配置或未启用。' })
@@ -473,41 +488,44 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
           if (directorPlan.route.kind === 'hypit-template') return sendJson(response, 409, { error: '图形模板方案请走本地 Hypit 渲染。' })
           if (directorPlan.status !== 'executable' && directorPlan.route.kind !== 'model-required' && directorPlan.route.kind !== 'video-model') return sendJson(response, 409, { error: '复杂镜头方案尚未就绪，无法提交生成。' })
           if (draft.confirmedRevision !== draft.revision || draft.confirmedPlanHash !== digest(JSON.stringify(directorPlan))) return sendJson(response, 409, { error: '请先确认当前方案后再提交生成。' })
-          let estimate
-          try { estimate = videoEstimate(directorPlan.canvas.duration) } catch (e) { return sendJson(response, 400, { error: e.message }) }
-          if (body.confirmCostCny !== estimate.cny) return sendJson(response, 409, { error: '请确认当前方案的 MiniMax 费用预估。' })
-          const seconds = estimate.seconds
-          const ratio = ratioForCanvas(directorPlan.canvas.width, directorPlan.canvas.height)
+          const planHash = digest(JSON.stringify(directorPlan)), planned = draft.videoPlan
+          if (!planned || planned.planHash !== planHash || !planned.manifestPath || !planned.estimate?.cny) return sendJson(response, 409, { error: '请先用官方 H3 连接器生成当前方案的离线计划。' })
+          if (String(body.confirmCostCny) !== planned.estimate.cny) return sendJson(response, 409, { error: '请确认当前方案的 MiniMax 精确费用预估。' })
+          const seconds = planned.duration, ratio = planned.ratio
           draft.status = 'submitting'
           const id = randomUUID(), taskDir = path.join(directory, id)
           try {
             await mkdir(taskDir)
-            const job = { id, owner, kind: 'video', filename: draft.filename, createdAt: new Date().toISOString(), status: 'queued', message: '等待 MiniMax H3 生成', progress: 5, cost: null, taskId: null, directorPlan: structuredClone(directorPlan), canvas: structuredClone(directorPlan.canvas), draftRevision: draft.revision, video: { provider: 'minimax-h3', model: videoConfig.model, duration: seconds, ratio, resolution: '768P' } }
+            const manifestPath = path.join(taskDir, 'h3-job.json')
+            await copyFile(planned.manifestPath, manifestPath)
+            const job = { id, owner, kind: 'video', filename: draft.filename, createdAt: new Date().toISOString(), status: 'queued', message: '等待 MiniMax H3 生成', progress: 5, cost: planned.estimate.cny, taskId: null, manifestPath, directorPlan: structuredClone(directorPlan), canvas: structuredClone(directorPlan.canvas), draftRevision: draft.revision, video: { provider: 'minimax-h3-official-plugin', model: planned.model, duration: seconds, ratio, resolution: planned.resolution, pricingAsOf: planned.estimate.snapshotDate } }
             await persist(job); jobs.set(id, job)
-            await audit.append({ kind: 'video', provider: 'minimax-h3', model: videoConfig.model, fee: 0, feeUnit: '按量计费（以供应商账单为准）', summary: `提交 MiniMax 生成：${job.filename} · ${seconds} 秒 · ${ratio}`, draftId: draft.id, jobId: id, owner })
+            await audit.append({ kind: 'video', provider: 'minimax-h3-official-plugin', model: planned.model, fee: Number(planned.estimate.cny), feeUnit: '元（计划估价）', summary: `提交 MiniMax 生成：${job.filename} · ${seconds} 秒 · ${ratio}`, draftId: draft.id, jobId: id, owner })
             enqueue(job, async (update) => {
               try {
-                const { taskId } = await submitVideo({ prompt: directorPlan.prompt, duration: seconds, resolution: '768P', ratio }, videoConfig)
+                const submitted = await submitVideo({ manifestPath, confirmCostCny: planned.estimate.cny }, videoConfig)
+                const taskId = submitted.taskId
                 await update({ taskId, status: 'running', message: `已提交 MiniMax（任务 ${taskId}），正在生成。`, progress: 10 })
-                let last = 'queued'
+                let last = submitted.state
                 for (let attempt = 0; attempt < 90; attempt++) {
                   await new Promise((resolve) => setTimeout(resolve, 10_000))
-                  const state = await queryVideo(taskId, videoConfig)
-                  last = state.status
-                  if (state.status === 'succeeded') {
-                    await fetchVideo(state.url, path.join(taskDir, 'result.mp4'), videoConfig)
+                  const state = await resumeVideo({ manifestPath, outputDir: taskDir }, videoConfig)
+                  last = state.state
+                  if (state.state === 'downloaded') {
+                    await copyFile(state.outputPath, path.join(taskDir, 'result.mp4'))
                     const videoSeconds = await probeDuration(path.join(taskDir, 'result.mp4')).catch(() => null)
                     await update({ status: 'complete', progress: 100, message: 'MiniMax 成片已生成并下载，请观看确认。', result: videoSeconds ? { duration: videoSeconds, audio: false } : null })
-                    await audit.append({ kind: 'video', provider: 'minimax-h3', model: videoConfig.model, fee: 0, feeUnit: '按量计费（以供应商账单为准）', summary: `MiniMax 成片完成：${job.filename} · ${seconds} 秒`, draftId: draft.id, jobId: id, owner })
+                    await audit.append({ kind: 'video', provider: 'minimax-h3-official-plugin', model: planned.model, fee: Number(planned.estimate.cny), feeUnit: '元（计划估价）', summary: `MiniMax 成片完成：${job.filename} · ${seconds} 秒`, draftId: draft.id, jobId: id, owner })
                     return
                   }
-                  if (state.status === 'failed' || state.status === 'cancelled') throw new Error(state.error || `MiniMax 任务${state.status}。`)
-                  await update({ progress: Math.min(90, 15 + attempt * 2), message: `MiniMax 生成中（${state.status}）。` })
+                  if (state.state === 'failed' || state.state === 'cancelled') throw new Error(`MiniMax 任务${state.state}。`)
+                  await update({ progress: Math.min(90, 15 + attempt * 2), message: `MiniMax 生成中（${state.state}）。` })
                 }
                 throw new Error(`MiniMax 任务超时（最后状态 ${last}）。`)
               } catch (error) {
-                await update({ status: 'failed', message: error.message, error: error.message, progress: job.progress })
-                await audit.append({ kind: 'video', provider: 'minimax-h3', model: videoConfig.model, fee: 0, feeUnit: '按量计费（以供应商账单为准）', summary: `MiniMax 生成未完成：${job.filename}`, draftId: draft.id, jobId: id, owner, failed: true })
+                const uncertain = error.state === 'submission_uncertain'
+                await update({ status: uncertain ? 'submission_uncertain' : 'failed', message: uncertain ? '提交结果不确定；已停止重试，请先在 MiniMax 任务列表对账。' : error.message, error: error.message, progress: job.progress })
+                await audit.append({ kind: 'video', provider: 'minimax-h3-official-plugin', model: planned.model, fee: Number(planned.estimate.cny), feeUnit: '元（计划估价）', summary: uncertain ? `MiniMax 提交结果不确定：${job.filename}` : `MiniMax 生成未完成：${job.filename}`, draftId: draft.id, jobId: id, owner, failed: true })
               }
             })
             return sendJson(response, 202, publicJob(job))
@@ -650,6 +668,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
       const jobDirectory = path.join(directory, job.id)
       if (!match[2] && request.method === 'GET') return sendJson(response, 200, publicJob(job))
       if (!match[2] && request.method === 'DELETE') {
+        if (job.status === 'submission_uncertain') return sendJson(response, 409, { error: '该付费任务的提交结果尚未对账，不能删除证据。' })
         if (!finalStates.has(job.status)) return sendJson(response, 409, { error: '运行中的任务暂不能删除。' })
         // id is a generated UUID and jobDirectory is one direct child of this service's jobs directory.
         await rm(jobDirectory, { recursive: true })

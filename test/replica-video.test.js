@@ -1,14 +1,26 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { createVideoTask, downloadVideo, queryVideoTask, ratioForCanvas, readVideoConfig, videoHealth } from '../server/replica-video.js'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { planVideoTask, ratioForCanvas, resumeVideoTask, submitVideoTask, videoHealth } from '../server/replica-video.js'
 
-const config = { baseUrl: 'https://api.minimax.cn', model: 'MiniMax-H3', apiKey: 'test-key' }
+async function fixture(t) {
+  const directory = await mkdtemp(path.join(tmpdir(), 'replica-video-'))
+  const runnerPath = path.join(directory, 'cli.mjs')
+  const credentialPath = path.join(directory, 'credential.dat')
+  await writeFile(runnerPath, '')
+  t.after(() => rm(directory, { recursive: true, force: true }))
+  return { directory, runnerPath, credentialPath, model: 'MiniMax-H3' }
+}
 
-test('video health requires a valid https base and a key', () => {
+test('video health requires the official runner and DPAPI credential', async (t) => {
+  const config = await fixture(t)
+  assert.equal(videoHealth(config).planningReady, true)
+  assert.equal(videoHealth(config).ready, false)
+  await writeFile(config.credentialPath, 'ciphertext')
   assert.equal(videoHealth(config).ready, true)
-  assert.equal(videoHealth({ baseUrl: 'https://api.minimax.cn', model: 'MiniMax-H3', apiKey: '' }).ready, false)
-  assert.equal(videoHealth({ baseUrl: 'http://api.minimax.cn', model: 'MiniMax-H3', apiKey: 'k' }).ready, false)
-  assert.equal(videoHealth({ baseUrl: 'https://api.minimax.cn?x=1', model: 'MiniMax-H3', apiKey: 'k' }).ready, false)
+  assert.equal(videoHealth(config).connector, 'official-plugin')
 })
 
 test('ratio maps the workbench canvas to a MiniMax token', () => {
@@ -17,54 +29,45 @@ test('ratio maps the workbench canvas to a MiniMax token', () => {
   assert.equal(ratioForCanvas(1024, 1024), '1:1')
 })
 
-test('createVideoTask submits and returns the task id', async () => {
-  const calls = []
-  const fetch = async (url, options) => {
-    calls.push({ url, headers: options.headers, body: JSON.parse(options.body) })
-    return { ok: true, json: async () => ({ task_id: '424010985738629', request_id: 'r1' }) }
+test('offline planning writes a text-only spec and returns the plugin estimate', async (t) => {
+  const config = await fixture(t)
+  let call
+  config.run = async (args) => {
+    call = args
+    return { ok: true, job: { request: { model: 'MiniMax-H3', duration: 6, resolution: '768P', ratio: '9:16' }, estimate: { cny: '3.00', snapshotDate: '2026-09-01' } } }
   }
-  const result = await createVideoTask({ prompt: '口红特写镜头', duration: 5, ratio: '9:16' }, { ...config, fetch })
-  assert.equal(result.taskId, '424010985738629')
-  assert.equal(calls[0].url, 'https://api.minimax.cn/v2/video_generation')
-  assert.equal(calls[0].headers.authorization, 'Bearer test-key')
-  assert.equal(calls[0].body.model, 'MiniMax-H3')
-  assert.equal(calls[0].body.duration, 5)
-  assert.equal(calls[0].body.ratio, '9:16')
-  assert.equal(calls[0].body.content[0].type, 'text')
+  const result = await planVideoTask({ prompt: '口红特写镜头', duration: 6, resolution: '768P', ratio: '9:16', directory: config.directory }, config)
+  assert.equal(call[0], 'plan')
+  assert.equal(result.job.estimate.cny, '3.00')
+  assert.deepEqual(JSON.parse(await readFile(path.join(config.directory, 'h3-spec.json'), 'utf8')), { model: 'MiniMax-H3', prompt: '口红特写镜头', duration: 6, resolution: '768P', ratio: '9:16' })
 })
 
-test('createVideoTask rejects invalid durations and missing prompt', async () => {
-  await assert.rejects(createVideoTask({ prompt: '', duration: 5, ratio: '9:16' }, config), /缺少视频描述/)
-  await assert.rejects(createVideoTask({ prompt: 'x', duration: 3, ratio: '9:16' }, config), /4～15/)
-  await assert.rejects(createVideoTask({ prompt: 'x', duration: 16, ratio: '9:16' }, config), /4～15/)
-  await assert.rejects(createVideoTask({ prompt: 'x', duration: 5.5, ratio: '9:16' }, config), /4～15/)
+test('paid submit uses the persisted manifest and exact confirmed cost', async (t) => {
+  const config = await fixture(t)
+  await writeFile(config.credentialPath, 'ciphertext')
+  const manifestPath = path.join(config.directory, 'h3-job.json')
+  await writeFile(manifestPath, JSON.stringify({ state: 'planned' }))
+  let call
+  config.run = async (args) => { call = args; return { ok: true, job: { state: 'submitted', taskId: 'task-1' } } }
+  const job = await submitVideoTask({ manifestPath, confirmCostCny: '3.00' }, config)
+  assert.equal(job.taskId, 'task-1')
+  assert.deepEqual(call, ['submit', '--manifest', manifestPath, '--confirm-cost-cny', '3.00'])
 })
 
-test('createVideoTask surfaces provider errors', async () => {
-  const fetch = async () => ({ ok: false, status: 402, json: async () => ({ error: { message: 'insufficient balance (1008)' } }) })
-  await assert.rejects(createVideoTask({ prompt: 'x', duration: 5, ratio: '9:16' }, { ...config, fetch }), /insufficient balance/)
+test('uncertain paid submission preserves the plugin state instead of retrying', async (t) => {
+  const config = await fixture(t)
+  await writeFile(config.credentialPath, 'ciphertext')
+  const manifestPath = path.join(config.directory, 'h3-job.json')
+  config.run = async () => { await writeFile(manifestPath, JSON.stringify({ state: 'submission_uncertain' })); throw new Error('uncertain') }
+  await assert.rejects(submitVideoTask({ manifestPath, confirmCostCny: '3.00' }, config), (error) => error.state === 'submission_uncertain')
 })
 
-test('queryVideoTask parses status and content url', async () => {
-  const fetch = async (url) => {
-    assert.match(url, /\/v2\/query\/video_generation\/424010985738629$/)
-    return { ok: true, json: async () => ({ task: { status: 'succeeded', content: { url: 'https://cdn.example.com/out.mp4' }, duration: 5, resolution: '768P' } }) }
-  }
-  const state = await queryVideoTask('424010985738629', { ...config, fetch })
-  assert.equal(state.status, 'succeeded')
-  assert.equal(state.url, 'https://cdn.example.com/out.mp4')
-})
-
-test('downloadVideo writes the body to the destination', async (t) => {
-  const { mkdtemp, readFile, rm } = await import('node:fs/promises')
-  const { tmpdir } = await import('node:os')
-  const path = await import('node:path')
-  const dir = await mkdtemp(path.join(tmpdir(), 'replica-video-'))
-  t.after(() => rm(dir, { recursive: true, force: true }))
-  const body = Buffer.from('FAKE-MP4')
-  const fetch = async () => ({ ok: true, body: (async function* () { yield body })() })
-  const dest = path.join(dir, 'result.mp4')
-  const bytes = await downloadVideo('https://cdn.example.com/out.mp4', dest, { ...config, fetch })
-  assert.equal(bytes, body.length)
-  assert.deepEqual(await readFile(dest), body)
+test('resume only continues the recorded task manifest', async (t) => {
+  const config = await fixture(t)
+  const manifestPath = path.join(config.directory, 'h3-job.json')
+  let call
+  config.run = async (args) => { call = args; return { ok: true, job: { state: 'processing', taskId: 'task-1' } } }
+  const job = await resumeVideoTask({ manifestPath, outputDir: config.directory }, config)
+  assert.equal(job.state, 'processing')
+  assert.deepEqual(call, ['resume', '--manifest', manifestPath, '--output-dir', config.directory])
 })

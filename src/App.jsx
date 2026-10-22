@@ -381,6 +381,7 @@ function App({ initialView }) {
   const [filter, setFilter] = useState('all')
   const [styleFilter, setStyleFilter] = useState('all')
   const [lightboxIndex, setLightboxIndex] = useState(null)
+  const [directorBrief, setDirectorBrief] = useState('')
 
   useEffect(() => {
     const handlePopState = () => setView(readView(window.location))
@@ -444,8 +445,8 @@ function App({ initialView }) {
     }
   }, [lightboxIndex, visibleStyleShots.length])
 
-  if (view === 'replica') return <ReplicaWorkbench onBack={() => navigateTo('portfolio')} />
-  if (view === 'studio') return <NativeBoard onBack={() => navigateTo('portfolio')} onDirector={() => navigateTo('replica')} />
+  if (view === 'replica') return <ReplicaWorkbench initialRequirement={directorBrief} onBack={() => navigateTo(directorBrief ? 'studio' : 'portfolio')} />
+  if (view === 'studio') return <NativeBoard onBack={() => navigateTo('portfolio')} onDirector={(brief = '') => { setDirectorBrief(brief); navigateTo('replica') }} />
 
   if (view === 'gateway') return <Gateway assetPath={assetPath} onEnterPortfolio={() => navigateTo('portfolio')} onEnterInterview={() => navigateTo('interview')} />
 

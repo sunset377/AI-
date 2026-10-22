@@ -81,7 +81,7 @@ export function ResultComparison({ currentJob, mediaUrl }) {
   </div>
 }
 
-export default function ReplicaWorkbench({ onBack }) {
+export default function ReplicaWorkbench({ onBack, initialRequirement = '' }) {
   useEffect(() => {
     const previous = document.title
     document.title = '视频复刻工作台'
@@ -105,7 +105,7 @@ export default function ReplicaWorkbench({ onBack }) {
   const fileInput = useRef(null)
   const requestInFlight = useRef(false)
   const selected = jobs.find((job) => job.id === selectedId)
-  const active = jobs.find((job) => !['complete', 'failed'].includes(job.status))
+  const active = jobs.find((job) => !['complete', 'failed', 'submission_uncertain'].includes(job.status))
   const busy = uploading || !!active
   const preview = useMemo(() => {
     if (!duration) return { plan: null, error: '' }
@@ -125,14 +125,14 @@ export default function ReplicaWorkbench({ onBack }) {
     try {
       const result = await requestApi('/health')
       setHealth(result)
-      if (result.ready) { setJobs((await requestApi('/jobs')).jobs); setAudit((await requestApi('/audit?limit=50')).entries); setPollError('') }
+      setJobs((await requestApi('/jobs')).jobs); setAudit((await requestApi('/audit?limit=50')).entries); setPollError('')
     } catch (error) { setHealth({ ready: false, planning: { ready: false }, render: { ready: false }, error: error.message }) }
     finally { setChecking(false) }
   }
 
   useEffect(() => { connect() }, [])
   useEffect(() => {
-    if (!active || !health?.ready) return
+    if (!active || !health?.planning?.ready) return
     let disposed = false
     let controller
     const timer = window.setInterval(async () => {
@@ -146,7 +146,7 @@ export default function ReplicaWorkbench({ onBack }) {
       finally { requestInFlight.current = false }
     }, 1500)
     return () => { disposed = true; window.clearInterval(timer); controller?.abort() }
-  }, [active?.id, health?.ready])
+  }, [active?.id, health?.planning?.ready])
 
   const choose = (candidate) => {
     if (!candidate || busy) return
@@ -192,7 +192,7 @@ export default function ReplicaWorkbench({ onBack }) {
   return (
     <main className="replicaWorkbench">
       <aside className="rwRail">
-        <button className="rwBrand" type="button" onClick={onBack} aria-label="返回个人作品集"><span className="rwBrandMark">R</span><strong>视频复刻工作台</strong></button>
+        <button className="rwBrand" type="button" onClick={onBack} aria-label="返回视频智能体"><span className="rwBrandMark">R</span><strong>MOMOCO 视频导演</strong></button>
         <div className="rwRailCopy"><p>ONE IDEA IN</p><div>Plan it.<br />Make it real.</div><span>说出想法，可选一段参考。</span></div>
         <nav className="rwNav" aria-label="工作台导航">
           {[
@@ -205,7 +205,7 @@ export default function ReplicaWorkbench({ onBack }) {
           ].map(([id, icon, title, subtitle]) => <button key={id} type="button" className={tab === id ? 'isActive' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id); setError('') }}><span className="rwNavIcon">{icon}</span><span><strong>{title}</strong><small>{subtitle}</small></span></button>)}
         </nav>
         <div className="rwRailFoot"><span className="rwDot" /><div><strong>默认零模型调用费</strong><small>Hypit 剪辑 · 本地包装<br />复杂镜头另行升级</small></div></div>
-        <button className="rwBack" type="button" onClick={onBack}>← 返回作品集</button>
+        <button className="rwBack" type="button" onClick={onBack}>← {initialRequirement ? '返回白板智能体' : '返回作品集'}</button>
       </aside>
 
       <div className="rwMain">
@@ -214,7 +214,7 @@ export default function ReplicaWorkbench({ onBack }) {
         {error && <p className="rwAlert" role="alert">{error}</p>}
         {pollError && <p className="rwAlert" role="alert">{pollError} 已提交任务不会自动重试。<button type="button" onClick={connect}>重新连接</button></p>}
 
-        <div hidden={tab !== 'template'}><TemplateEditor onWhiteboard={(copy) => { setWhiteboardHandoff({ copy }); setTab('whiteboard') }} health={health} requestApi={requestApi} mediaUrl={mediaUrl} jobBusy={busy} onJob={(job) => { setJobs((all) => [job, ...all]); setSelectedId(job.id); setTab('result') }} /></div>
+        <div hidden={tab !== 'template'}><TemplateEditor initialRequirement={initialRequirement} onWhiteboard={(copy) => { setWhiteboardHandoff({ copy }); setTab('whiteboard') }} health={health} requestApi={requestApi} mediaUrl={mediaUrl} jobBusy={busy} onJob={(job) => { setJobs((all) => [job, ...all]); setSelectedId(job.id); setTab('result') }} /></div>
 
         <div hidden={tab !== 'whiteboard'}><WhiteboardStudio requestApi={requestApi} mediaUrl={mediaUrl} handoff={whiteboardHandoff} /></div>
 
@@ -248,7 +248,8 @@ export default function ReplicaWorkbench({ onBack }) {
         {tab === 'result' && <section className="rwPanel rwResults">
           <div className="rwPanelHead"><div><p className="rwEyebrow">REAL OUTPUT</p><h2>{currentJob?.filename || '等待你的第一个版本'}</h2></div>{currentJob && <span className={`rwPill ${currentJob.kind === 'video' ? '' : 'rwFree'}`}>{currentJob.kind === 'video' ? 'MiniMax 按量计费' : '¥ 0 模型费'}</span>}</div>
           {!currentJob ? <div className="rwEmpty"><span className="rwUploadIcon">▶</span><h3>先制作一个版本</h3><p>实际成片完成后，会在这里显示对比和下载。</p><button className="rwPrimary" type="button" onClick={() => setTab('create')}>去上传视频 →</button></div> : <>
-            <div className={`rwJobStatus ${currentJob.status === 'failed' ? 'isFailed' : ''}`} role="status"><strong>{currentJob.message}</strong><span>{currentJob.progress}%</span><progress max="100" value={currentJob.progress} /></div>
+            <div className={`rwJobStatus ${['failed', 'submission_uncertain'].includes(currentJob.status) ? 'isFailed' : ''}`} role="status"><strong>{currentJob.message}</strong><span>{currentJob.progress}%</span><progress max="100" value={currentJob.progress} /></div>
+            {currentJob.status === 'submission_uncertain' && <p className="rwAlert">MiniMax 创建请求结果不确定，已停止自动提交。请先在平台任务列表对账，不要重新点击生成。</p>}
             {currentJob.directorPlan && <div className="rwTaskCard"><p className="rwEyebrow">TASK PLAN</p><p className="rwTaskPlan">方案已定：{currentJob.directorPlan.route.kind === 'hypit-template' ? `本地 Hypit 模板 · ${currentJob.directorPlan.canvas.width}×${currentJob.directorPlan.canvas.height} · ${currentJob.directorPlan.canvas.duration} 秒 · 零模型费` : `${currentJob.directorPlan.canvas.width}×${currentJob.directorPlan.canvas.height} · ${currentJob.directorPlan.canvas.duration} 秒 · ${currentJob.video?.model || 'MiniMax-H3'} 云端生成`}，现在生成。</p>{currentJob.directorPlan.prompt && <details className="rtSection"><summary>视频指令</summary><p className="rtTaskPrompt">{currentJob.directorPlan.prompt}</p></details>}</div>}
             <ResultComparison currentJob={currentJob} mediaUrl={mediaUrl} />
             {currentJob.status === 'complete' && currentJob.directorPlan?.shots?.length > 0 && <div className="rwQcCard"><p className="rwEyebrow">OUTPUT CHECK</p><h3>成片质检 · 镜头核对</h3><ol>{currentJob.directorPlan.shots.map((shot) => <li key={shot.id}><strong>{shot.start.toFixed(0)}–{shot.end.toFixed(0)} 秒</strong><span>{shot.task}{shot.visual ? ` · ${shot.visual.slice(0, 60)}` : ''}</span></li>)}</ol><p className="rwHint">以上为提交时的镜头规划；生成结果以实际画面为准。当前版本未接入 AI 逐帧质检，不声称自动验证文字与字幕。</p></div>}

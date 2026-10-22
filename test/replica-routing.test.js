@@ -135,3 +135,40 @@ test('rag search accepts the memory collection and forwards to the client', asyn
   await f.request('/rag/search', 'POST', { collection: 'memory', query: '我的偏好', top_k: 2 })
   assert.ok(f.ragCalls.some((c) => c.collection === 'memory'))
 })
+
+test('complex director confirmation creates an offline official H3 plan without exposing its local manifest', async (t) => {
+  const plan = {
+    schemaVersion: 1,
+    status: 'planning_only',
+    goal: '制作复杂产品镜头',
+    requirements: ['口红旋出并定格'],
+    reference: null,
+    canvas: { width: 720, height: 1280, fps: 30, duration: 6 },
+    shots: [{ id: 'shot-1', start: 0, end: 6, task: '产品定格', visual: '深红背景金色轮廓光', text: '', action: '口红自下向上旋出', source: 'model' }],
+    assets: [{ id: 'prop-lipstick', type: 'prop', description: '口红产品外观唯一锚点', rights: 'unknown', source: 'model' }],
+    route: { kind: 'model-required', templateId: null },
+    audio: { mode: 'mute', source: 'none' },
+    prompt: '【核心风格】写实产品广告\n【影片基调】克制\n【光线设计】金色轮廓光\n【导演意图】展示质感\n【技术地基】720×1280 6秒\n【素材绑定与防覆盖】口红是唯一产品锚\n【分镜/场景精确时间编排】0-6秒旋出\n【全程一致性与动态降级】锁定产品\n【音频设计】静音\n【负向提示】无文字无水印',
+    questions: [],
+    blockers: ['等待用户确认云端生成费用。'],
+  }
+  const f = await fixture(t, {
+    chatConfig: { baseUrl: 'https://provider.example', model: 'test-model', apiKey: 'secret', vision: false, director: 'loaded' },
+    chat: async () => ({ reply: '方案已拆解。', patch: {}, questions: [], plan }),
+    planVideo: async ({ duration, resolution, ratio, directory }) => ({ manifestPath: path.join(directory, 'h3-job.json'), job: { request: { model: 'MiniMax-H3', duration, resolution, ratio }, estimate: { cny: '3.00', snapshotDate: '2026-09-01', source: 'official' } } }),
+  })
+  const draft = await (await f.request('/drafts', 'POST', {})).json()
+  await f.request(`/drafts/${draft.id}/messages`, 'POST', { revision: draft.revision, message: '口红旋出并定格', mode: 'api', consent: { provider: 'test-model', shareImages: false } })
+  let current
+  for (let attempt = 0; attempt < 30; attempt++) {
+    current = await (await f.request(`/drafts/${draft.id}`)).json()
+    if (current.status === 'idle') break
+    await new Promise((resolve) => setTimeout(resolve, 20))
+  }
+  const confirmed = await f.request(`/drafts/${draft.id}/confirm`, 'POST', { revision: current.revision })
+  assert.equal(confirmed.status, 200)
+  const result = await confirmed.json()
+  assert.equal(result.videoPlan.estimate.cny, '3.00')
+  assert.equal(result.videoPlan.ratio, '9:16')
+  assert.ok(!('manifestPath' in result.videoPlan))
+})

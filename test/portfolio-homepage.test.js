@@ -55,7 +55,8 @@ test('separate gateway and portfolio retain the original visual entry and all pr
     }
     const studio = renderToStaticMarkup(React.createElement(App, { initialView: 'studio' }))
     assert.match(studio, /刘耀华 · 视频智能体/)
-    assert.match(studio, /导演与复杂镜头/)
+    assert.match(studio, /MOMOCO 导演 · 复杂镜头/)
+    assert.match(studio, /交给 MOMOCO 导演拆解/)
     assert.match(studio, /配音与试听确认/)
     assert.match(studio, /github\.com\/ChenShuo2004\/cs-board/)
     assert.match(studio, /本地 F5‑TTS \/ FFmpeg/)

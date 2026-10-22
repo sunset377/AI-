@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { videoEstimate } from '../../video-cost'
 import { REPLICA_LIMITS } from '../../replica'
 import { DEFAULT_TEMPLATE, planTemplate, validateTemplate } from '../../replica-template'
 import { renderTemplateSvg } from '../../replica-template-visual'
@@ -32,12 +31,12 @@ export function directorSendBlock({ requirement = '', chatBusy = false, dirty = 
   return ''
 }
 
-export default function TemplateEditor({ health, requestApi, mediaUrl, onJob, onWhiteboard, jobBusy = false }) {
+export default function TemplateEditor({ health, requestApi, mediaUrl, onJob, onWhiteboard, initialRequirement = '', jobBusy = false }) {
   const [file, setFile] = useState(null), [localUrl, setLocalUrl] = useState('')
   const [draft, setDraft] = useState(null), [drafts, setDrafts] = useState([])
   const [template, setTemplate] = useState({ ...DEFAULT_TEMPLATE })
   const [pending, setPending] = useState(false), [error, setError] = useState('')
-  const [requirement, setRequirement] = useState(''), [mode, setMode] = useState('local'), [shareImages, setShareImages] = useState(false)
+  const [requirement, setRequirement] = useState(initialRequirement), [mode, setMode] = useState('local'), [shareImages, setShareImages] = useState(false)
   const [replaceReference, setReplaceReference] = useState(false)
   const [pendingTrim, setPendingTrim] = useState(null), [trimming, setTrimming] = useState(false)
   const [prosody, setProsody] = useState({ title: '', benefit: '', action: '' }), [pause, setPause] = useState(0.25)
@@ -70,12 +69,13 @@ export default function TemplateEditor({ health, requestApi, mediaUrl, onJob, on
     const url = URL.createObjectURL(file); setLocalUrl(url)
     return () => URL.revokeObjectURL(url)
   }, [file])
+  useEffect(() => { if (initialRequirement && health?.chat?.ready) setMode('api') }, [initialRequirement, health?.chat?.ready])
   useEffect(() => {
-    if (!health?.ready) return
+    if (!health?.planning?.ready) return
     let disposed = false
     requestApi('/drafts').then((data) => { if (!disposed) setDrafts(data.drafts) }).catch((e) => { if (!disposed) setError(e.message) })
     return () => { disposed = true }
-  }, [health?.ready])
+  }, [health?.planning?.ready])
   useEffect(() => {
     if (!draft || !busyStates.includes(draft.status)) return
     const token = generation.current, controller = new AbortController(); let inFlight = false
@@ -224,11 +224,10 @@ export default function TemplateEditor({ health, requestApi, mediaUrl, onJob, on
   const operate = async (operation, body = {}) => {
     if (!draft || busy) return
     if (operation === 'video-submit') {
-      try {
-        const estimate = videoEstimate(draft.directorPlan.canvas.duration)
-        if (!window.confirm(`提交 ${estimate.seconds} 秒 MiniMax H3 视频？预估 ¥${estimate.cny}（768P，无参考素材，价格快照 ${estimate.date}，实际以供应商账单为准）。此次会发送生成提示词并产生费用。`)) return
-        body = { ...body, confirmCostCny: estimate.cny }
-      } catch (e) { setError(e.message); return }
+      const plan = draft.videoPlan
+      if (!plan?.estimate?.cny) { setError('请先确认当前方案，由官方 H3 连接器生成离线费用计划。'); return }
+      if (!window.confirm(`提交 ${plan.duration} 秒 MiniMax H3 视频？预估 ¥${plan.estimate.cny}（${plan.resolution}，官方价格快照 ${plan.estimate.snapshotDate}，实际以供应商账单为准）。此次只提交一个付费任务，网络结果不确定时不会自动重提。`)) return
+      body = { ...body, confirmCostCny: plan.estimate.cny }
     }
     const token = generation.current; setPending(true); setError('')
     try {
@@ -345,7 +344,7 @@ export default function TemplateEditor({ health, requestApi, mediaUrl, onJob, on
       <section className="rwPanel rtHero" aria-labelledby="rt-hero-title">
         <p className="rwEyebrow">01 / DIRECTOR AGENT</p>
         <h2 id="rt-hero-title" className="rtHeroTitle">今天想让 Agent 完成什么？</h2>
-        <p className="rtHeroSub">选择文本与生成模型，直接描述目标；导演会先反馈、追问，再形成结构化方案或可复制指令。</p>
+        <p className="rtHeroSub">MOMOCO 导演 Skill 先拆解剧本、镜头和资产缺口；图形文字路由 Hypit 执行，真人、产品和复杂运镜再生成 MiniMax H3 离线计划。</p>
         <div className="rtComposer">
           <label className="rwField">你的想法<textarea aria-label="告诉导演你想做什么" rows={4} maxLength={2000} value={requirement} disabled={chatBusy} onChange={(e) => setRequirement(e.target.value)} placeholder="例如：做一条 6 秒绿色背景文字卡。标题：3 秒看懂；卖点：本地生成；行动：马上开始。文字黄色，弹跳入场。" /></label>
           <div className="rtRouteBar"><span className={`rtRoutePill ${mode === 'api' ? 'isApi' : ''}`}>{mode === 'api' ? health?.chat?.model || 'DeepSeek 对话' : '本地向导'}</span><span className="rtRoutePill isVideo">{health?.video?.ready ? 'MiniMax H3 视频' : '视频模型未启用'}</span><span className="rtRoutePill isLocal">Hypit 本地渲染</span></div>
@@ -380,6 +379,9 @@ export default function TemplateEditor({ health, requestApi, mediaUrl, onJob, on
         <h3>证据来源</h3>{draft?.directorPlan?.reference ? <><p>{draft.directorPlan.reference.summary}</p><ul>{draft.directorPlan.reference.evidence.map((item, index) => <li key={index}><span>{item.source}</span>{item.text}</li>)}</ul></> : <p className="rtNoEvidence">本次没有参考原片；当前方案仅依据你的文字和默认画布。</p>}
         <p className="rwHint">当前分析只测量时长与尺寸，没有 OCR/ASR，不自动识别文字、语音或剧情。</p>
         {draft?.directorPlan ? <><div className="rtPlanMeta"><span>{draft.directorPlan.canvas.width}×{draft.directorPlan.canvas.height}</span><span>{draft.directorPlan.canvas.duration} 秒</span><span>{draft.directorPlan.route.kind}</span><span>{draft.directorPlan.audio.mode}</span></div><h3>镜头时间线</h3>{draft.directorPlan.shots.length ? <ol className="rtShots">{draft.directorPlan.shots.map((shot) => <li key={shot.id}><strong>{shot.start.toFixed(2)}–{shot.end.toFixed(2)} 秒</strong><span>{shot.task} · {shot.text}</span></li>)}</ol> : <p className="rwHint">需要继续补充可制作文案或复杂镜头素材。</p>}{draft.directorPlan.blockers.length > 0 && <div className="rwAlert">{draft.directorPlan.blockers.join('；')}</div>}<label className="rwField">可复制视频指令<textarea aria-label="可复制视频指令" readOnly rows={6} value={draft.directorPlan.prompt} /></label><button className="rwSecondary" type="button" onClick={() => navigator.clipboard?.writeText(draft.directorPlan.prompt)}>复制视频指令</button></> : <><p className="rwHint">发送第一条消息后，这里会显示参数、时间线、生产路径和可复制提示词。</p><button className="rwSecondary" type="button" disabled>复制视频指令</button></>}
+        {draft?.directorPlan?.assets?.length > 0 && <div><h3>资产清单</h3><ol className="rtShots">{draft.directorPlan.assets.map((asset) => <li key={asset.id}><strong>{asset.type}</strong><span>{asset.description} · 权利：{asset.rights}</span></li>)}</ol></div>}
+        {draft?.directorPlan && !draft.directorPlan.assets.length && <p className="rwHint">当前没有绑定资产；私有图片不会自动上传给视频模型。</p>}
+        {draft?.videoPlan && <p className="rtRouting" role="status"><strong>H3 离线计划：¥{draft.videoPlan.estimate.cny}</strong><span>{draft.videoPlan.model} · {draft.videoPlan.duration} 秒 · {draft.videoPlan.resolution} · 价格快照 {draft.videoPlan.estimate.snapshotDate}</span></p>}
         {onWhiteboard && <button className="rwSecondary" type="button" disabled={busy} onClick={() => onWhiteboard([template.title, template.benefit, template.action].filter(Boolean).join("\n"))}>带着当前文案制作白板 →</button>}
         <div className="rwSubmitRow"><div><strong>{confirmed ? '当前方案已确认' : executable ? '方案可以交给本地 Hypit' : complexPlanReady ? '复杂镜头方案已就绪，可确认后提交生成' : '继续和导演沟通'}</strong><small>{confirmed && executable ? (renderReady ? '确认后才会创建独立任务' : '渲染器未就绪：图形卡成片需 Hypit；复杂镜头可走 MiniMax') : confirmed && complexPlanReady ? '提交后由 MiniMax H3 云端生成，按量计费（以供应商账单为准），生成期间可查看进度' : executable ? '确认后才会创建独立任务' : complexPlanReady ? '确认后才会提交 MiniMax 生成' : '复杂镜头不会伪装成本地成片'}</small></div><button className="rwSecondary" type="button" disabled={(!executable && !complexPlanReady) || busy || dirty || (executable && !voiceReady) || confirmed} onClick={() => operate('confirm')}>确认当前方案</button>{executable ? <button className="rwPrimary" type="button" disabled={!confirmed || !preview.plan || busy || !voiceReady || !renderReady} onClick={() => operate('render')}>制作成片 →</button> : draft?.directorPlan ? <button className="rwPrimary" type="button" disabled={!confirmed || busy || !health?.video?.ready} onClick={() => operate('video-submit')} title="复杂人物镜头由 MiniMax H3 云端生成，按量计费">{health?.video?.ready ? '提交 MiniMax 生成 →' : 'MiniMax 未启用 →'}</button> : <button className="rwPrimary" type="button" disabled>制作成片 →</button>}</div>
       </section>
