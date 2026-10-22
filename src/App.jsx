@@ -31,6 +31,17 @@ const wallpapers = [
 
 const projects = [
   {
+    title: 'MineFlow · 矿山智慧运输调度',
+    subtitle: '可交互业务 Demo · 浏览器直接体验',
+    type: 'product',
+    image: 'assets/mineflow-preview.png',
+    meta: '需求 / 车辆推荐 / 人工派单 / 排队 / 称重 / 异常 / 看板',
+    description:
+      '基于公开招聘场景开发的运输调度演示：创建需求、确认车辆推荐、推进运输、处理超载与故障，再核对电子磅单和运营指标。全部为模拟数据，每位访客使用独立浏览器会话；不包含真实司机接单 App 或生产设备接入。',
+    href: 'mineflow/',
+    actionLabel: '进入 MineFlow · 开始90秒互动演示',
+  },
+  {
     title: '预言 · 自动化成语短视频生产线',
     subtitle: 'Vox 风格 · 每 2 小时自动跑一集 · 已上线 40+ 集',
     type: 'product',
@@ -510,6 +521,7 @@ function App({ initialView }) {
             <span>把片场重复劳动变成可调度流水线</span>
             <span>2026 Portfolio</span>
             <div className="heroDemoActions">
+              <a href={assetPath('mineflow/')} target="_blank" rel="noreferrer">体验 MineFlow 矿山调度 ↗</a>
               <a href="#director">运行流水线演示 ↓</a>
               <a href="#script-input">输入剧本生成分镜 ↓</a>
             </div>
