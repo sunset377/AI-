@@ -71,12 +71,12 @@ test('bad provider JSON cannot crash the frontend or pretend generation succeede
   assert.doesNotMatch(await response.text(), /test-provider-secret/)
 })
 
-test('portfolio exposes both demos immediately after the hero and hides provider branding in interview', async () => {
+test('portfolio keeps real work before both demos and hides provider branding in interview', async () => {
   const vite = await createServer({ appType: 'custom', cacheDir: 'node_modules/.vite-storyboard-tests', server: { middlewareMode: true, hmr: false } })
   try {
     const { default: App } = await vite.ssrLoadModule('/src/App.jsx')
     const portfolio = renderToStaticMarkup(React.createElement(App, { initialView: 'portfolio' }))
-    const ids = ['home', 'director', 'script-demo', 'about', 'works'].map((id) => portfolio.indexOf(`id="${id}"`))
+    const ids = ['home', 'workflow', 'works', 'about', 'director', 'script-demo'].map((id) => portfolio.indexOf(`id="${id}"`))
     assert.ok(ids.every((position, index) => position >= 0 && (index === 0 || position > ids[index - 1])))
     assert.match(portfolio, /运行流水线演示/)
     assert.match(portfolio, /输入剧本生成分镜/)
