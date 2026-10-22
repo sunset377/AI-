@@ -34,6 +34,17 @@ const wallpapers = [
 
 const projects = [
   {
+    title: 'MineFlow · 矿山智慧运输调度',
+    subtitle: '可交互业务 Demo · 浏览器直接体验',
+    type: 'product',
+    image: 'assets/mineflow-preview.png',
+    meta: '需求 / 车辆推荐 / 人工派单 / 排队 / 称重 / 异常 / 看板',
+    description:
+      '基于公开招聘场景开发的运输调度演示：创建需求、确认车辆推荐、推进运输、处理超载与故障，再核对电子磅单和运营指标。全部为模拟数据，每位访客使用独立浏览器会话；不包含真实司机接单 App 或生产设备接入。',
+    href: 'mineflow/',
+    actionLabel: '进入 MineFlow · 开始90秒互动演示',
+  },
+  {
     title: '定制化视频工作流 · 预言',
     subtitle: '已跑通的定时任务 · 同系列、不同选题',
     type: 'product',
@@ -156,6 +167,7 @@ const projects = [
 }))
 
 const projectOrder = [
+  'MineFlow · 矿山智慧运输调度',
   '定制化视频工作流 · 预言', '量产样片 · 愚公移山', 'AI 漫剧导演工作流',
   '小刘带你挖三星堆', '品牌产品宣传片', '《星际穷途 X》',
   '《时光来信》· 屈臣氏 185 周年',
@@ -164,6 +176,7 @@ const projectOrder = [
 projects.sort((a, b) => projectOrder.indexOf(a.title) - projectOrder.indexOf(b.title))
 
 const projectSummaries = {
+  'MineFlow · 矿山智慧运输调度': '从业务需求、车辆推荐与人工派单，到排队、称重、异常和运营看板的可交互调度演示。',
   '定制化视频工作流 · 预言': '以已跑通的定时任务与系列样片，展示从选题到成片、封面和发布文案的生产方法。',
   '量产样片 · 愚公移山': '同一套工作流的实际视频，直接查看画面风格、字幕和剪辑节奏。',
   'AI 漫剧导演工作流': '独立开发测试 3 个月，沉淀从剧本、人物道具资产到分镜和分时段提示词的标准化导演 Skill。',
@@ -457,7 +470,7 @@ function App({ initialView }) {
           <div className="headerContact"><span><b>电话</b>19182874015</span><span><b>微信</b>Sun677set</span></div>
         </header>
         <div className="heroInner shell portfolioHeroGrid">
-          <div className="heroAside"><span>刘耀华 · AI CONTENT / AGENT WORKFLOW</span><span>把 AI 能力用到内容生产与业务交付</span><span>2026 PORTFOLIO</span><div className="heroDemoActions"><a href="#workflow">查看视频工作流 ↓</a><a href="#works">浏览全部作品 ↓</a></div></div>
+          <div className="heroAside"><span>刘耀华 · AI CONTENT / AGENT WORKFLOW</span><span>把 AI 能力用到内容生产与业务交付</span><span>2026 PORTFOLIO</span><div className="heroDemoActions"><a href={assetPath('mineflow/')} target="_blank" rel="noreferrer">体验 MineFlow 矿山调度 ↗</a><a href="#workflow">查看视频工作流 ↓</a><a href="#works">浏览全部作品 ↓</a></div></div>
           <aside className="studioPreviewCard"><p>已集成 · 开源视频智能体</p><img src={assetPath('assets/production/cs-board-preview.jpg')} alt="CS Board 蓝白配色工作台预览：画面风格选择与制作进度" width="1000" height="620" /><h2>把一段旁白，做成视频。</h2><p>选择音色、输入文案或分镜，再从 12 种画面风格中选择并查看制作进度。</p><a href="?view=studio" onClick={event=>{event.preventDefault();navigateTo('studio')}}>打开视频智能体 ↗</a><small>界面已上线；完整生成需连接本地 F5‑TTS / FFmpeg 服务</small></aside>
         </div>
       </section>

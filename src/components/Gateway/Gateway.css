@@ -208,6 +208,26 @@
   color: var(--gateway-muted);
 }
 
+.gatewayMineflow {
+  display: grid;
+  gap: 8px;
+  width: min(calc(100% - 32px), 1540px);
+  box-sizing: border-box;
+  margin: 22px auto 0;
+  padding: 18px;
+  border: 1px solid #649c85;
+  border-radius: 6px;
+  color: #ecf8f1;
+  background: #1c3a30;
+  text-decoration: none;
+  line-height: 1.6;
+}
+
+.gatewayMineflow strong { font-size: 16px; }
+.gatewayMineflow > span { font-size: 12px; }
+.gatewayMineflow small { color: #b6cebf; font-size: 11px; }
+.gatewayMineflow:hover { background: #254c3e; }
+
 .gatewayPrimary,
 .gatewaySecondary {
   min-height: 50px;

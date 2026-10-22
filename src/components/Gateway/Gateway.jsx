@@ -16,6 +16,11 @@ export default function Gateway({ assetPath, onEnterPortfolio, onEnterInterview 
       </nav>
       <button className="gatewayInterviewLink" type="button" onClick={onEnterInterview}>AI 面试 <span aria-hidden="true">↗</span></button>
     </header>
+    <a className="gatewayMineflow" href={assetPath('mineflow/')} target="_blank" rel="noreferrer">
+      <strong>体验 MineFlow · 矿山运输调度 <span aria-hidden="true">↗</span></strong>
+      <span>90秒互动演示：创建需求 → 人工派单 → 排队称重 → 完成运输</span>
+      <small>模拟数据 · 无需登录 · 每位访客独立会话</small>
+    </a>
     <section className="gatewayHero" aria-labelledby="gateway-title">
       <div className="gatewayCopy">
         <p className="gatewayLabel">AI CONTENT · AGENT WORKFLOW · CHENGDU</p>

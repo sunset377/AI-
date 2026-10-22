@@ -44,6 +44,20 @@ test('GitHub Pages build does not request media from the domain root', async () 
   assert.deepEqual(offenders, [])
 })
 
+test('MineFlow publishes a self-contained subdirectory with replay and license notices', async () => {
+  const html = await readFile('dist/mineflow/index.html', 'utf8')
+  assert.match(html, /<title>MineFlow｜矿山智慧运输调度系统<\/title>/)
+  const assets = [...html.matchAll(/(?:src|href)="(\/AI-\/mineflow\/[^"?#]+)"/g)]
+  assert.ok(assets.length >= 3)
+  for (const [, url] of assets) {
+    assert.equal(await fileExists(`dist/${url.slice('/AI-/'.length)}`), true, url)
+  }
+  const replay = JSON.parse(await readFile('dist/mineflow/research/openmines-replay.json', 'utf8'))
+  assert.equal(replay.frames.length, 97)
+  assert.match(await readFile('dist/mineflow/THIRD_PARTY_NOTICES.txt', 'utf8'), /Apache/)
+  assert.equal(await fileExists('dist/assets/mineflow-preview.png'), true)
+})
+
 test('GitHub Pages build publishes the Sanxingdui tool as a self-contained interactive page', async () => {
   const toolFiles = [
     'dist/sanxingdui/index.html',
