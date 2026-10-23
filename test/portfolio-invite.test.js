@@ -1,14 +1,32 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { once } from 'node:events'
+import { mkdtemp, writeFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
 import { startPortfolio } from '../server/portfolio-server.js'
+import { createAuditLog } from '../server/replica-audit.js'
 import { videoEstimate } from '../src/video-cost.js'
 import { runTool } from '../server/replica-render.js'
 
-test('fresh visitors open every view and the audio library without credentials', async t => {
-  const server = await startPortfolio({ port: 0 })
+async function fixture(t) {
+  const directory = await mkdtemp(path.join(tmpdir(), 'portfolio-invite-'))
+  await writeFile(path.join(directory, 'library.json'), JSON.stringify([
+    { id: 'sample-a', name: '测试音色 A', visibility: 'demo', transcript: '测试文字 A', file: 'fixture-a.wav', source: 'private-reference-a.wav' },
+    { id: 'sample-b', name: '测试音色 B', visibility: 'demo', transcript: '测试文字 B', file: 'fixture-b.wav' },
+    { id: 'personal', name: '私有测试条目', visibility: 'private', file: 'personal.wav' },
+  ]))
+  const server = await startPortfolio({ port: 0, quotaPath: path.join(directory, 'quota.json'), replicaOptions: {
+    directory: path.join(directory, 'jobs'), whiteboardRoot: directory,
+    audit: createAuditLog({ directory: path.join(directory, 'audit') }),
+  } })
   if (!server.listening) await once(server, 'listening')
-  t.after(() => new Promise(resolve => server.close(resolve)))
+  t.after(async () => { await new Promise(resolve => server.close(resolve)); await rm(directory, { recursive: true, force: true }) })
+  return server
+}
+
+test('fresh visitors open every view and only the provided public audio catalog without credentials', async t => {
+  const server = await fixture(t)
   const base = `http://127.0.0.1:${server.address().port}`
   for (const view of ['gateway', 'portfolio', 'interview', 'studio', 'replica']) {
     const response = await fetch(`${base}/?view=${view}`)
@@ -19,7 +37,7 @@ test('fresh visitors open every view and the audio library without credentials',
   const library = await fetch(`${base}/api/replica/whiteboard/voices`)
   assert.equal(library.status, 200)
   const { items } = await library.json()
-  assert.ok(items.length >= 2)
+  assert.deepEqual(items.map(item => item.id), ['sample-a', 'sample-b'])
   assert.ok(items.every(item => item.id !== 'personal' && !item.source && !item.file))
   for (const route of ['/.env.local', '/.backups/private.json', '/api/replica/whiteboard/audio/personal']) {
     assert.equal((await fetch(base + route)).status, 404)
@@ -41,9 +59,7 @@ test('production preview streams interview requests through the private gateway'
       headers: { 'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-store' },
     })
   })
-  const server = await startPortfolio({ port: 0 })
-  if (!server.listening) await once(server, 'listening')
-  t.after(() => new Promise(resolve => server.close(resolve)))
+  const server = await fixture(t)
   const response = await realFetch(`http://127.0.0.1:${server.address().port}/api/interview`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

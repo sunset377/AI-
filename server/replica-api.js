@@ -88,7 +88,7 @@ function sendJson(response, status, body) {
   response.end(JSON.stringify(body))
 }
 
-export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'jobs'), render = renderReplica, checkTools = checkReplicaTools, analyze = analyzeReplica, probeDuration = probeVideoDuration, trimVideo = trimReplicaVideo, chatConfig, chat = chatReplica, checkVoice = checkReplicaVoice, voice = createVoicePreview, ragClient = createRagClient(), audit = createAuditLog({ directory: path.join(HYPIT_PROJECT, 'jobs', '.audit') }), videoConfig, planVideo = planVideoTask, submitVideo = submitVideoTask, resumeVideo = resumeVideoTask } = {}) {
+export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'jobs'), render = renderReplica, checkTools = checkReplicaTools, analyze = analyzeReplica, probeDuration = probeVideoDuration, trimVideo = trimReplicaVideo, chatConfig, chat = chatReplica, checkVoice = checkReplicaVoice, voice = createVoicePreview, ragClient = createRagClient(), audit = createAuditLog({ directory: path.join(HYPIT_PROJECT, 'jobs', '.audit') }), videoConfig, planVideo = planVideoTask, submitVideo = submitVideoTask, resumeVideo = resumeVideoTask, whiteboardRoot = path.join(projectRoot, '.local-audio') } = {}) {
   loadLocalEnv()
   await mkdir(directory, { recursive: true })
   chatConfig ||= await readReplicaChatConfig()
@@ -197,7 +197,7 @@ export async function createReplicaApi({ directory = path.join(HYPIT_PROJECT, 'j
     const stream = createReadStream(file, { start, end }); response.on('close', () => stream.destroy()); stream.on('error', () => response.destroy()); return stream.pipe(response)
   }
 
-  const whiteboard = createWhiteboardApi({ root: path.join(projectRoot, '.local-audio'), serveFile, sendJson })
+  const whiteboard = createWhiteboardApi({ root: whiteboardRoot, serveFile, sendJson })
 
   return async function replicaMiddleware(request, response, next) {
     const url = new URL(request.url, 'http://localhost')

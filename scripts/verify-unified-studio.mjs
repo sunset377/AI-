@@ -26,7 +26,13 @@ try {
       if (path === '/api/replica/health') data = { ready: false, planning: { ready: false }, chat: { ready: false }, video: { ready: false }, render: { ready: false } }
       await route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(data) })
     })
-    await page.goto(base + '?view=studio')
+    await page.goto(base + '?view=portfolio')
+    const providerCard = page.locator('article.workCard').filter({ has: page.getByRole('heading', { name: 'AI创作聚合平台', exact: true }) })
+    assert.match(await providerCard.innerText(), /第三方/)
+    await providerCard.getByRole('link', { name: '在工作台查看模型' }).click()
+    await page.getByRole('heading', { name: 'DeepSeek V4.1 Flash', exact: true }).waitFor()
+    assert.equal(new URL(page.url()).searchParams.get('view'), 'studio')
+    assert.equal(page.context().pages().length, 1)
     const url = page.url()
     const openDirectory = async () => { if (width < 680 && !await page.getByRole('complementary', { name: '工作台目录' }).isVisible()) await page.getByRole('button', { name: '☰ 工作台目录', exact: true }).click() }
     const tab = async name => { await openDirectory(); await page.getByRole('tab', { name, exact: true }).click(); assert.equal(page.url(), url) }
@@ -111,4 +117,7 @@ try {
   assert.equal(writes, 0)
   assert.deepEqual(errors, [])
   console.log(JSON.stringify({ ok: true, widths: [1440, 390], paidCalls: 0, checks: ['same URL', 'real agent controls', 'three preserved drafts', 'handoff', 'skill search and bookmarks', '12 loaded style previews', 'keyboard tabs', 'no horizontal overflow'] }))
+} catch (error) {
+  console.error(JSON.stringify({ pageErrors: errors, blockedWrites: writes }))
+  throw error
 } finally { await browser.close() }

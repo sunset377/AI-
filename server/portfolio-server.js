@@ -8,10 +8,9 @@ import { createReplicaApi } from './replica-api.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const interviewGateway = 'https://ci-interview-gateway.pages.dev'
-export async function startPortfolio({ port = Number(process.env.PORTFOLIO_DEMO_PORT || 5175), host = '127.0.0.1' } = {}) {
-  const api = await createReplicaApi()
+export async function startPortfolio({ port = Number(process.env.PORTFOLIO_DEMO_PORT || 5175), host = '127.0.0.1', replicaOptions, quotaPath = path.join(root, '.local-audio', 'online-quota.json') } = {}) {
+  const api = await createReplicaApi(replicaOptions)
   const dist = path.join(root, 'dist')
-  const quotaPath = path.join(root, '.local-audio', 'online-quota.json')
   await mkdir(path.dirname(quotaPath), { recursive: true })
   let quota = await readFile(quotaPath, 'utf8').then(JSON.parse).catch(() => ({ day: '', count: 0 }))
   let queue = Promise.resolve()

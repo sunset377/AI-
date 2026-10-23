@@ -4,7 +4,6 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { createSsrServer as createServer } from './helpers/vite.js'
 import { parseSseLine, streamInterview } from '../src/interview/client.js'
-import { buildResumeFallbackAnswer } from '../src/interview/fallback.js'
 
 test('parseSseLine reads Workers AI and OpenAI-compatible token shapes', () => {
   assert.deepEqual(parseSseLine('data: {"response":"你好"}'), { response: '你好' })
@@ -51,53 +50,6 @@ test('streamInterview reports a server error without generating a local answer',
   assert.deepEqual(tokens, [])
 })
 
-test('resume fallback optimizes common interview questions without inventing facts', () => {
-  assert.match(buildResumeFallbackAnswer('为什么适合 AI Agent 岗位'), /MOMOCO/)
-  assert.match(buildResumeFallbackAnswer('说说你的不足'), /编程基础/)
-  assert.match(buildResumeFallbackAnswer('你有几年大厂经验'), /暂未收录/)
-  assert.doesNotMatch(buildResumeFallbackAnswer('请做一下自我介绍'), /简历知识库演示/)
-  assert.match(buildResumeFallbackAnswer('他是本科生吗'), /2026年6月毕业于四川大学艺术学院视觉传达设计专业/)
-  assert.match(buildResumeFallbackAnswer('他是本科生吗'), /学历层次.*尚待本人确认/)
-  assert.match(buildResumeFallbackAnswer('面试时怎么称呼你'), /刘耀华/)
-  assert.match(buildResumeFallbackAnswer('可以考虑哪些求职城市'), /上海、杭州和武汉/)
-  assert.match(buildResumeFallbackAnswer('你现在住在哪个城市'), /当前常住城市.*尚未获本人明确确认/)
-  assert.match(buildResumeFallbackAnswer('你的目标岗位优先级是什么'), /AI 工作流自动化/)
-  assert.match(buildResumeFallbackAnswer('你做过多少集 AI 短剧'), /约 60 集/)
-  assert.match(buildResumeFallbackAnswer('那部三分钟的短片叫什么'), /正式片名尚未提供/)
-  assert.match(buildResumeFallbackAnswer('MOMOCO 工作流哪些已经可用'), /端到端自动 Agent 串联/)
-  assert.match(buildResumeFallbackAnswer('角色卡有付费订单吗'), /小规模真实付费订单/)
-  assert.match(buildResumeFallbackAnswer('项目代码都是你独立手写的吗'), /Codex 辅助实现/)
-  assert.match(buildResumeFallbackAnswer('你为什么从视觉设计转向 AI 应用'), /完整自动化/)
-  assert.match(buildResumeFallbackAnswer('你现在都会哪些AI工具'), /Codex、Claude Code/)
-  assert.match(buildResumeFallbackAnswer('为什么从视觉设计转向 AI 应用'), /不是完全割裂的转行/)
-  assert.match(buildResumeFallbackAnswer('Agent 和普通聊天机器人有什么区别'), /受约束的工作流/)
-  assert.match(buildResumeFallbackAnswer('怎么降低 Agent 幻觉'), /结构化输入/)
-  assert.match(buildResumeFallbackAnswer('如何评测一个 Agent'), /任务成功率/)
-  assert.match(buildResumeFallbackAnswer('没有正式实习怎么证明自己'), /2026年6月毕业/)
-  assert.doesNotMatch(buildResumeFallbackAnswer('说说你平时怎样推进事情'), /没有足够信息/)
-})
-
-test('static fallback keeps short follow-up questions connected to recent context', () => {
-  const answer = buildResumeFallbackAnswer([
-    { role: 'user', content: '你现在都会哪些AI工具' },
-    { role: 'assistant', content: '上一轮回答' },
-    { role: 'user', content: '具体怎么用的？' },
-  ])
-
-  assert.match(answer, /Codex、Claude Code/)
-})
-
-test('static fallback prioritizes a new explicit question over older conversation topics', () => {
-  const answer = buildResumeFallbackAnswer([
-    { role: 'user', content: '你的优势与不足是什么' },
-    { role: 'assistant', content: '上一轮回答' },
-    { role: 'user', content: '你毕业于哪个学校' },
-  ])
-
-  assert.match(answer, /2026年6月毕业于四川大学艺术学院视觉传达设计专业/)
-  assert.doesNotMatch(answer, /编程基础/)
-})
-
 test('streamInterview rejects a missing API route instead of using resume knowledge', async () => {
   const tokens = []
   await assert.rejects(streamInterview({
@@ -125,11 +77,12 @@ test('interview view explains the AI identity and offers starter questions', asy
     assert.match(html, /AI 面试助手/)
     assert.doesNotMatch(html, /基于求职简历知识库/)
     assert.doesNotMatch(html, /简历知识库演示模式/)
-    assert.match(html, /AI Agent \/ AI应用开发工程师/)
-    assert.match(html, /请做一下自我介绍/)
-    assert.match(html, /为什么适合 AI Agent 岗位/)
-    assert.match(html, /你常用哪些 AI 工具/)
-    assert.match(html, /为什么从视觉设计转向 AI 应用/)
+    assert.match(html, /AI 分身/)
+    assert.match(html, /定位<\/dt><dd>AI 信息流 \/ Agent 开发 \/ AIGC 赋能/)
+    assert.match(html, /aria-label="推荐问题"/)
+    assert.match(html, /讲一个你从0到1做的项目/)
+    assert.match(html, /AI生成内容最常见的翻车问题是什么/)
+    assert.match(html, /你平时怎么选模型和工具/)
     assert.match(html, /Shift \+ Enter 换行/)
     assert.match(html, /查看作品集/)
     assert.match(html, /联系本人/)

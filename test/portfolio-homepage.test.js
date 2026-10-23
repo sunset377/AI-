@@ -5,11 +5,9 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { createServer } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resumeKnowledgeBase } from '../src/interview/profile.js'
-import { buildResumeFallbackAnswer } from '../src/interview/fallback.js'
 
-test('unavailable WorkBuddy is absent from interview facts and local answers', () => {
+test('unavailable WorkBuddy is absent from interview facts', () => {
   assert.doesNotMatch(JSON.stringify(resumeKnowledgeBase), /workbuddy/i)
-  assert.doesNotMatch(JSON.stringify(buildResumeFallbackAnswer('你如何做产品经理？')), /workbuddy/i)
 })
 
 // A presentation check must not initialize the separate local video service.

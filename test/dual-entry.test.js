@@ -12,7 +12,7 @@ test('readView restores only supported public views', () => {
   assert.equal(readView({ search: '?view=unknown' }), 'gateway')
 })
 
-test('the default render makes the Agent workflow the primary destination while retaining interview access', async () => {
+test('the default gateway exposes portfolio and interview access without claiming a live workflow', async () => {
   const vite = await createServer({
     appType: 'custom',
     server: { middlewareMode: true, hmr: false },
@@ -24,20 +24,19 @@ test('the default render makes the Agent workflow the primary destination while 
 
     assert.match(html, /可调度/)
     assert.match(html, /和数字版的我聊聊/)
-    assert.match(html, /查看 Agent 流水线/)
+    assert.match(html, /查看作品集/)
     assert.match(html, /AGENT WORKFLOW/)
-    assert.match(html, /SeaArt MoreShort/)
-    assert.match(html, /class="gatewayPrimary"[^>]*>查看 Agent 流水线/)
-    assert.ok(html.indexOf('查看 Agent 流水线') < html.indexOf('和数字版的我聊聊'))
+    assert.match(html, /class="gatewayPrimary"[^>]*>查看作品集/)
+    assert.match(html, /流程示意/)
     assert.match(html, /assets\/hero-avatar\.jpg/)
-    assert.match(html, /assets\/portfolio-gallery\/gallery-003\.webp/)
-    assert.match(html, />99<\/span><small>WORKS/)
+    assert.match(html, /aria-label="网站入口"/)
+    assert.doesNotMatch(html, /QC 一次通过率|SeaArt MoreShort/)
   } finally {
     await vite.close()
   }
 })
 
-test('portfolio exposes the partnership product and the silent project preview', async () => {
+test('portfolio distinguishes the third-party model service and preserves silent project previews', async () => {
   const vite = await createServer({
     appType: 'custom',
     server: { middlewareMode: true, hmr: false },
@@ -48,15 +47,19 @@ test('portfolio exposes the partnership product and the silent project preview',
     const html = renderToStaticMarkup(React.createElement(App, { initialView: 'portfolio' }))
 
     assert.match(html, /AI创作聚合平台/)
-    assert.match(html, /与伙伴联合从 0 到 1 搭建/)
-    assert.match(html, /href="https:\/\/aigchub\.token6688\.com\/signup\?ref=07996c9e"/)
+    const service = html.split('<article class="workCard"').find(card => card.includes('<h3>AI创作聚合平台</h3>'))
+    assert.ok(service)
+    assert.match(service, /第三方/)
+    assert.doesNotMatch(html, /与伙伴.*(?:搭建|共建)|联合创始人/)
+    assert.match(service, /href="\?view=studio"/)
+    assert.doesNotMatch(service, /target="_blank"/)
     assert.match(html, /assets\/starry-preview-113-130\.mp4/)
     assert.match(html, /品牌产品宣传片/)
     assert.match(html, /assets\/brand-promo-preview-37-47\.mp4/)
     assert.match(html, /品牌产品宣传片 10 秒精选预览/)
     assert.match(html, /href="\/assets\/brand-promo-preview-37-47\.mp4"[^>]*>打开 10 秒视频/)
     assert.match(html, /<video[^>]*muted=""[^>]*playsInline=""/)
-    assert.match(html, />产品<\/button>/)
+    assert.match(html, />工作流 \/ 产品<\/button>/)
     assert.match(html, /镜面落日 · 六帧视觉系列/)
     assert.match(html, /href="#style"[^>]*>查看六张组图/)
     assert.match(html, /镜面落日组图 <span>6<\/span>/)
