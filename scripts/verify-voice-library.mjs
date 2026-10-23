@@ -14,6 +14,8 @@ const names = ['耀华 · 本人音色', '阿言 · 温暖沉稳男声', '川川
 try {
   for (const width of [1440, 390]) {
     const page = await browser.newPage({ viewport: { width, height: 900 } })
+    page.setDefaultTimeout(15000)
+    page.setDefaultNavigationTimeout(30000)
     page.on('pageerror', error => errors.push(error.message))
     let live = false
     let unavailable = 'missing'
@@ -29,6 +31,7 @@ try {
       return route.fulfill({ status: 404, contentType: 'text/html', body: '<html>GitHub Pages 404</html>' })
     })
     await page.goto(base + '?view=whiteboard', { waitUntil: 'networkidle' })
+    console.log(`Checking voice previews at ${width}px`)
     const select = page.getByLabel('选择声音', { exact: true })
     await select.waitFor()
     assert.deepEqual(await select.locator('option').allTextContents(), names, 'A missing local API must not leave the public voice selector empty.')
@@ -36,6 +39,7 @@ try {
     const copy = page.getByRole('textbox', { name: '视频文案', exact: true })
     await copy.fill('这是访客自己的文案，更换音色后仍须保留。')
     await select.selectOption('xiaoya')
+    await page.locator('.voiceReferenceGrid article').last().getByRole('button', { name: '选择并试听', exact: true }).click()
     const playing = page.getByLabel('所选声音自我介绍', { exact: true })
     await page.waitForFunction(() => { const audio = document.querySelector('audio[aria-label="所选声音自我介绍"]'); return audio && !audio.paused && audio.currentTime > 0 })
     assert.match(await playing.getAttribute('src'), /\/AI-\/cs-assets\/voices\/xiaoya\.wav$/)
@@ -43,7 +47,11 @@ try {
     assert.equal(await samples.count(), 6)
     await page.waitForFunction(() => [...document.querySelectorAll('.voiceReferenceGrid audio')].every(audio => audio.readyState >= 1 && audio.duration > 0))
     for (const sample of await samples.all()) {
-      assert.equal(await sample.evaluate(async audio => { await audio.play(); const ok = !audio.paused && audio.duration > 0; audio.pause(); return ok }), true)
+      assert.equal(await sample.evaluate(async audio => {
+        let timer
+        try { await Promise.race([audio.play(), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Sample playback timed out')), 10000) })]); return !audio.paused && audio.duration > 0 }
+        finally { clearTimeout(timer); audio.pause() }
+      }), true)
     }
     assert.equal(await copy.inputValue(), '这是访客自己的文案，更换音色后仍须保留。')
     assert.equal(await page.getByRole('button', { name: '生成旁白试听', exact: true }).isDisabled(), true)
