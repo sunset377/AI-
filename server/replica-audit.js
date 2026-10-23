@@ -15,18 +15,19 @@ export function createAuditLog({ directory }) {
   const file = path.join(directory, 'audit.jsonl')
   let entries = []
   let pending = Promise.resolve()
-  let bootstrapped = false
+  let bootstrapping
 
   async function bootstrap() {
-    if (bootstrapped) return
-    bootstrapped = true
-    try {
-      await mkdir(directory, { recursive: true })
-      const lines = (await readFile(file, 'utf8').catch(() => '')).split('\n').filter(Boolean)
-      for (const line of lines.slice(-MAX_ENTRIES)) {
-        try { entries.push(JSON.parse(line)) } catch { /* skip a corrupt line */ }
-      }
-    } catch { /* audit must never break the workbench */ }
+    if (!bootstrapping) bootstrapping = (async () => {
+      try {
+        await mkdir(directory, { recursive: true })
+        const lines = (await readFile(file, 'utf8').catch(() => '')).split('\n').filter(Boolean)
+        for (const line of lines.slice(-MAX_ENTRIES)) {
+          try { entries.push(JSON.parse(line)) } catch { /* skip a corrupt line */ }
+        }
+      } catch { /* audit must never break the workbench */ }
+    })()
+    return bootstrapping
   }
 
   async function append(entry) {
@@ -36,6 +37,7 @@ export function createAuditLog({ directory }) {
     if (entries.length > MAX_ENTRIES) entries.shift()
     const json = `${JSON.stringify(record)}\n`
     pending = pending.then(async () => { try { await appendFile(file, json, 'utf8') } catch { /* non-fatal */ } }).catch(() => {})
+    await pending
     return record
   }
 

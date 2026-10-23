@@ -420,16 +420,18 @@ test('configured chat requires exact per-round consent and rejects executable pa
   assert.equal(failures, 1)
 })
 
-test('paid dialogue has no automatic replay, stays private, and shares images only by opt-in', async (t) => {
+test('paid dialogue has no automatic replay, stays private, and shares images only by opt-in', { timeout: 5000 }, async (t) => {
   let calls = 0, release
+  const { promise: chatStarted, resolve: markChatStarted } = Promise.withResolvers()
   const chatConfig = { baseUrl: 'https://provider.example/v1', model: 'test-model', apiKey: 'TEST_SECRET', vision: true }
-  const f = await fixture(t, { chatConfig, chat: () => { calls++; return new Promise((_, reject) => { release = () => reject(new Error('TEST_SECRET')) }) } })
+  const f = await fixture(t, { chatConfig, chat: () => { calls++; return new Promise((_, reject) => { release = () => reject(new Error('TEST_SECRET')); markChatStarted() }) } })
   const d = await f.create(), base = `/drafts/${d.id}`
   await f.request(`${base}/analyze`, 'POST', { revision: 1 }); const state = await f.wait(d.id)
   const body = { revision: state.revision, message: '背景改绿', mode: 'api', consent: { provider: 'test-model', shareImages: false } }
   assert.equal((await f.request(`${base}/messages`, 'POST', { ...body, consent: null })).status, 409); assert.equal(calls, 0)
   assert.equal((await f.request(`${base}/messages`, 'POST', body)).status, 202)
   assert.equal((await f.request(`${base}/messages`, 'POST', body)).status, 429)
+  await chatStarted
   release(); const failed = await f.wait(d.id, 'failed'); assert.equal(calls, 1)
   assert.equal(failed.template.background, state.template.background); assert.equal(JSON.stringify(failed).includes('TEST_SECRET'), false)
   const health = await (await f.request('/health')).text(); assert.equal(health.includes('TEST_SECRET'), false); assert.equal(health.includes('provider.example'), false)

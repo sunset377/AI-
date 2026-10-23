@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
-import { mkdtemp, writeFile, rm } from 'node:fs/promises'
+import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { createReplicaApi } from '../server/replica-api.js'
@@ -45,6 +45,16 @@ test('audit log appends, lists newest first and persists across instances', asyn
   const again = await reloaded.list({ limit: 10 })
   assert.equal(again.length, 2)
   assert.equal(again[0].summary, 'second')
+})
+
+test('concurrent cold-start audit appends are persisted before their promises resolve', async t => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'replica-audit-concurrent-'))
+  t.after(() => rm(directory, { recursive: true, force: true }))
+  const audit = createAuditLog({ directory })
+  const records = await Promise.all(Array.from({ length: 20 }, (_, index) => audit.append({ summary: `entry-${index}` })))
+  const persisted = (await readFile(path.join(directory, 'audit.jsonl'), 'utf8')).trim().split('\n').map(JSON.parse)
+  assert.deepEqual(persisted.map(entry => entry.id), records.map(entry => entry.id))
+  assert.deepEqual(await createAuditLog({ directory }).list(), records.toReversed())
 })
 
 async function fixture(t, config = {}) {
