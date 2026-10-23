@@ -47,14 +47,21 @@ function publicJob(row) {
 }
 
 function imageReceipt(data, requestId, modelId, previous = {}) {
-  const relayGenerationId = data.generation_id || previous.relayGenerationId
+  const relayGenerationId = data.generation_id || previous.relayGenerationId || data.id
   const result = { modelId, ...(typeof relayGenerationId === 'string' && relayGenerationId.length <= 200 ? { relayGenerationId } : {}) }
   if (data.is_final === true) {
     if (data.status === 'failed') return { status: 'failed', result: { ...result, error: '上游图片任务失败，请联系作者核查结算。' } }
-    // shortcut: final image output schema still requires a real receipt before enabling public calls.
+    if (['completed', 'succeeded'].includes(data.status) && (data.type === 'image' || data.output?.type === 'image')) {
+      if (data.cdn_pending === true) return { status: 'processing', result }
+      const value = data.output?.url || data.result_url
+      try {
+        const url = new URL(value)
+        if (url.protocol === 'https:' && url.hostname === 'cdn.token6688.com' && !url.port && !url.username && !url.password) return { status: 'complete', result: { ...result, imageUrl: url.href } }
+      } catch { /* Never render an unconfirmed or non-platform result URL. */ }
+    }
     return { status: 'uncertain', result: { ...result, error: '图片任务已结束，成品尚未核实，请联系作者，不要重复提交。' } }
   }
-  if ((data.request_id === requestId && ['starting', 'pending', 'running'].includes(data.state)) || (typeof data.status === 'string' && data.is_final === false)) return { status: 'processing', result }
+  if ((data.request_id === requestId && ['starting', 'accepted', 'pending', 'running'].includes(data.state)) || (typeof data.status === 'string' && data.is_final === false)) return { status: 'processing', result }
   throw new Error('Unconfirmed image receipt')
 }
 
@@ -67,7 +74,7 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
   const expiry = Date.parse(env.EXPERIENCE_EXPIRES_AT || '')
   const expired = !Number.isFinite(expiry) || Date.now() >= expiry
   if (url.pathname === '/api/models' && request.method === 'GET') {
-    return json({ ...catalog, ready: configured && !expired, expiresAt: env.EXPERIENCE_EXPIRES_AT,
+    return json({ ...catalog, ready: configured && !expired, publicAccess: configured && !expired && env.PUBLIC_GUEST_ACCESS === '1', expiresAt: env.EXPERIENCE_EXPIRES_AT,
       models: catalog.models.map(model => ({ ...model, enabled: Boolean(MODEL_POLICY[model.id]) && model.available,
         limit: MODEL_POLICY[model.id]?.visitor || 0 })),
     })
@@ -79,7 +86,8 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
     try { input = await readJson(request, 2000) } catch { return json({ error: '体验码格式无效。' }, 400) }
     const key = await signingKey(env.SESSION_SECRET)
     const expected = await crypto.subtle.sign('HMAC', key, encoder.encode(env.INVITE_TOKEN))
-    if (typeof input.code !== 'string' || !await crypto.subtle.verify('HMAC', key, expected, encoder.encode(input.code))) return json({ error: '体验码无效，请使用作者提供的体验链接。' }, 403)
+    const publicGuest = env.PUBLIC_GUEST_ACCESS === '1' && input.code === undefined
+    if (!publicGuest && (typeof input.code !== 'string' || !await crypto.subtle.verify('HMAC', key, expected, encoder.encode(input.code)))) return json({ error: '体验码无效，请使用作者提供的体验链接。' }, 403)
     return json({ token: await issueSession(env), expiresIn: 8 * 3600 })
   }
   const session = await readSession(request, env)

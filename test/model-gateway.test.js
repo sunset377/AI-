@@ -53,6 +53,20 @@ test('unverified relay does not advertise ready or allow charges', async () => {
   assert.equal((await handleModelRequest(request('/api/chat', chat()), disabled, () => assert.fail('No provider call allowed'))).status, 503)
 })
 
+test('explicit public experience issues a signed guest session without sharing the owner account', async () => {
+  const { env, request } = setup()
+  const opened = { ...env, PUBLIC_GUEST_ACCESS: '1' }
+  const catalog = await (await handleModelRequest(request('/api/models'), opened)).json()
+  assert.equal(catalog.publicAccess, true)
+  const response = await handleModelRequest(request('/api/sessions', {}), opened)
+  assert.equal(response.status, 200)
+  const { token } = await response.json()
+  const answer = await (await handleModelRequest(request('/api/chat', chat(), token), opened, mockChat)).json()
+  assert.equal(answer.status, 'complete')
+  assert.equal((await handleModelRequest(request('/api/sessions', {}), env)).status, 403)
+  assert.equal((await (await handleModelRequest(request('/api/models'), { ...opened, RELAY_VERIFIED: '0' })).json()).publicAccess, false)
+})
+
 test('video, arbitrary models, high resolution, bulk counts and system overrides never reach provider', async () => {
   const { env, request, session } = setup(); const token = await session()
   const never = () => assert.fail('Blocked request reached supplier')
@@ -144,4 +158,25 @@ test('image status query failures preserve the existing receipt, and an unverifi
   const unverified = await (await handleModelRequest(request('/api/jobs/' + body.requestId, null, token), env, async () => Response.json({ status: 'succeeded', is_final: true, output: { unknown: 'shape' } }))).json()
   assert.equal(unverified.status, 'uncertain'); assert.equal(unverified.imageUrl, undefined)
   assert.doesNotMatch(JSON.stringify(unverified), /private-generation|unknown/)
+})
+
+test('accepted image tasks deliver only a confirmed final CDN image without resubmitting', async () => {
+  const { env, request, session } = setup(); const token = await session(); const body = image()
+  const first = await (await handleModelRequest(request('/api/images', body, token), env, async () => Response.json({ request_id: body.requestId, generation_id: 'private-task', state: 'accepted' }))).json()
+  assert.equal(first.status, 'processing')
+  const result = await (await handleModelRequest(request('/api/jobs/' + body.requestId, null, token), env, async (url, options) => {
+    assert.equal(options.method, 'GET'); assert.match(url, /\/generations\/private-task$/)
+    return Response.json({ id: 'private-task', status: 'completed', is_final: true, type: 'image', result_type: 'image', cdn_pending: false, output: { type: 'image', url: 'https://cdn.token6688.com/sha256/fixture.jpg' }, result_url: 'https://cdn.token6688.com/sha256/fixture.jpg', billing: { actual_cost_micro_usd: 7955 } })
+  })).json()
+  assert.equal(result.status, 'complete')
+  assert.equal(result.imageUrl, 'https://cdn.token6688.com/sha256/fixture.jpg')
+  assert.doesNotMatch(JSON.stringify(result), /private-task|billing|7955/)
+})
+
+test('image completion never trusts a fake, private-host, or unfinished URL', async () => {
+  for (const imageUrl of ['javascript:alert(1)', 'https://cdn.token6688.com.evil.test/x', 'https://127.0.0.1/x', 'https://user:password@cdn.token6688.com/x']) {
+    const { env, request, session } = setup(); const token = await session(); const body = image()
+    const result = await (await handleModelRequest(request('/api/images', body, token), env, async () => Response.json({ status: 'completed', is_final: true, type: 'image', output: { type: 'image', url: imageUrl } }))).json()
+    assert.notEqual(result.status, 'complete'); assert.equal(result.imageUrl, undefined)
+  }
 })

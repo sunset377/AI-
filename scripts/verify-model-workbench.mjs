@@ -15,13 +15,16 @@ try {
   for (const viewport of [{ width: 1440, height: 960 }, { width: 390, height: 844 }]) {
     const page = await browser.newPage({ viewport })
     page.on('pageerror', error => errors.push(error.message))
-    let submissions = 0
+    let submissions = 0; let imageWrites = 0; let imageReads = 0
+    await page.route('https://cdn.token6688.com/fixture.png', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aP1cAAAAASUVORK5CYII=', 'base64') }))
     await page.route('https://portfolio-model-gateway.980175020.workers.dev/**', async route => {
       const path = new URL(route.request().url()).pathname
       let data
-      if (path === '/api/models') data = { ...catalog, ready: true, models: catalog.models.map(model => ({ ...model, enabled: Boolean(MODEL_POLICY[model.id]), limit: MODEL_POLICY[model.id]?.visitor || 0 })) }
+      if (path === '/api/models') data = { ...catalog, ready: true, publicAccess: true, models: catalog.models.map(model => ({ ...model, enabled: Boolean(MODEL_POLICY[model.id]), limit: MODEL_POLICY[model.id]?.visitor || 0 })) }
       else if (path === '/api/sessions') data = { token: 'ui-test-only' }
       else if (path === '/api/chat') { submissions++; data = { status: 'complete', id: route.request().postDataJSON().requestId, text: '界面交互测试已完成。' } }
+      else if (path === '/api/images') { imageWrites++; data = { status: 'processing', id: route.request().postDataJSON().requestId } }
+      else if (path.startsWith('/api/jobs/')) { imageReads++; data = { status: 'complete', id: path.split('/').at(-1), imageUrl: 'https://cdn.token6688.com/fixture.png' } }
       else throw new Error('Unexpected request: ' + path)
       await route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(data) })
     })
@@ -52,6 +55,9 @@ try {
     assert.doesNotMatch(await page.locator('.mwReference').innerText(), /stale.png/)
     await page.getByRole('textbox', { name: '创作需求', exact: true }).fill('一座玻璃花园')
     assert.equal(await page.getByRole('button', { name: '发送创作需求' }).isEnabled(), true)
+    await page.getByRole('button', { name: '发送创作需求' }).click()
+    await page.locator('.mwMessages img').waitFor({ timeout: 7000 })
+    assert.equal(imageWrites, 1); assert.equal(imageReads, 1)
     if (viewport.width < 680) await page.getByRole('button', { name: '☰ 工作台目录' }).click()
     await page.getByRole('textbox', { name: '搜索模型' }).fill('')
     await page.getByRole('button', { name: '视频', exact: true }).click()
@@ -73,6 +79,10 @@ try {
     await page.locator('.mwHistory').getByRole('button', { name: /测试界面交互/ }).click()
     await page.getByText('界面交互测试已完成。', { exact: true }).waitFor()
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true)
+    await page.evaluate(() => sessionStorage.clear())
+    await page.goto(base + '?view=studio')
+    await page.waitForFunction(() => sessionStorage.getItem('portfolio-model-session') === 'ui-test-only', { timeout: 7000 })
+    assert.equal(await page.locator('.mwAuth').count(), 0)
     await page.close()
   }
   assert.deepEqual(errors, [])

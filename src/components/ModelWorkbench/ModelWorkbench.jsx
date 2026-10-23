@@ -86,21 +86,25 @@ export default function ModelWorkbench({ onBack, initialSection = 'models', init
     if (!response.ok) { if (response.status === 401) { setSession(''); sessionStorage.removeItem('portfolio-model-session') }; throw Object.assign(new Error(data.error || '本次请求未完成。'), { status: response.status }) }
     return data
   }
-  const authorize = async (value) => {
-    if (!value.trim()) return
+  const authorize = async (value = '', guest = false) => {
+    if (!guest && !value.trim()) return
     setAuthBusy(true); setError('')
     try {
-      const data = await call('/api/sessions', { method: 'POST', body: JSON.stringify({ code: value.trim() }) }, '')
+      const data = await call('/api/sessions', { method: 'POST', body: JSON.stringify(guest ? {} : { code: value.trim() }) }, '')
       setSession(data.token); sessionStorage.setItem('portfolio-model-session', data.token); setCode('')
       sessionStorage.removeItem('portfolio-model-invite')
       const url = new URL(window.location.href); url.hash = ''; window.history.replaceState(window.history.state, '', url)
     } catch (err) { setError(err.message) } finally { setAuthBusy(false) }
   }
   useEffect(() => {
-    setSession(sessionStorage.getItem('portfolio-model-session') || '')
+    const saved = sessionStorage.getItem('portfolio-model-session') || ''
+    setSession(saved)
     setHistory(read(localStorage, 'portfolio-model-history', []))
-    call('/api/models', {}, '').then(data => { setModels(data.models); setReady(data.ready) }).catch(() => setReady(false))
     const invite = new URLSearchParams(window.location.hash.slice(1)).get('experience') || sessionStorage.getItem('portfolio-model-invite')
+    call('/api/models', {}, '').then(data => {
+      setModels(data.models); setReady(data.ready)
+      if (data.publicAccess && !saved && !invite) authorize('', true)
+    }).catch(() => setReady(false))
     if (invite) authorize(invite)
   }, [])
   useEffect(() => { end.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }) }, [messages])
@@ -161,6 +165,23 @@ export default function ModelWorkbench({ onBack, initialSection = 'models', init
       else save(messages.map((item, i) => i === index ? { ...item, status: result.status, content: result.text || result.error || '任务仍在处理，请稍后查看。', imageUrl: result.imageUrl } : item))
     } catch (err) { setError(err.message) }
   }
+  useEffect(() => {
+    const pending = messages.find(message => message.role === 'assistant' && message.status === 'processing')
+    if (!pending || busy || !session) return
+    let cancelled = false; let polling = false; let attempts = 0
+    const timer = setInterval(async () => {
+      if (polling) return
+      if (++attempts > 60) { clearInterval(timer); return }
+      polling = true
+      try {
+        const result = await call(`/api/jobs/${pending.taskId}`)
+        if (!cancelled && result.status !== 'processing') save(messages.map(item => item === pending ? { ...item, status: result.status, content: result.text || result.error || '图片已生成。', imageUrl: result.imageUrl } : item))
+      } catch {
+        if (!cancelled) { clearInterval(timer); setError('自动查询暂时中断，请点击“查看任务状态”。不要重复生成。') }
+      } finally { polling = false }
+    }, 3000)
+    return () => { cancelled = true; clearInterval(timer) }
+  }, [messages, conversation, selectedId, session, busy])
   return <div className="mw" ref={shell}>
     <a href="#mw-main" className="mwSkip">跳到创作区</a>
     <header className="mwHeader"><div className="mwBrand"><Symbol small /><strong>刘耀华<span>AI 创作工作台</span></strong><span className="mwEdition">作品集体验版</span></div><div className="mwHeaderActions"><button className="mwMobileMenu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}>☰ 工作台目录</button><button onClick={() => { setSection('models'); setShowHistory(!showHistory) }} disabled={busy} aria-expanded={showHistory}>会话记录</button><button onClick={onBack}>返回作品集 ↗</button><span className="mwAvatar" aria-label="作者刘耀华">刘</span></div></header>

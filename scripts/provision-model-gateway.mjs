@@ -27,7 +27,7 @@ if (existsSync(statePath)) {
 } else {
   if (!task) throw new Error('Set RELAY_SETUP_TASK_ID to a dedicated TokenGo account task before creating a key.')
   if (protect(protect('preflight'), true) !== 'preflight') throw new Error('Windows credential protection is unavailable.')
-  const input = { name: 'Portfolio guest workbench', permissions: ['chat', 'image', 'models'], allowed_models: Object.keys(MODEL_POLICY), total_quota: 100000, rate_limit: 4 }
+  const input = { name: 'Portfolio guest workbench', permissions: ['chat', 'image', 'models', 'tasks'], allowed_models: Object.keys(MODEL_POLICY), total_quota: 100000, rate_limit: 4 }
   const response = spawnSync(cli, ['key', 'create', '--site', site, '--task', task, '--input', '-'], { input: JSON.stringify(input), encoding: 'utf8', windowsHide: true })
   let data
   try { data = JSON.parse(response.stdout) } catch { throw new Error('Key creation did not return JSON; inspect account key metadata before retrying.') }
@@ -41,7 +41,7 @@ if (existsSync(statePath)) {
 if (process.argv.includes('--open-chat-images')) {
   if (!state.keyId) throw new Error('The dedicated portfolio key ID is missing; do not create a replacement key automatically.')
   const response = spawnSync(cli, ['key', 'update', '--site', site, '--key', state.keyId, '--input', '-'], {
-    input: JSON.stringify({ permissions: ['chat', 'image', 'models'], allowed_models: Object.keys(MODEL_POLICY), total_quota: 100000, rate_limit: 4 }), encoding: 'utf8', windowsHide: true,
+    input: JSON.stringify({ permissions: ['chat', 'image', 'models', 'tasks'], allowed_models: Object.keys(MODEL_POLICY), total_quota: 100000, rate_limit: 4 }), encoding: 'utf8', windowsHide: true,
   })
   let data
   try { data = JSON.parse(response.stdout) } catch { throw new Error('Key update was not confirmed; query its metadata before retrying.') }
@@ -59,4 +59,4 @@ if (process.argv.includes('--check')) {
   console.log(JSON.stringify({ upstreamStatus: response.status, availableModels: data.data?.map(item => item.id), errorCode: data.error?.code }))
 }
 if (process.argv.includes('--invite')) console.log(`https://sunset377.github.io/AI-/?view=studio#experience=${secrets.INVITE_TOKEN}`)
-console.log(JSON.stringify({ keyId: state.keyId, encryptedCredential: statePath, quotaMicroUsd: 100000, permissions: ['chat', 'image', 'models'] }))
+console.log(JSON.stringify({ keyId: state.keyId, encryptedCredential: statePath, quotaMicroUsd: 100000, permissions: ['chat', 'image', 'models', 'tasks'] }))
