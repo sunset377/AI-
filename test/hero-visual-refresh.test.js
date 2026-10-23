@@ -21,7 +21,7 @@ test('portfolio route preserves the supplied artwork and offers a return to the 
     assert.match(html, /alt="刘耀华的个人照片"/)
     assert.match(html, /class="nav"/)
     assert.match(html, /aria-label="作品集导航"/)
-    assert.match(html, /href="\?view=studio"[^>]*>打开视频智能体/)
+    assert.match(html, /href="\?view=studio"[^>]*>打开 AIGC 创作智能体/)
     assert.match(html, /← 入口/)
     assert.doesNotMatch(html, /class="heroCopy"/)
     assert.doesNotMatch(html, /查看作品|复制邮箱/)

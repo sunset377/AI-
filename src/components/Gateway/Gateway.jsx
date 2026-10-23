@@ -35,7 +35,7 @@ export default function Gateway({ assetPath, onEnterPortfolio, onEnterInterview 
         <div className="traceWindow">
           <div className="traceChrome"><span className="dot r" /><span className="dot y" /><span className="dot g" /><span className="traceTitle">刘耀华 · 内容与工具落地</span><span className="traceLive">流程示意</span></div>
           <ol className="traceStages">{stages.map((stage,i)=><li className={`stage ${i===3?'is-running':'is-pending'}`} key={stage}><span className="stageDot" aria-hidden="true" /><span className="stageLabel">{stage}</span><span className="stageMeta">{String(i+1).padStart(2,'0')}</span></li>)}</ol>
-          <div className="traceLog"><p className="logLine is-info">先确认方向与样片，再组织重复生产。</p><p className="logLine is-info">每一步保留输入、输出与人工审核点。</p><p className="logLine is-warn">进入作品集可体验视频智能体。</p></div>
+          <div className="traceLog"><p className="logLine is-info">先确认方向与样片，再组织重复生产。</p><p className="logLine is-info">每一步保留输入、输出与人工审核点。</p><p className="logLine is-warn">进入作品集可体验 AIGC 创作智能体。</p></div>
           <div className="traceStats"><div><strong>内容</strong><small>信息流素材与视频</small></div><div><strong>Agent</strong><small>工具与工作流</small></div><div><strong>落地</strong><small>业务应用与交付</small></div></div>
         </div>
       </div>

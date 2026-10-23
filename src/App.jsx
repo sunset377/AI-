@@ -477,7 +477,7 @@ function App({ initialView }) {
         </header>
         <div className="heroInner shell portfolioHeroGrid">
           <div className="heroAside"><span>刘耀华 · AI CONTENT / AGENT WORKFLOW</span><span>把 AI 能力用到内容生产与业务交付</span><span>2026 PORTFOLIO</span><div className="heroDemoActions"><a href={assetPath('mineflow/')} target="_blank" rel="noreferrer">体验 MineFlow 矿山调度 ↗</a><a href="#workflow">查看视频工作流 ↓</a><a href="#works">浏览全部作品 ↓</a></div></div>
-          <aside className="studioPreviewCard"><p>已集成 · 开源视频智能体</p><img src={assetPath('assets/production/cs-board-preview.jpg')} alt="CS Board 蓝白配色工作台预览：画面风格选择与制作进度" width="1000" height="620" /><h2>把一段旁白，做成视频。</h2><p>选择音色、输入文案或分镜，再从 12 种画面风格中选择并查看制作进度。</p><a href="?view=studio" onClick={event=>{event.preventDefault();navigateTo('studio')}}>打开视频智能体 ↗</a><small>界面已上线；完整生成需连接本地 F5‑TTS / FFmpeg 服务</small></aside>
+          <aside className="studioPreviewCard"><p>已集成 · AIGC 创作智能体</p><img src={assetPath('assets/production/cs-board-preview.jpg')} alt="白板制作模块预览：画面风格选择与制作进度" width="1000" height="620" /><h2>模型、Skill 与智能体，在这里协同。</h2><p>整合对话、图片与视频模型入口，搭配标准化 Skill 和导演、白板等智能体，串联创意沟通、剧本拆解、分镜规划与内容制作。</p><a href="?view=studio" onClick={event=>{event.preventDefault();navigateTo('studio')}}>打开 AIGC 创作智能体 ↗</a><small>聊天与图片可限额体验；视频生成按授权开放，完整制作需连接对应执行服务。</small></aside>
         </div>
       </section>
 
