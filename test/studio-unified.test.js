@@ -57,3 +57,20 @@ test('embedded whiteboard style previews honor the GitHub Pages subdirectory', a
     assert.ok(html.includes('src="/AI-/cs-assets/styles/minimal-whiteboard.webp"'), 'Preview assets must stay under the deployed /AI-/ base.')
   } finally { await vite.close() }
 })
+
+test('public whiteboard renders six read-only voice previews without a local API', async () => {
+  const vite = await createServer({ configFile: false, base: '/AI-/', plugins: [react()], appType: 'custom', server: { middlewareMode: true, watch: null, hmr: false }, optimizeDeps: { noDiscovery: true, include: [] } })
+  try {
+    const { default: Board } = await vite.ssrLoadModule('/src/components/CSBoard/NativeBoard.tsx')
+    const html = renderToStaticMarkup(React.createElement(Board, { embedded: true, onBack() {}, onDirector() {} }))
+    const picker = html.match(/<select aria-label="选择声音"[^>]*>(.*?)<\/select>/)?.[1]
+    assert.ok(picker)
+    assert.equal((picker.match(/<option/g) || []).length, 6)
+    for (const id of ['yaohua', 'ayan', 'chuanchuan', 'frank', 'anning', 'xiaoya']) {
+      assert.ok(picker.includes(`value="${id}"`))
+      assert.ok(html.includes(`src="/AI-/cs-assets/voices/${id}.wav"`))
+    }
+    assert.match(html, /<button\b[^>]*disabled=""[^>]*>生成旁白试听<\/button>/)
+    assert.match(html, /公网不开放声音克隆/)
+  } finally { await vite.close() }
+})

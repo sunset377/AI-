@@ -8,4 +8,6 @@
 
 F5 运行配置位于忽略的 `.local-audio/f5-runtime.json`，单次最多 1000 字、自然语速、输出最多 300 秒，一次仅运行一个本地配音任务；模型或参考不可用时明确报错，不切换其他声音。本人音色默认，新文案生成文件按匿名会话隔离。
 
+GitHub Pages 没有本地 F5 API。用户已授权公开六段已生成的自我介绍样音，位于 `public/cs-assets/voices/{yaohua,ayan,chuanchuan,frank,anning,xiaoya}.wav`；不包含原始参考录音或转写。页面默认展示这六个只读试听音色，资源路径跟随部署 `BASE_URL`；本地目录有效时优先使用本地目录，接口 404、非 JSON、空目录或连接失败时保留公开样音。公开样音不启用新文案配音或声音克隆；新文案仍需本地 F5 服务。`node scripts/verify-voice-library.mjs` 在桌面、手机尺寸下验证选择、实际播放、文案保留、接口降级与零生成提交（默认预览端口 5193，可设置 `PORTFOLIO_TEST_URL`）。
+
 真实文本/图片生成需要用户在页面确认调用；离线测试与浏览器提交测试不会创建模型任务。原 DeepSeek 导演和 MiniMax H3 在顶部“导演与复杂镜头”入口保留。
