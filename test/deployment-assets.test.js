@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { access, readdir, readFile } from 'node:fs/promises'
+import { access, readdir, readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import test from 'node:test'
 
@@ -42,6 +42,16 @@ test('GitHub Pages build does not request media from the domain root', async () 
   }
 
   assert.deepEqual(offenders, [])
+})
+
+test('entry icons stay within a small download budget instead of loading full artwork', async () => {
+  const html = await readFile('dist/index.html', 'utf8')
+  for (const [tag] of html.matchAll(/<link\b[^>]*rel="[^"]*\bicon\b[^"]*"[^>]*>/g)) {
+    const href = tag.match(/href="([^"]+)"/)?.[1]
+    assert.ok(href?.startsWith('/AI-/'), 'Icons must use the portfolio base path')
+    const { size } = await stat(path.join('dist', href.slice('/AI-/'.length)))
+    assert.ok(size <= 64 * 1024, `Icon is ${size} bytes; do not download full artwork for a browser tab`)
+  }
 })
 
 test('MineFlow publishes a self-contained subdirectory with replay and license notices', async () => {
