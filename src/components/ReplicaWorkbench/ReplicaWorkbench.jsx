@@ -81,13 +81,15 @@ export function ResultComparison({ currentJob, mediaUrl }) {
   </div>
 }
 
-export default function ReplicaWorkbench({ onBack, initialRequirement = '' }) {
+export default function ReplicaWorkbench({ onBack, initialRequirement = '', embedded = false, action, onWhiteboard }) {
   useEffect(() => {
+    if (embedded) return
     const previous = document.title
     document.title = '视频复刻工作台'
     return () => { document.title = previous }
-  }, [])
+  }, [embedded])
   const [tab, setTab] = useState('template')
+  useEffect(() => { if (action?.tab && ['template', 'create', 'result', 'history', 'engine'].includes(action.tab)) setTab(action.tab) }, [action])
   const [file, setFile] = useState(null)
   const [url, setUrl] = useState('')
   const [duration, setDuration] = useState(0)
@@ -189,34 +191,35 @@ export default function ReplicaWorkbench({ onBack, initialRequirement = '' }) {
 
   const field = (name, value) => setOptions((previous) => ({ ...previous, [name]: value }))
   const currentJob = selected || active
+  const navigation = <nav className="rwNav" aria-label={embedded ? '导演工具' : '工作台导航'}>
+    {[
+      ['template', 'R', '导演 Agent', '想法 · 对话 · 方案 · 成片'],
+      ['whiteboard', '声', '白板与音频库', '试听 · 成品旁白 · 白板视频'],
+      ['create', '剪', '原片剪辑包装', '旧版 · 节奏 · 字幕包装'],
+      ['result', '▶', '结果工作台', '真实成片 · 原片对比'],
+      ['history', '记', '运行记录', '状态 · 任务 · 文件管理'],
+      ['engine', 'API', '执行与模型', '本地优先 · 按需升级'],
+    ].map(([id, icon, title, subtitle]) => <button key={id} type="button" className={tab === id ? 'isActive' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => { if (embedded && id === 'whiteboard' && onWhiteboard) onWhiteboard(''); else setTab(id); setError('') }}><span className="rwNavIcon">{icon}</span><span><strong>{title}</strong><small>{subtitle}</small></span></button>)}
+  </nav>
   return (
-    <main className="replicaWorkbench">
-      <aside className="rwRail">
+    <div className={`replicaWorkbench${embedded ? ' rwEmbedded' : ''}`}>
+      {!embedded && <aside className="rwRail">
         <button className="rwBrand" type="button" onClick={onBack} aria-label="返回视频智能体"><span className="rwBrandMark">R</span><strong>MOMOCO 视频导演</strong></button>
         <div className="rwRailCopy"><p>ONE IDEA IN</p><div>Plan it.<br />Make it real.</div><span>说出想法，可选一段参考。</span></div>
-        <nav className="rwNav" aria-label="工作台导航">
-          {[
-            ['template', 'R', '导演 Agent', '想法 · 对话 · 方案 · 成片'],
-            ['whiteboard', '声', '白板与音频库', '试听 · 成品旁白 · 白板视频'],
-            ['create', '剪', '原片剪辑包装', '旧版 · 节奏 · 字幕包装'],
-            ['result', '▶', '结果工作台', '真实成片 · 原片对比'],
-            ['history', '记', '运行记录', '状态 · 任务 · 文件管理'],
-            ['engine', 'API', '执行与模型', '本地优先 · 按需升级'],
-          ].map(([id, icon, title, subtitle]) => <button key={id} type="button" className={tab === id ? 'isActive' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => { setTab(id); setError('') }}><span className="rwNavIcon">{icon}</span><span><strong>{title}</strong><small>{subtitle}</small></span></button>)}
-        </nav>
+        {navigation}
         <div className="rwRailFoot"><span className="rwDot" /><div><strong>默认零模型调用费</strong><small>Hypit 剪辑 · 本地包装<br />复杂镜头另行升级</small></div></div>
         <button className="rwBack" type="button" onClick={onBack}>← {initialRequirement ? '返回白板智能体' : '返回作品集'}</button>
-      </aside>
+      </aside>}
 
       <div className="rwMain">
-        <header className="rwHeader"><div><p className="rwEyebrow">HYPIT VIDEO WORKBENCH · 03</p><h1>{({ template: '看懂结构，做出你的版本。', create: '留住画面，换个开场。', result: '你的新版本，在这里。', history: '每一次制作，都有记录。', engine: '本地先做，按需升级。' })[tab]}</h1><p className="rwIntro">{({ template: '先输入想法，参考视频可选。导演 Agent 会反馈、追问并生成结构化方案；支持的图形模板确认后由本地 Hypit 制作成片。', create: '上传一个短片，调整开头节奏、字幕和视觉包装。先做一个版本，满意后再导出。', result: '有参考时并排对比；无参考时直接展示真实成片。', history: '只展示当前浏览器的任务。文件保存在执行服务，可在任务完成后删除。', engine: '本地模板和剪辑不调用视频大模型；可选语言模型每轮确认后才发出请求。' })[tab]}</p></div><span className={`rwStatus ${health?.ready ? 'isReady' : ''}`}><i />{checking ? '检查执行服务' : health?.ready ? '本地执行器已连接' : '仅本地预览'}</span></header>
+        {embedded ? <>{navigation}<p className="rwEmbeddedStatus">{checking ? '正在检查执行服务…' : health?.ready ? '本地执行器已连接' : '执行服务未连接；不会自动提交生成。'}</p></> : <header className="rwHeader"><div><p className="rwEyebrow">HYPIT VIDEO WORKBENCH · 03</p><h1>{({ template: '看懂结构，做出你的版本。', create: '留住画面，换个开场。', result: '你的新版本，在这里。', history: '每一次制作，都有记录。', engine: '本地先做，按需升级。' })[tab]}</h1><p className="rwIntro">{({ template: '先输入想法，参考视频可选。导演 Agent 会反馈、追问并生成结构化方案；支持的图形模板确认后由本地 Hypit 制作成片。', create: '上传一个短片，调整开头节奏、字幕和视觉包装。先做一个版本，满意后再导出。', result: '有参考时并排对比；无参考时直接展示真实成片。', history: '只展示当前浏览器的任务。文件保存在执行服务，可在任务完成后删除。', engine: '本地模板和剪辑不调用视频大模型；可选语言模型每轮确认后才发出请求。' })[tab]}</p></div><span className={`rwStatus ${health?.ready ? 'isReady' : ''}`}><i />{checking ? '检查执行服务' : health?.ready ? '本地执行器已连接' : '仅本地预览'}</span></header>}
 
         {error && <p className="rwAlert" role="alert">{error}</p>}
         {pollError && <p className="rwAlert" role="alert">{pollError} 已提交任务不会自动重试。<button type="button" onClick={connect}>重新连接</button></p>}
 
-        <div hidden={tab !== 'template'}><TemplateEditor initialRequirement={initialRequirement} onWhiteboard={(copy) => { setWhiteboardHandoff({ copy }); setTab('whiteboard') }} health={health} requestApi={requestApi} mediaUrl={mediaUrl} jobBusy={busy} onJob={(job) => { setJobs((all) => [job, ...all]); setSelectedId(job.id); setTab('result') }} /></div>
+        <div hidden={tab !== 'template'}><TemplateEditor initialRequirement={initialRequirement} handoff={action} onWhiteboard={(copy) => { if (embedded && onWhiteboard) onWhiteboard(copy); else { setWhiteboardHandoff({ copy }); setTab('whiteboard') } }} health={health} requestApi={requestApi} mediaUrl={mediaUrl} jobBusy={busy} onJob={(job) => { setJobs((all) => [job, ...all]); setSelectedId(job.id); setTab('result') }} /></div>
 
-        <div hidden={tab !== 'whiteboard'}><WhiteboardStudio requestApi={requestApi} mediaUrl={mediaUrl} handoff={whiteboardHandoff} /></div>
+        {!embedded && <div hidden={tab !== 'whiteboard'}><WhiteboardStudio requestApi={requestApi} mediaUrl={mediaUrl} handoff={whiteboardHandoff} /></div>}
 
         {tab === 'create' && <>
           <div className="rwCreateGrid">
@@ -268,6 +271,6 @@ export default function ReplicaWorkbench({ onBack, initialRequirement = '' }) {
         </>}
         <footer className="rwFooter"><span>HYPIT WORKBENCH / 原片低成本复刻</span><span>先看效果，再决定下一步。</span></footer>
       </div>
-    </main>
+    </div>
   )
 }

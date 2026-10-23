@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import snapshot from '../../model-catalog.json'
 import { MODEL_POLICY } from '../../model-policy.js'
+import ReplicaWorkbench from '../ReplicaWorkbench/ReplicaWorkbench'
+import NativeBoard from '../CSBoard/NativeBoard'
+import SkillSquare from './SkillSquare'
 import './ModelWorkbench.css'
 
 const API = (import.meta.env.VITE_MODELS_API_URL || 'https://portfolio-model-gateway.980175020.workers.dev').replace(/\/$/, '')
 const categories = [['all', '全部'], ['chat', '聊天'], ['image', '图片'], ['video', '视频'], ['audio', '音频'], ['mine', '我的']]
+const sections = [['models', '✧', '大模型'], ['agents', '▦', '智能体'], ['skills', '⌘', 'Skill 广场']]
 const typeName = { chat: '聊天', image: '图片', video: '视频', audio: '音频' }
 const uid = () => crypto.randomUUID()
 const read = (storage, key, fallback) => { try { return JSON.parse(storage.getItem(key)) || fallback } catch { return fallback } }
@@ -12,7 +16,12 @@ function Symbol({ type = 'chat', small = false }) {
   return <span className={`mwSymbol mwSymbol-${type} ${small ? 'mwSymbolSmall' : ''}`} aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><path d="M24 5 30 18 43 24 30 30 24 43 18 30 5 24 18 18Z" fill="currentColor" /><path d="m24 15 3 6 6 3-6 3-3 6-3-6-6-3 6-3Z" fill="white" /></svg></span>
 }
 
-export default function ModelWorkbench({ onBack, onDirector, onWhiteboard }) {
+export default function ModelWorkbench({ onBack, initialSection = 'models', initialAgent = 'director', initialRequirement = '' }) {
+  const [section, setSection] = useState(initialSection)
+  const [agent, setAgent] = useState(initialAgent)
+  const [visitedAgents, setVisitedAgents] = useState(initialSection === 'agents' ? [initialAgent] : [])
+  const [directorAction, setDirectorAction] = useState({ tab: 'template', copy: initialRequirement })
+  const [whiteboardHandoff, setWhiteboardHandoff] = useState(null)
   const [models, setModels] = useState(() => snapshot.models.map(model => ({ ...model, enabled: Boolean(MODEL_POLICY[model.id]), limit: MODEL_POLICY[model.id]?.visitor || 0 })))
   const [ready, setReady] = useState(false)
   const [category, setCategory] = useState('all')
@@ -31,11 +40,34 @@ export default function ModelWorkbench({ onBack, onDirector, onWhiteboard }) {
   const [messages, setMessages] = useState([])
   const [showHistory, setShowHistory] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const shell = useRef(null)
   const end = useRef(null)
+  useEffect(() => {
+    for (const media of shell.current?.querySelectorAll('audio,video') || []) {
+      if (media.parentElement?.closest('[hidden]')) media.pause()
+    }
+  }, [section, agent])
   const selected = models.find(model => model.id === selectedId) || models[0]
   const locked = !selected?.enabled
   const providers = useMemo(() => [...new Set(models.map(model => model.provider))].sort(), [models])
   const filtered = useMemo(() => models.filter(model => (category === 'all' || model.type === category) && (provider === 'all' || model.provider === provider) && `${model.name} ${model.description}`.toLowerCase().includes(query.toLowerCase())), [models, category, provider, query])
+  const switchSection = (value) => {
+    setSection(value); setSidebarOpen(false); setShowHistory(false)
+    if (value === 'agents') setVisitedAgents(current => current.includes(agent) ? current : [...current, agent])
+  }
+  const openAgent = (value, action) => {
+    setAgent(value); setSection('agents'); setSidebarOpen(false); setShowHistory(false)
+    setVisitedAgents(current => current.includes(value) ? current : [...current, value])
+    if (value === 'director' && action) setDirectorAction(action)
+    if (value === 'whiteboard' && action?.copy) setWhiteboardHandoff({ copy: action.copy })
+  }
+  const tabKey = (event) => {
+    const current = sections.findIndex(([id]) => id === section)
+    const next = ({ ArrowRight: (current + 1) % 3, ArrowLeft: (current + 2) % 3, Home: 0, End: 2 })[event.key]
+    if (next === undefined) return
+    event.preventDefault(); switchSection(sections[next][0]); setSidebarOpen(true)
+    event.currentTarget.querySelectorAll('[role="tab"]')[next].focus()
+  }
 
   const call = async (path, options = {}, token = session) => {
     const response = await fetch(API + path, { ...options, headers: { ...(options.body ? { 'content-type': 'application/json' } : {}), ...(token ? { authorization: `Bearer ${token}` } : {}) } })
@@ -107,19 +139,24 @@ export default function ModelWorkbench({ onBack, onDirector, onWhiteboard }) {
       else save(messages.map((item, i) => i === index ? { ...item, status: result.status, content: result.text || result.error || '任务仍在处理，请稍后查看。', imageUrl: result.imageUrl } : item))
     } catch (err) { setError(err.message) }
   }
-  return <div className="mw">
+  return <div className="mw" ref={shell}>
     <a href="#mw-main" className="mwSkip">跳到创作区</a>
-    <header className="mwHeader"><div className="mwBrand"><Symbol small /><strong>刘耀华<span>AI 创作工作台</span></strong><span className="mwEdition">作品集体验版</span></div><div className="mwHeaderActions"><button onClick={() => setShowHistory(!showHistory)} disabled={busy} aria-expanded={showHistory}>会话记录</button><button onClick={onBack}>返回作品集 ↗</button><span className="mwAvatar" aria-label="作者刘耀华">刘</span></div></header>
+    <header className="mwHeader"><div className="mwBrand"><Symbol small /><strong>刘耀华<span>AI 创作工作台</span></strong><span className="mwEdition">作品集体验版</span></div><div className="mwHeaderActions"><button className="mwMobileMenu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}>☰ 工作台目录</button><button onClick={() => { setSection('models'); setShowHistory(!showHistory) }} disabled={busy} aria-expanded={showHistory}>会话记录</button><button onClick={onBack}>返回作品集 ↗</button><span className="mwAvatar" aria-label="作者刘耀华">刘</span></div></header>
     <div className="mwLayout">
-      <aside className={`mwSidebar ${sidebarOpen ? 'isOpen' : ''}`} aria-label="模型目录">
-        <nav className="mwTools" aria-label="工作台入口"><button className="isActive"><span>✧</span>大模型</button><button onClick={() => onDirector(draft)} disabled={busy}><span>▦</span>MOMOCO 导演</button><button onClick={onWhiteboard} disabled={busy}><span>▤</span>白板工坊</button></nav>
+      <aside className={`mwSidebar ${sidebarOpen ? 'isOpen' : ''}`} aria-label="工作台目录">
+        <nav className="mwTools" role="tablist" aria-label="工作台栏目" onKeyDown={tabKey}>{sections.map(([id, icon, label]) => <button key={id} type="button" role="tab" id={`mw-tab-${id}`} aria-controls={`mw-panel-${id}`} aria-selected={section === id} tabIndex={section === id ? 0 : -1} className={section === id ? 'isActive' : ''} onClick={() => switchSection(id)}><span aria-hidden="true">{icon}</span>{label}</button>)}</nav>
+        <div className="mwModelDirectory" hidden={section !== 'models'}>
         <div className="mwCategories" role="group" aria-label="模型分类">{categories.map(([id, name]) => <button key={id} aria-pressed={category === id} className={category === id ? 'isActive' : ''} onClick={() => { setCategory(id); setSidebarOpen(true) }}>{name}</button>)}</div>
         <div className="mwFilters"><select aria-label="筛选厂商" value={provider} onChange={event => setProvider(event.target.value)}><option value="all">全部厂商</option>{providers.map(name => <option key={name}>{name}</option>)}</select><input aria-label="搜索模型" placeholder="搜索模型 / 用途" value={query} onChange={event => setQuery(event.target.value)} /></div>
         <p className="mwCatalogNote"><i />目录来自已连接的 AIGC Hub 账户</p>
         <div className="mwModelList">{category === 'mine' ? <><h2>本机创作记录</h2>{history.length ? history.map(item => <button key={item.id} className="mwHistoryItem" disabled={busy} onClick={() => { setSelectedId(item.modelId); setConversation(item.id); setMessages(item.messages); setSidebarOpen(false) }}><strong>{item.title}</strong><small>{new Date(item.updatedAt).toLocaleDateString('zh-CN')}</small></button>) : <p className="mwMuted">完成一次聊天或图片生成后，记录会保存在当前浏览器。</p>}</> : filtered.map(model => <button key={`${model.type}-${model.id}`} className={`mwModel ${selectedId === model.id ? 'isSelected' : ''}`} disabled={busy} aria-pressed={selectedId === model.id} onClick={() => start(model.id)}><Symbol type={model.type} small /><span className="mwModelText"><strong>{model.name}</strong><small>{model.description || `${typeName[model.type]}模型 · 点击查看`}</small></span><span className={`mwAvailability ${model.enabled ? 'isEnabled' : ''}`}>{model.enabled ? '体验' : '锁定'}</span></button>)}{category !== 'mine' && !filtered.length && <p className="mwMuted">没有匹配的模型，试试其他关键词。</p>}</div>
-        <div className="mwAccount"><span className="mwAvatar">刘</span><div><strong>作者提供体验额度</strong><small>{session ? '已获得访客体验权限' : '免注册 · 使用作者的体验链接'}</small></div></div>
+        </div>
+        <div className="mwAgentDirectory" hidden={section !== 'agents'}><p className="mwDirectoryTitle">我的智能体</p>{[['director', 'MOMOCO 导演', '剧本拆解 · 分镜 · 复杂镜头'], ['whiteboard', '白板视频智能体', 'CS Board 二创 · 音色 · 画面风格']].map(([id, name, description]) => <button key={id} className={`mwAgentChoice ${agent === id ? 'isSelected' : ''}`} aria-pressed={agent === id} onClick={() => openAgent(id)}><Symbol type={id === 'director' ? 'video' : 'image'} small /><span><strong>{name}</strong><small>{description}</small></span></button>)}<p className="mwDirectoryNote">导演链路：DeepSeek / MOMOCO Skill / MiniMax H3。<br />实际可用状态以工具内提示为准。</p><button className="mwDirectoryLink" onClick={() => switchSection('skills')}>查看可用 Skill →</button></div>
+        <div className="mwSkillDirectory" hidden={section !== 'skills'}><p className="mwDirectoryTitle">方法与工具，在这里衔接</p><p className="mwDirectoryNote">查看步骤、收藏常用方法，再将 Skill 交给对应智能体。始终留在同一个工作台。</p><button className="mwAgentChoice" onClick={() => openAgent('director')}><Symbol type="video" small /><span><strong>MOMOCO 导演</strong><small>打开导演操作区</small></span></button><button className="mwAgentChoice" onClick={() => openAgent('whiteboard')}><Symbol type="image" small /><span><strong>白板视频智能体</strong><small>打开白板制作区</small></span></button></div>
+        <div className="mwAccount"><span className="mwAvatar">刘</span><div><strong>{section === 'models' ? '作者提供体验额度' : '同一工作台 · 按需调用'}</strong><small>{section === 'models' ? session ? '已获得访客体验权限' : '免注册 · 使用作者的体验链接' : '切换栏目保留当前输入与草稿'}</small></div></div>
       </aside>
-      <main className="mwMain" id="mw-main"><div className="mwConversationTop"><button className="mwMobileMenu" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}>☰ 模型目录</button><div><strong>{conversation ? '创作会话' : '新对话'}</strong><small>{selected?.name}</small></div><button disabled={busy} onClick={() => start()}>＋ 新对话</button></div>
+      <main className="mwContent" id="mw-main">
+      <section className="mwMain" role="tabpanel" id="mw-panel-models" aria-labelledby="mw-tab-models" hidden={section !== 'models'}><div className="mwConversationTop"><div><strong>{conversation ? '创作会话' : '新对话'}</strong><small>{selected?.name}</small></div><button disabled={busy} onClick={() => start()}>＋ 新对话</button></div>
         {showHistory && <section className="mwHistory"><h2>会话记录</h2><p>仅显示当前浏览器的记录，不读取作者的私人对话。</p>{history.map(item => <button key={item.id} disabled={busy} onClick={() => { setSelectedId(item.modelId); setConversation(item.id); setMessages(item.messages); setShowHistory(false) }}>{item.title}<span>{new Date(item.updatedAt).toLocaleDateString('zh-CN')}</span></button>)}{!history.length && <p>还没有会话记录。</p>}</section>}
         <div className={`mwCanvas ${messages.length ? 'hasMessages' : ''}`} aria-live="polite">{messages.length ? <div className="mwMessages">{messages.map((message, index) => <article key={index} className={`mwMessage ${message.role}`}>
           <strong>{message.role === 'user' ? '你' : models.find(model => model.id === message.modelId)?.name || selected?.name}</strong><p>{message.content}</p>
@@ -131,6 +168,13 @@ export default function ModelWorkbench({ onBack, onDirector, onWhiteboard }) {
           <form className="mwComposer" onSubmit={submit}><div className="mwComposerModel"><Symbol type={selected?.type} small /><strong>{selected?.name}</strong><span>{locked ? '未开放' : selected?.type === 'image' ? '文生图 · 1K · 单张' : '简洁回答'}</span></div><label className="mwInputLabel" htmlFor="mw-prompt">创作需求</label><textarea id="mw-prompt" maxLength={selected?.type === 'image' ? 1000 : 1800} placeholder={locked ? '该模型暂未开放，请从左侧选择标有“体验”的模型' : selected?.type === 'image' ? '描述你想生成的画面、风格和构图…' : '描述你的需求，或开始一段对话…'} value={draft} disabled={locked || busy} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) submit(event) }} /><div className="mwComposerBottom"><div>{selected?.type === 'image' && !locked ? <select aria-label="图片尺寸" value={size} onChange={event => setSize(event.target.value)} disabled={busy}><option value="1024x1024">1:1 方形 · 1K</option><option value="1792x1024">16:9 横版 · 1K</option><option value="1024x1792">9:16 竖版 · 1K</option></select> : <span>{locked ? '访客权限已锁定' : '聊天体验'}</span>}<span className="mwBudgetHint">{!locked && `每次体验会话每日最多 ${selected?.limit || 0} 次`}</span></div><button className="mwSend" type="submit" disabled={locked || busy || !session || !ready || !draft.trim()} aria-label="发送创作需求">{busy ? '处理中…' : selected?.type === 'image' ? '生成图片 ↑' : '发送 ↑'}</button></div></form>
           {error && <p className="mwError" role="alert">{error}</p>}<p className="mwFootnote">{ready ? '体验费用由作者承担 · 内容由 AI 生成，请核对重要信息' : '模型体验服务暂未就绪 · 你仍可浏览模型目录'}</p>
         </div>
+      </section>
+      <section className="mwAgentPanel" role="tabpanel" id="mw-panel-agents" aria-labelledby="mw-tab-agents" hidden={section !== 'agents'}>
+        <div className="mwAgentHeading"><div><p>智能体</p><h1>{agent === 'director' ? 'MOMOCO 视频导演' : '白板视频智能体'}</h1><span>{agent === 'director' ? '从想法、剧本到分镜方案，与白板工作流在同页衔接。' : '基于 CS Board 二创，保留音色、文案、画面风格与成片设置。'}</span></div><span className="mwServiceNotice">生成需连接执行服务</span></div>
+        <div hidden={agent !== 'director'}>{visitedAgents.includes('director') && <ReplicaWorkbench embedded action={directorAction} initialRequirement={initialRequirement} onWhiteboard={copy => openAgent('whiteboard', { copy })} onBack={onBack} />}</div>
+        <div hidden={agent !== 'whiteboard'}>{visitedAgents.includes('whiteboard') && <NativeBoard embedded handoff={whiteboardHandoff} onDirector={copy => openAgent('director', { tab: 'template', copy })} onBack={onBack} />}</div>
+      </section>
+      <section className="mwSkillPanel" role="tabpanel" id="mw-panel-skills" aria-labelledby="mw-tab-skills" hidden={section !== 'skills'}><SkillSquare onUse={skill => openAgent(skill.agent, { tab: skill.tab || 'template' })} /></section>
       </main>
     </div>
   </div>

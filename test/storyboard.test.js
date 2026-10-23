@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { createServer } from 'vite'
+import { createSsrServer as createServer } from './helpers/vite.js'
 import worker from '../src/worker.js'
 import { validateStoryboard } from '../src/storyboard.js'
 

@@ -31,12 +31,13 @@ export function directorSendBlock({ requirement = '', chatBusy = false, dirty = 
   return ''
 }
 
-export default function TemplateEditor({ health, requestApi, mediaUrl, onJob, onWhiteboard, initialRequirement = '', jobBusy = false }) {
+export default function TemplateEditor({ health, requestApi, mediaUrl, onJob, onWhiteboard, initialRequirement = '', handoff, jobBusy = false }) {
   const [file, setFile] = useState(null), [localUrl, setLocalUrl] = useState('')
   const [draft, setDraft] = useState(null), [drafts, setDrafts] = useState([])
   const [template, setTemplate] = useState({ ...DEFAULT_TEMPLATE })
   const [pending, setPending] = useState(false), [error, setError] = useState('')
   const [requirement, setRequirement] = useState(initialRequirement), [mode, setMode] = useState('local'), [shareImages, setShareImages] = useState(false)
+  useEffect(() => { if (handoff?.copy) setRequirement(handoff.copy) }, [handoff])
   const [replaceReference, setReplaceReference] = useState(false)
   const [pendingTrim, setPendingTrim] = useState(null), [trimming, setTrimming] = useState(false)
   const [prosody, setProsody] = useState({ title: '', benefit: '', action: '' }), [pause, setPause] = useState(0.25)

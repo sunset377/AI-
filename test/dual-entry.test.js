@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { createServer } from 'vite'
+import { createSsrServer as createServer } from './helpers/vite.js'
 import { readView } from '../src/navigation.js'
 
 test('readView restores only supported public views', () => {

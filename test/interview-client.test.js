@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { createServer } from 'vite'
+import { createSsrServer as createServer } from './helpers/vite.js'
 import { parseSseLine, streamInterview } from '../src/interview/client.js'
 import { buildResumeFallbackAnswer } from '../src/interview/fallback.js'
 

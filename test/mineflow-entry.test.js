@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { createServer } from 'vite'
+import { createSsrServer as createServer } from './helpers/vite.js'
 
 test('gateway and project list expose the interactive MineFlow entry without removing portfolio access', async () => {
   const vite = await createServer({ appType: 'custom', server: { middlewareMode: true, hmr: false } })

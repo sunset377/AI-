@@ -131,7 +131,7 @@ test('shared template drawing changes color and motion without interpreting text
 })
 
 test('template editor exposes an always-ready director composer, evidence and executable plan controls', async () => {
-  const { createServer } = await import('vite')
+  const { createSsrServer: createServer } = await import('./helpers/vite.js')
   const React = (await import('react')).default
   const { renderToStaticMarkup } = await import('react-dom/server')
   const vite = await createServer({ appType: 'custom', cacheDir: '.codex-run/replica-tests/template-cache', server: { middlewareMode: true, hmr: false } })

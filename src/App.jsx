@@ -4,9 +4,7 @@ import Gateway from './components/Gateway/Gateway'
 import InterviewExperience from './components/Interview/InterviewExperience'
 import DirectorDemo from './components/DirectorDemo/DirectorDemo'
 import ScriptDemo from './components/ScriptDemo/ScriptDemo'
-import ReplicaWorkbench from './components/ReplicaWorkbench/ReplicaWorkbench'
 import VideoPreview from './components/VideoPreview/VideoPreview'
-import NativeBoard from './components/CSBoard/NativeBoard'
 import ModelWorkbench from './components/ModelWorkbench/ModelWorkbench'
 import { readView, writeView } from './navigation'
 
@@ -382,7 +380,6 @@ function App({ initialView }) {
   const [filter, setFilter] = useState('all')
   const [styleFilter, setStyleFilter] = useState('all')
   const [lightboxIndex, setLightboxIndex] = useState(null)
-  const [directorBrief, setDirectorBrief] = useState('')
 
   useEffect(() => {
     const invite = new URLSearchParams(window.location.hash.slice(1)).get('experience')
@@ -453,9 +450,7 @@ function App({ initialView }) {
     }
   }, [lightboxIndex, visibleStyleShots.length])
 
-  if (view === 'replica') return <ReplicaWorkbench initialRequirement={directorBrief} onBack={() => navigateTo(directorBrief ? 'studio' : 'portfolio')} />
-  if (view === 'studio') return <ModelWorkbench onBack={() => navigateTo('portfolio')} onWhiteboard={() => navigateTo('whiteboard')} onDirector={(brief = '') => { setDirectorBrief(brief); navigateTo('replica') }} />
-  if (view === 'whiteboard') return <NativeBoard onBack={() => navigateTo('studio')} onDirector={(brief = '') => { setDirectorBrief(brief); navigateTo('replica') }} />
+  if (['studio', 'replica', 'whiteboard'].includes(view)) return <ModelWorkbench initialSection={view === 'studio' ? 'models' : 'agents'} initialAgent={view === 'whiteboard' ? 'whiteboard' : 'director'} onBack={() => navigateTo('portfolio')} />
 
   if (view === 'gateway') return <Gateway assetPath={assetPath} onEnterPortfolio={() => navigateTo('portfolio')} onEnterInterview={() => navigateTo('interview')} />
 

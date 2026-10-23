@@ -6,7 +6,7 @@ import path from 'node:path'
 import { createServer } from 'node:http'
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { createServer as createViteServer } from 'vite'
+import { createSsrServer as createViteServer } from './helpers/vite.js'
 import { readView } from '../src/navigation.js'
 import { planReplica, validateReplicaOptions, mapOutputToSource } from '../src/replica.js'
 import { createAss, createHypitSources } from '../server/replica-render.js'
@@ -61,19 +61,20 @@ test('subtitle text cannot inject ASS commands, and Hypit only demands local med
   assert.equal((source.run.match(/<target/g) || []).length, plan.segments.length)
 })
 
-test('replica route and SSR keep the blue workbench available without a backend or API key', async () => {
+test('legacy replica route opens the unified studio with director controls and no claimed generated output', async () => {
   assert.equal(readView({ search: '?view=replica' }), 'replica')
   const vite = await createViteServer({ appType: 'custom', cacheDir: '.codex-run/replica-tests/legacy-cache', server: { middlewareMode: true, hmr: false } })
   try {
     const { default: App } = await vite.ssrLoadModule('/src/App.jsx')
     const html = renderToStaticMarkup(React.createElement(App, { initialView: 'replica' }))
-    assert.match(html, /看懂结构，做出你的版本/)
+    assert.match(html, /MOMOCO 视频导演/)
+    assert.match(html, /role="tablist" aria-label="工作台栏目"/)
     assert.match(html, /告诉导演你想做什么/)
     assert.match(html, /添加参考视频/)
     assert.match(html, /type="file"/)
-    assert.match(html, /仅本地预览/)
+    assert.match(html, /执行服务未连接/)
     assert.match(html, /disabled=""[^>]*>制作成片/)
-    assert.doesNotMatch(html, /type="password"|API KEY|模型已生成/)
+    assert.doesNotMatch(html, /API KEY|模型已生成/)
     const { ResultComparison } = await vite.ssrLoadModule('/src/components/ReplicaWorkbench/ReplicaWorkbench.jsx')
     const result = renderToStaticMarkup(React.createElement(ResultComparison, { currentJob: { inputUrl: null, resultUrl: '/jobs/output/result', status: 'complete' }, mediaUrl: (url) => url }))
     assert.match(result, /本次无参考原片/)

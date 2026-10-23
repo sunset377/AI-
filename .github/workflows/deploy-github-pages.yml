@@ -44,7 +44,7 @@ jobs:
       - name: Verify DeepSeek interview and secret isolation
         run: |
           node --test test/interview-worker.test.js test/deepseek-interview.test.js test/interview-reliability.test.js test/storyboard.test.js
-          node --test test/model-gateway.test.js
+          node --test test/model-gateway.test.js test/studio-unified.test.js test/portfolio-homepage.test.js
           node --test --test-name-pattern='parseSseLine|streamInterview' test/interview-client.test.js
 
       - name: Upload Pages artifact
