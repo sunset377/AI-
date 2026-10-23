@@ -104,7 +104,7 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
   if (!['/api/chat', '/api/images'].includes(url.pathname)) return json({ error: '该功能未向访客开放。' }, 403)
   if (request.method !== 'POST') return json({ error: '请使用 POST 提交。' }, 405)
   let input
-  try { input = validateModelRequest(await readJson(request)) } catch (error) { return json({ error: error.message }, 400) }
+  try { input = validateModelRequest(await readJson(request, url.pathname === '/api/images' ? 7_100_000 : 30000)) } catch (error) { return json({ error: error.message }, 400) }
   if ((url.pathname === '/api/chat' ? 'chat' : 'image') !== input.type) return json({ error: '模型类型与操作不匹配。' }, 400)
   const fingerprint = encode(await crypto.subtle.digest('SHA-256', encoder.encode(JSON.stringify(input))))
   const previous = await env.DB.prepare('SELECT * FROM model_requests WHERE id = ?').bind(input.requestId).first()
@@ -119,7 +119,7 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
   if (!reserved) return json({ error: '今日体验次数已用完，或同一请求正在处理。' }, 429)
   const body = input.type === 'chat'
     ? { model: input.modelId, messages: [{ role: 'system', content: '你是刘耀华作品集的 AI 创作助手。请用中文清晰简洁地回答用户的问题。' }, ...input.messages], stream: false, max_tokens: 600 }
-    : { task_id: env.RELAY_TASK_ID, request_id: input.requestId, input: { model_id: input.modelId, modality: 'image', params: { prompt: input.prompt, size: input.size, count: 1, quality: 'medium', mode: 'text-to-image', output_format: 'jpeg' } } }
+    : { task_id: env.RELAY_TASK_ID, request_id: input.requestId, input: { model_id: input.modelId, modality: 'image', params: input.params } }
   let result, status
   try {
     const response = await upstreamFetch(input.type === 'chat' ? base + '/chat/completions' : 'https://aigchub.token6688.com/api/v1/model-runtime/cli/generations', {

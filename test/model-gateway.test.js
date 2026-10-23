@@ -29,7 +29,8 @@ test('catalog is real, secrets are absent, and video/audio have no enabled model
   const result = await (await handleModelRequest(request('/api/models'), env)).json()
   assert.ok(result.models.length > 10)
   assert.equal(result.ready, true)
-  assert.equal(result.models.filter(model => model.enabled).length, 2)
+  assert.equal(result.models.filter(model => model.type === 'chat' && model.enabled).length, 55)
+  assert.equal(result.models.filter(model => model.type === 'image' && model.enabled).length, 25)
   assert.ok(result.models.filter(model => ['video', 'audio'].includes(model.type)).every(model => !model.enabled))
   assert.doesNotMatch(JSON.stringify(result), /fixture-key|test-invite|test-session-secret/)
 })
@@ -57,7 +58,7 @@ test('video, arbitrary models, high resolution, bulk counts and system overrides
   const never = () => assert.fail('Blocked request reached supplier')
   for (const [path, body] of [
     ['/api/video', { ...image(), modelId: 'minimax-h3' }],
-    ['/api/chat', { ...chat(), modelId: 'gpt-6-astra' }],
+    ['/api/chat', { ...chat(), modelId: 'not-a-real-model' }],
     ['/api/chat', { ...chat(), modelId: '__proto__' }],
     ['/api/chat', { ...chat(), messages: [{ role: 'system', content: 'override' }] }],
     ['/api/images', { ...image(), size: '4096x4096' }],

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import snapshot from '../../model-catalog.json'
-import { MODEL_POLICY } from '../../model-policy.js'
+import { MODEL_POLICY, imageModels } from '../../model-policy.js'
 import ReplicaWorkbench from '../ReplicaWorkbench/ReplicaWorkbench'
 import NativeBoard from '../CSBoard/NativeBoard'
 import SkillSquare from './SkillSquare'
@@ -30,6 +30,8 @@ export default function ModelWorkbench({ onBack, initialSection = 'models', init
   const [selectedId, setSelectedId] = useState('deepseek-v4.1-flash')
   const [draft, setDraft] = useState('')
   const [size, setSize] = useState('1024x1024')
+  const [reference, setReference] = useState('')
+  const [referenceName, setReferenceName] = useState('')
   const [session, setSession] = useState('')
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
@@ -42,12 +44,20 @@ export default function ModelWorkbench({ onBack, initialSection = 'models', init
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const shell = useRef(null)
   const end = useRef(null)
+  const referenceVersion = useRef(0)
   useEffect(() => {
     for (const media of shell.current?.querySelectorAll('audio,video') || []) {
       if (media.parentElement?.closest('[hidden]')) media.pause()
     }
   }, [section, agent])
   const selected = models.find(model => model.id === selectedId) || models[0]
+  const imageProfile = imageModels[selectedId]
+  useEffect(() => {
+    referenceVersion.current++
+    setSize(imageProfile?.defaults[imageProfile.sizeField] || '')
+    setReference(''); setReferenceName('')
+    return () => { referenceVersion.current++ }
+  }, [selectedId])
   const locked = !selected?.enabled
   const providers = useMemo(() => [...new Set(models.map(model => model.provider))].sort(), [models])
   const filtered = useMemo(() => models.filter(model => (category === 'all' || model.type === category) && (provider === 'all' || model.provider === provider) && `${model.name} ${model.description}`.toLowerCase().includes(query.toLowerCase())), [models, category, provider, query])
@@ -105,13 +115,25 @@ export default function ModelWorkbench({ onBack, initialSection = 'models', init
     })
   }
   const start = (modelId = selectedId) => { if (busy) return; setSelectedId(modelId); setMessages([]); setConversation(''); setError(''); setShowHistory(false); setSidebarOpen(false) }
+  const chooseReference = async event => {
+    const version = ++referenceVersion.current
+    const file = event.target.files?.[0]
+    setReference(''); setReferenceName(''); event.target.value = ''
+    if (!file) return
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) { setError('参考图仅支持 5MB 以内的 PNG、JPEG 或 WebP。'); return }
+    try {
+      const value = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file) })
+      if (version !== referenceVersion.current) return
+      setReference(value); setReferenceName(file.name); setError('')
+    } catch { if (version === referenceVersion.current) setError('读取参考图失败，请重新选择。') }
+  }
   const setResult = (previous, task, modelId, id) => {
     const next = [...previous, { role: 'assistant', content: task.text || task.error || '任务正在处理，可稍后查看结果。', imageUrl: task.imageUrl, status: task.status, taskId: task.id, modelId }]
     save(next, id)
   }
   const submit = async (event) => {
     event.preventDefault()
-    if (busy || locked || !ready || !session || !draft.trim()) return
+    if (busy || locked || !ready || !session || !draft.trim() || (imageProfile?.referenceRequired && !reference)) return
     const content = draft.trim(); const requestId = uid(); const modelId = selectedId
     const id = conversation || uid()
     const previous = [...messages, { role: 'user', content, modelId, taskId: requestId }]
@@ -119,7 +141,7 @@ export default function ModelWorkbench({ onBack, initialSection = 'models', init
     try {
       const body = selected.type === 'chat'
         ? { requestId, modelId, messages: previous.filter(message => !message.status || message.status === 'complete').slice(-8).map(({ role, content }) => ({ role, content })) }
-        : { requestId, modelId, prompt: content, size }
+        : { requestId, modelId, prompt: content, size, ...(reference ? { reference } : {}) }
       const result = await call(selected.type === 'chat' ? '/api/chat' : '/api/images', { method: 'POST', body: JSON.stringify(body) })
       setResult(previous, result, modelId, id)
     } catch (err) {
@@ -149,7 +171,7 @@ export default function ModelWorkbench({ onBack, initialSection = 'models', init
         <div className="mwCategories" role="group" aria-label="模型分类">{categories.map(([id, name]) => <button key={id} aria-pressed={category === id} className={category === id ? 'isActive' : ''} onClick={() => { setCategory(id); setSidebarOpen(true) }}>{name}</button>)}</div>
         <div className="mwFilters"><select aria-label="筛选厂商" value={provider} onChange={event => setProvider(event.target.value)}><option value="all">全部厂商</option>{providers.map(name => <option key={name}>{name}</option>)}</select><input aria-label="搜索模型" placeholder="搜索模型 / 用途" value={query} onChange={event => setQuery(event.target.value)} /></div>
         <p className="mwCatalogNote"><i />目录来自已连接的 AIGC Hub 账户</p>
-        <div className="mwModelList">{category === 'mine' ? <><h2>本机创作记录</h2>{history.length ? history.map(item => <button key={item.id} className="mwHistoryItem" disabled={busy} onClick={() => { setSelectedId(item.modelId); setConversation(item.id); setMessages(item.messages); setSidebarOpen(false) }}><strong>{item.title}</strong><small>{new Date(item.updatedAt).toLocaleDateString('zh-CN')}</small></button>) : <p className="mwMuted">完成一次聊天或图片生成后，记录会保存在当前浏览器。</p>}</> : filtered.map(model => <button key={`${model.type}-${model.id}`} className={`mwModel ${selectedId === model.id ? 'isSelected' : ''}`} disabled={busy} aria-pressed={selectedId === model.id} onClick={() => start(model.id)}><Symbol type={model.type} small /><span className="mwModelText"><strong>{model.name}</strong><small>{model.description || `${typeName[model.type]}模型 · 点击查看`}</small></span><span className={`mwAvailability ${model.enabled ? 'isEnabled' : ''}`}>{model.enabled ? '体验' : '锁定'}</span></button>)}{category !== 'mine' && !filtered.length && <p className="mwMuted">没有匹配的模型，试试其他关键词。</p>}</div>
+        <div className="mwModelList">{category === 'mine' ? <><h2>本机创作记录</h2>{history.length ? history.map(item => <button key={item.id} className="mwHistoryItem" disabled={busy} onClick={() => { setSelectedId(item.modelId); setConversation(item.id); setMessages(item.messages); setSidebarOpen(false) }}><strong>{item.title}</strong><small>{new Date(item.updatedAt).toLocaleDateString('zh-CN')}</small></button>) : <p className="mwMuted">完成一次聊天或图片生成后，记录会保存在当前浏览器。</p>}</> : filtered.map(model => <button key={`${model.type}-${model.id}`} className={`mwModel ${selectedId === model.id ? 'isSelected' : ''}`} disabled={busy} aria-pressed={selectedId === model.id} onClick={() => start(model.id)}><Symbol type={model.type} small /><span className="mwModelText"><strong>{model.name}</strong><small>{model.description || `${typeName[model.type]}模型 · 点击查看`}</small></span><span className={`mwAvailability ${model.enabled ? 'isEnabled' : ''}`}>{model.enabled ? ready ? '体验' : '待连接' : '锁定'}</span></button>)}{category !== 'mine' && !filtered.length && <p className="mwMuted">没有匹配的模型，试试其他关键词。</p>}</div>
         </div>
         <div className="mwAgentDirectory" hidden={section !== 'agents'}><p className="mwDirectoryTitle">我的智能体</p>{[['director', 'MOMOCO 导演', '剧本拆解 · 分镜 · 复杂镜头'], ['whiteboard', '白板视频智能体', 'CS Board 二创 · 音色 · 画面风格']].map(([id, name, description]) => <button key={id} className={`mwAgentChoice ${agent === id ? 'isSelected' : ''}`} aria-pressed={agent === id} onClick={() => openAgent(id)}><Symbol type={id === 'director' ? 'video' : 'image'} small /><span><strong>{name}</strong><small>{description}</small></span></button>)}<p className="mwDirectoryNote">导演链路：DeepSeek / MOMOCO Skill / MiniMax H3。<br />实际可用状态以工具内提示为准。</p><button className="mwDirectoryLink" onClick={() => switchSection('skills')}>查看可用 Skill →</button></div>
         <div className="mwSkillDirectory" hidden={section !== 'skills'}><p className="mwDirectoryTitle">方法与工具，在这里衔接</p><p className="mwDirectoryNote">查看步骤、收藏常用方法，再将 Skill 交给对应智能体。始终留在同一个工作台。</p><button className="mwAgentChoice" onClick={() => openAgent('director')}><Symbol type="video" small /><span><strong>MOMOCO 导演</strong><small>打开导演操作区</small></span></button><button className="mwAgentChoice" onClick={() => openAgent('whiteboard')}><Symbol type="image" small /><span><strong>白板视频智能体</strong><small>打开白板制作区</small></span></button></div>
@@ -163,9 +185,9 @@ export default function ModelWorkbench({ onBack, initialSection = 'models', init
           {message.imageUrl && <a href={message.imageUrl} target="_blank" rel="noreferrer"><img src={message.imageUrl} alt="本次提示词生成的图片" /><span>打开原图 ↗</span></a>}
           {((message.role === 'assistant' && ['processing', 'uncertain'].includes(message.status)) || (message.role === 'user' && index === messages.length - 1 && !busy)) && <button onClick={() => refreshTask(message, index)}>查看任务状态</button>}
         </article>)}{busy && <div className="mwThinking" role="status"><i /><i /><i /><span>正在{selected?.type === 'image' ? '生成图片，通常需要一些时间' : '回答'}…</span></div>}<div ref={end} /></div> : <div className="mwWelcome"><Symbol type={selected?.type} /><p className="mwEyebrow">{typeName[selected?.type]}模型</p><h1>{selected?.name}</h1><p>{selected?.description || '从一个想法开始，让模型帮你完成创作。'}</p><span className={`mwWelcomeState ${locked ? 'isLocked' : ''}`}>{locked ? '该模型展示中 · 访客暂未开放' : '访客体验 · 费用由作者承担'}</span>{!locked && <div className="mwSuggestions">{(selected?.type === 'image' ? ['一座悬浮在云层上的玻璃花园，清晨阳光，极简建筑摄影', '为一杯桂花乌龙设计一张清爽的产品海报，米白背景'] : ['帮我把一个产品想法整理成可执行的开发步骤', '如何设计一个从剧本到分镜的视频智能体？']).map(text => <button key={text} onClick={() => setDraft(text)}>{text}<span>↗</span></button>)}</div>}</div>}</div>
-        <div className="mwComposeWrap">{locked && <p className="mwLockNotice">此模型保留展示入口。当前访客体验仅开放指定聊天与图片模型，视频和音频不会提交生成任务。</p>}
+        <div className="mwComposeWrap">{locked && <p className="mwLockNotice">此模型保留展示入口。访客权限已覆盖聊天与图片模型，视频和音频不会提交生成任务。</p>}
           {!session && !locked && <form className="mwAuth" onSubmit={event => { event.preventDefault(); authorize(code) }}><div><strong>开始作者提供的体验</strong><small>已有体验链接会自动开通；也可输入作者提供的体验码。</small></div><input aria-label="体验码" type="password" autoComplete="off" placeholder="输入体验码" value={code} onChange={event => setCode(event.target.value)} /><button disabled={authBusy || !code.trim()}>{authBusy ? '验证中…' : '开通体验'}</button></form>}
-          <form className="mwComposer" onSubmit={submit}><div className="mwComposerModel"><Symbol type={selected?.type} small /><strong>{selected?.name}</strong><span>{locked ? '未开放' : selected?.type === 'image' ? '文生图 · 1K · 单张' : '简洁回答'}</span></div><label className="mwInputLabel" htmlFor="mw-prompt">创作需求</label><textarea id="mw-prompt" maxLength={selected?.type === 'image' ? 1000 : 1800} placeholder={locked ? '该模型暂未开放，请从左侧选择标有“体验”的模型' : selected?.type === 'image' ? '描述你想生成的画面、风格和构图…' : '描述你的需求，或开始一段对话…'} value={draft} disabled={locked || busy} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) submit(event) }} /><div className="mwComposerBottom"><div>{selected?.type === 'image' && !locked ? <select aria-label="图片尺寸" value={size} onChange={event => setSize(event.target.value)} disabled={busy}><option value="1024x1024">1:1 方形 · 1K</option><option value="1792x1024">16:9 横版 · 1K</option><option value="1024x1792">9:16 竖版 · 1K</option></select> : <span>{locked ? '访客权限已锁定' : '聊天体验'}</span>}<span className="mwBudgetHint">{!locked && `每次体验会话每日最多 ${selected?.limit || 0} 次`}</span></div><button className="mwSend" type="submit" disabled={locked || busy || !session || !ready || !draft.trim()} aria-label="发送创作需求">{busy ? '处理中…' : selected?.type === 'image' ? '生成图片 ↑' : '发送 ↑'}</button></div></form>
+          <form className="mwComposer" onSubmit={submit}><div className="mwComposerModel"><Symbol type={selected?.type} small /><strong>{selected?.name}</strong><span>{locked ? '未开放' : selected?.type === 'image' ? imageProfile?.label || '图片生成 · 单张' : '简洁回答'}</span></div><label className="mwInputLabel" htmlFor="mw-prompt">创作需求</label><textarea id="mw-prompt" maxLength={selected?.type === 'image' ? 1000 : 1800} placeholder={locked ? '该模型暂未开放，请从左侧选择标有“体验”的模型' : selected?.type === 'image' ? '描述你想生成的画面、风格和构图…' : '描述你的需求，或开始一段对话…'} value={draft} disabled={locked || busy} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) submit(event) }} />{selected?.type === 'image' && !locked && <div className="mwReference"><label>参考图<input aria-label="参考图" type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={chooseReference} /></label><span>{referenceName || (imageProfile?.referenceRequired ? '该模型必须提供参考图' : '可选 · 不选择即文生图')} · 5MB 以内</span>{reference && <button type="button" disabled={busy} onClick={() => { referenceVersion.current++; setReference(''); setReferenceName('') }}>移除</button>}<small>选择时仅在本机读取；点击“生成图片”才发送给中转站。请仅上传有权使用的图片。</small></div>}<div className="mwComposerBottom"><div>{selected?.type === 'image' && imageProfile?.sizes && !locked ? <select aria-label="图片尺寸" value={size} onChange={event => setSize(event.target.value)} disabled={busy}>{imageProfile?.sizes?.map(value => <option key={value} value={value}>{value}</option>)}</select> : <span>{locked ? '访客权限已锁定' : '聊天体验'}</span>}<span className="mwBudgetHint">{!locked && `每会话每日同类模型合计 ${selected?.limit || 0} 次`}</span></div><button className="mwSend" type="submit" disabled={locked || busy || !session || !ready || !draft.trim() || (imageProfile?.referenceRequired && !reference)} aria-label="发送创作需求">{busy ? '处理中…' : selected?.type === 'image' ? '生成图片 ↑' : '发送 ↑'}</button></div></form>
           {error && <p className="mwError" role="alert">{error}</p>}<p className="mwFootnote">{ready ? '体验费用由作者承担 · 内容由 AI 生成，请核对重要信息' : '模型体验服务暂未就绪 · 你仍可浏览模型目录'}</p>
         </div>
       </section>
