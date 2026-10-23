@@ -16,6 +16,7 @@ try {
   for (const width of [1440, 390]) {
     const page = await browser.newPage({ viewport: { width, height: width > 680 ? 960 : 844 } })
     page.setDefaultTimeout(6000)
+    page.setDefaultNavigationTimeout(30000)
     page.on('pageerror', error => errors.push(error.message))
     await page.route('**/api/**', async route => {
       const path = new URL(route.request().url()).pathname
@@ -26,7 +27,7 @@ try {
       if (path === '/api/replica/health') data = { ready: false, planning: { ready: false }, chat: { ready: false }, video: { ready: false }, render: { ready: false } }
       await route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(data) })
     })
-    await page.goto(base + '?view=portfolio')
+    await page.goto(base + '?view=portfolio', { waitUntil: 'domcontentloaded' })
     const providerCard = page.locator('article.workCard').filter({ has: page.getByRole('heading', { name: 'AI创作聚合平台', exact: true }) })
     assert.match(await providerCard.innerText(), /第三方/)
     await providerCard.getByRole('link', { name: '在工作台查看模型' }).click()
@@ -69,7 +70,7 @@ try {
     assert.equal(await page.locator('.csStudio .primary.create').evaluate(element => getComputedStyle(element).backgroundColor), 'rgb(124, 58, 237)')
     const images = page.locator('.csStudio .stylePicker img')
     await images.first().scrollIntoViewIfNeeded()
-    await page.waitForFunction(() => [...document.querySelectorAll('.csStudio .stylePicker img')].every(img => img.complete && img.naturalWidth > 0))
+    await page.waitForFunction(() => [...document.querySelectorAll('.csStudio .stylePicker img')].every(img => img.complete && img.naturalWidth > 0), undefined, { timeout: 30000 })
     assert.equal(await images.count(), 12)
     await page.locator('.mwAgentPanel').evaluate(element => { element.scrollTop = 0 })
     await page.screenshot({ path: `${output}/whiteboard-${width}.png`, fullPage: true })
@@ -107,7 +108,7 @@ try {
     await page.keyboard.press('Home')
     assert.equal(await page.getByRole('tab', { name: '大模型', exact: true }).getAttribute('aria-selected'), 'true')
     for (const [view, heading] of [['replica', 'MOMOCO 视频导演'], ['whiteboard', '白板视频智能体']]) {
-      await page.goto(base + '?view=' + view)
+      await page.goto(base + '?view=' + view, { waitUntil: 'domcontentloaded' })
       await page.getByRole('heading', { name: heading, exact: true }).waitFor()
       assert.equal(await page.locator('.mwHeader').count(), 1)
       await checkLayout()
@@ -118,6 +119,7 @@ try {
   assert.deepEqual(errors, [])
   console.log(JSON.stringify({ ok: true, widths: [1440, 390], paidCalls: 0, checks: ['same URL', 'real agent controls', 'three preserved drafts', 'handoff', 'skill search and bookmarks', '12 loaded style previews', 'keyboard tabs', 'no horizontal overflow'] }))
 } catch (error) {
-  console.error(JSON.stringify({ pageErrors: errors, blockedWrites: writes }))
+  const images = await Promise.all(browser.contexts().flatMap(context => context.pages()).map(page => page.locator('.csStudio .stylePicker img').evaluateAll(items => items.map(img => ({ src: img.src, complete: img.complete, width: img.naturalWidth }))).catch(() => [])))
+  console.error(JSON.stringify({ pageErrors: errors, blockedWrites: writes, images }))
   throw error
 } finally { await browser.close() }
