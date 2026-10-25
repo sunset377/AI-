@@ -65,6 +65,8 @@ test('explicit public experience issues a signed guest session without sharing t
   assert.equal(answer.status, 'complete')
   assert.equal((await handleModelRequest(request('/api/sessions', {}), env)).status, 403)
   assert.equal((await (await handleModelRequest(request('/api/models'), { ...opened, RELAY_VERIFIED: '0' })).json()).publicAccess, false)
+  assert.equal((await handleModelRequest(request('/api/sessions', {}), { ...opened, INVITE_TOKEN: undefined })).status, 200)
+  for (const body of [[], 'invalid']) assert.equal((await handleModelRequest(request('/api/sessions', body), opened)).status, 400)
 })
 
 test('video, arbitrary models, high resolution, bulk counts and system overrides never reach provider', async () => {

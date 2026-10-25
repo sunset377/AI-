@@ -70,7 +70,7 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
   const origin = request.headers.get('origin')
   if (origin !== env.PUBLIC_ORIGIN) return json({ error: '该访问来源未获授权。' }, 403)
   if (request.method === 'OPTIONS') return new Response(null, { status: 204 })
-  const configured = Boolean(env.RELAY_API_KEY && env.RELAY_TASK_ID && env.SESSION_SECRET && env.INVITE_TOKEN && env.DB && env.RELAY_VERIFIED === '1')
+  const configured = Boolean(env.RELAY_API_KEY && env.RELAY_TASK_ID && env.SESSION_SECRET && (env.PUBLIC_GUEST_ACCESS === '1' || env.INVITE_TOKEN) && env.DB && env.RELAY_VERIFIED === '1')
   const expiry = Date.parse(env.EXPERIENCE_EXPIRES_AT || '')
   const expired = !Number.isFinite(expiry) || Date.now() >= expiry
   if (url.pathname === '/api/models' && request.method === 'GET') {
@@ -83,15 +83,18 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
   if (expired) return json({ error: '本期体验已结束，请联系作品集作者。' }, 403)
   if (url.pathname === '/api/sessions' && request.method === 'POST') {
     let input
-    try { input = await readJson(request, 2000) } catch { return json({ error: '体验码格式无效。' }, 400) }
-    const key = await signingKey(env.SESSION_SECRET)
-    const expected = await crypto.subtle.sign('HMAC', key, encoder.encode(env.INVITE_TOKEN))
+    try { input = await readJson(request, 2000) } catch { return json({ error: '访客连接请求格式无效。' }, 400) }
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return json({ error: '访客连接请求格式无效。' }, 400)
     const publicGuest = env.PUBLIC_GUEST_ACCESS === '1' && input.code === undefined
-    if (!publicGuest && (typeof input.code !== 'string' || !await crypto.subtle.verify('HMAC', key, expected, encoder.encode(input.code)))) return json({ error: '体验码无效，请使用作者提供的体验链接。' }, 403)
+    if (!publicGuest) {
+      const key = await signingKey(env.SESSION_SECRET)
+      const expected = await crypto.subtle.sign('HMAC', key, encoder.encode(env.INVITE_TOKEN || ''))
+      if (!env.INVITE_TOKEN || typeof input.code !== 'string' || !await crypto.subtle.verify('HMAC', key, expected, encoder.encode(input.code))) return json({ error: '当前访问未获授权，请联系作者。' }, 403)
+    }
     return json({ token: await issueSession(env), expiresIn: 8 * 3600 })
   }
   const session = await readSession(request, env)
-  if (!session) return json({ error: '请先输入体验码，或打开作者提供的体验链接。' }, 401)
+  if (!session) return json({ error: '访客会话已失效，请重新连接体验。' }, 401)
   const jobId = url.pathname.match(/^\/api\/jobs\/([a-f0-9-]{36})$/)?.[1]
   if (jobId && request.method === 'GET') {
     const row = await env.DB.prepare('SELECT * FROM model_requests WHERE id = ? AND session = ?').bind(jobId, session.id).first()

@@ -12,7 +12,7 @@ test('readView restores only supported public views', () => {
   assert.equal(readView({ search: '?view=unknown' }), 'gateway')
 })
 
-test('the default gateway exposes portfolio and interview access without claiming a live workflow', async () => {
+test('the default gateway leads with direct AI creation and retains portfolio and interview access', async () => {
   const vite = await createServer({
     appType: 'custom',
     server: { middlewareMode: true, hmr: false },
@@ -26,8 +26,10 @@ test('the default gateway exposes portfolio and interview access without claimin
     assert.match(html, /和数字版的我聊聊/)
     assert.match(html, /查看作品集/)
     assert.match(html, /AGENT WORKFLOW/)
-    assert.match(html, /class="gatewayPrimary"[^>]*>查看作品集/)
-    assert.match(html, /流程示意/)
+    assert.match(html, /class="gatewayPrimary"[^>]*href="\?view=studio"[^>]*>打开 AI 创作智能体/)
+    assert.match(html, /href="\?view=studio&amp;model=gpt-image-2-c"/)
+    assert.match(html, /无需体验码/)
+    assert.ok(html.indexOf('class="gatewayHero"') < html.indexOf('class="gatewayMineflow"'))
     assert.match(html, /assets\/hero-avatar\.jpg/)
     assert.match(html, /aria-label="网站入口"/)
     assert.doesNotMatch(html, /QC 一次通过率|SeaArt MoreShort/)

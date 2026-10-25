@@ -177,5 +177,6 @@
 .studioPreviewCard>p:first-child { margin:0 0 14px;letter-spacing:.08em; }
 .studioPreviewCard>a { display:block;margin-top:18px;padding:13px 18px;text-align:center;background:#cf8a6e;color:#201c19;border-radius:7px;font-weight:650; }
 .studioPreviewCard>small { display:block;margin-top:10px;color:#d5d0c8;font-size:11px;text-align:center; }
-@media(max-width:820px){.portfolioHeroGrid{grid-template-columns:1fr;gap:34px;padding-top:140px;}.studioPreviewCard{max-width:560px;justify-self:end;width:100%;}.portfolioHeroGrid .heroAside{margin-top:25px;}.heroWallpaper{background-position:38% center!important;}}
+.studioPreviewCard>img { margin-top: 18px; }
+@media(max-width:820px){.portfolioHeroGrid{grid-template-columns:1fr;gap:24px;padding-top:140px;}.studioPreviewCard{max-width:560px;justify-self:end;width:100%;grid-row:1;}.portfolioHeroGrid .heroAside{margin-top:0;}.heroWallpaper{background-position:38% center!important;}}
 @media(max-width:540px){.studioPreviewCard{padding:16px;}.studioPreviewCard h2{font-size:23px;}.portfolioHeroGrid{padding-top:150px;}}

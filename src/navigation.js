@@ -5,7 +5,7 @@ export function readView(location) {
   return supportedViews.has(view) ? view : 'gateway'
 }
 
-export function writeView(view) {
+export function writeView(view, modelId) {
   if (typeof window === 'undefined') return
 
   const nextView = supportedViews.has(view) ? view : 'gateway'
@@ -13,6 +13,8 @@ export function writeView(view) {
 
   if (nextView === 'gateway') url.searchParams.delete('view')
   else url.searchParams.set('view', nextView)
+  if (nextView === 'studio' && modelId) url.searchParams.set('model', modelId)
+  else url.searchParams.delete('model')
 
   url.hash = ''
   window.history.pushState({ view: nextView }, '', url)
