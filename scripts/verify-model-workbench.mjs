@@ -8,6 +8,7 @@ const require = createRequire(import.meta.url)
 const { chromium } = require(require.resolve('playwright', { paths: [process.env.PLAYWRIGHT_NODE_MODULES || 'C:/Users/98017/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules'] }))
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe' })
 const base = process.env.PORTFOLIO_TEST_URL || 'http://127.0.0.1:5190/AI-/'
+const api = process.env.PORTFOLIO_MODEL_API_URL || 'https://ci-interview-gateway.pages.dev'
 const output = '.codex-run/model-workbench'
 await mkdir(output, { recursive: true })
 const errors = []
@@ -15,10 +16,12 @@ try {
   for (const viewport of [{ width: 1440, height: 960 }, { width: 768, height: 1024 }, { width: 390, height: 844 }, { width: 360, height: 800 }]) {
     const page = await browser.newPage({ viewport })
     page.on('pageerror', error => errors.push(error.message))
-    let submissions = 0; let imageWrites = 0; let imageReads = 0; let sessions = 0; let relayReady = true
+    let submissions = 0; let imageWrites = 0; let imageReads = 0; let sessions = 0; let relayReady = true; let catalogOffline = false; let catalogStalled = false
     await page.route('https://cdn.token6688.com/fixture.png', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aP1cAAAAASUVORK5CYII=', 'base64') }))
-    await page.route('https://portfolio-model-gateway.980175020.workers.dev/**', async route => {
+    await page.route(api + '/**', async route => {
       const path = new URL(route.request().url()).pathname
+      if (path === '/api/models' && catalogOffline) return route.abort('timedout')
+      if (path === '/api/models' && catalogStalled) return
       let data
       if (path === '/api/models') data = { ...catalog, ready: relayReady, publicAccess: relayReady, models: catalog.models.map(model => ({ ...model, enabled: Boolean(MODEL_POLICY[model.id]), limit: MODEL_POLICY[model.id]?.visitor || 0 })) }
       else if (path === '/api/sessions') { sessions++; assert.deepEqual(route.request().postDataJSON(), {}); data = { token: 'ui-test-only', expiresIn: 8 * 3600 } }
@@ -105,6 +108,24 @@ try {
     assert.equal(await page.getByLabel('体验码', { exact: true }).count(), 0)
     assert.equal(await page.getByRole('button', { name: '发送创作需求' }).isEnabled(), false)
     assert.equal(sessions, 3, 'Unavailable service must not issue a guest session')
+    catalogOffline = true; relayReady = true
+    await page.reload()
+    await page.getByRole('button', { name: '重新连接', exact: true }).waitFor({ timeout: 5000 })
+    assert.equal(await page.getByRole('button', { name: '发送创作需求' }).isDisabled(), true)
+    catalogOffline = false
+    await page.getByRole('button', { name: '重新连接', exact: true }).click()
+    await page.waitForFunction(() => sessionStorage.getItem('portfolio-model-session') === 'ui-test-only')
+    assert.equal(sessions, 4, 'Retry must reload the catalog before authorizing a visitor')
+    if (viewport.width === 1440) {
+      catalogStalled = true
+      await page.reload()
+      await page.getByRole('alert').filter({ hasText: '连接超时' }).waitFor({ timeout: 20000 })
+      assert.equal(await page.getByRole('button', { name: '发送创作需求' }).isDisabled(), true)
+      catalogStalled = false
+      await page.getByRole('button', { name: '重新连接', exact: true }).click()
+      await page.locator('.mwAuth').waitFor({ state: 'hidden' })
+      assert.equal(sessions, 4, 'A valid session survives a catalog timeout and reconnect')
+    }
     await page.goto(base + '?view=portfolio')
     await page.locator('.studioPreviewCard > a').waitFor()
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true)
@@ -116,5 +137,5 @@ try {
     await page.close()
   }
   assert.deepEqual(errors, [])
-  console.log(JSON.stringify({ ok: true, viewports: [1440, 768, 390, 360], checks: ['AI entry above the fold', 'direct image entry', 'automatic guest sessions', 'expired-session renewal', 'service-unavailable state', 'model switching', 'image parameters', 'video lock', 'chat', 'history', 'no horizontal overflow'], paidCalls: 0 }))
+  console.log(JSON.stringify({ ok: true, viewports: [1440, 768, 390, 360], checks: ['AI entry above the fold', 'direct image entry', 'automatic guest sessions', 'expired-session renewal', 'service-unavailable state', 'network failure recovery', 'bounded connection timeout', 'model switching', 'image parameters', 'video lock', 'chat', 'history', 'no horizontal overflow'], paidCalls: 0 }))
 } finally { await browser.close() }

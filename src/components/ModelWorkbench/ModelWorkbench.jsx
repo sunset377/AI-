@@ -6,7 +6,7 @@ import NativeBoard from '../CSBoard/NativeBoard'
 import SkillSquare from './SkillSquare'
 import './ModelWorkbench.css'
 
-const API = (import.meta.env.VITE_MODELS_API_URL || 'https://portfolio-model-gateway.980175020.workers.dev').replace(/\/$/, '')
+const API = (import.meta.env.VITE_MODELS_API_URL || 'https://ci-interview-gateway.pages.dev').replace(/\/$/, '')
 const categories = [['all', '全部'], ['chat', '聊天'], ['image', '图片'], ['video', '视频'], ['audio', '音频'], ['mine', '我的']]
 const sections = [['models', '✧', '大模型'], ['agents', '▦', '智能体'], ['skills', '⌘', 'Skill 广场']]
 const typeName = { chat: '聊天', image: '图片', video: '视频', audio: '音频' }
@@ -84,11 +84,19 @@ export default function ModelWorkbench({ onBack, initialSection = 'models', init
   }
 
   const call = async (path, options = {}, token = session) => {
-    const response = await fetch(API + path, { ...options, headers: { ...(options.body ? { 'content-type': 'application/json' } : {}), ...(token ? { authorization: `Bearer ${token}` } : {}) } })
-    if (!response.headers.get('content-type')?.includes('application/json')) throw new Error('模型体验服务暂时无法连接，请稍后再试。')
-    const data = await response.json()
-    if (!response.ok) { if (response.status === 401) { setSession(''); sessionStorage.removeItem('portfolio-model-session'); sessionStorage.removeItem('portfolio-model-session-expiry') }; throw Object.assign(new Error(data.error || '本次请求未完成。'), { status: response.status }) }
-    return data
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), path === '/api/images' ? 210000 : path === '/api/chat' ? 75000 : 15000)
+    try {
+      const response = await fetch(API + path, { ...options, signal: controller.signal, headers: { ...(options.body ? { 'content-type': 'application/json' } : {}), ...(token ? { authorization: `Bearer ${token}` } : {}) } })
+      if (!response.headers.get('content-type')?.includes('application/json')) throw new Error('模型体验服务暂时无法连接，请稍后再试。')
+      const data = await response.json()
+      if (!response.ok) { if (response.status === 401) { setSession(''); sessionStorage.removeItem('portfolio-model-session'); sessionStorage.removeItem('portfolio-model-session-expiry') }; throw Object.assign(new Error(data.error || '本次请求未完成。'), { status: response.status }) }
+      return data
+    } catch (err) {
+      if (controller.signal.aborted) throw new Error('连接超时，请检查网络后重试连接。已提交的生成请求可查看任务状态。')
+      if (err instanceof TypeError) throw new Error('暂时无法连接模型服务，请检查网络后重试连接。')
+      throw err
+    } finally { clearTimeout(timer) }
   }
   const authorize = async (value = '', guest = false) => {
     if (!guest && !value.trim()) return
@@ -102,17 +110,23 @@ export default function ModelWorkbench({ onBack, initialSection = 'models', init
       const url = new URL(window.location.href); url.hash = ''; window.history.replaceState(window.history.state, '', url)
     } catch (err) { setError(err.message) } finally { setAuthBusy(false) }
   }
+  const connect = async (saved = session) => {
+    setCatalogLoading(true); setError('')
+    try {
+      const data = await call('/api/models', {}, '')
+      setModels(data.models); setReady(data.ready); setPublicAccess(Boolean(data.publicAccess))
+      const invite = new URLSearchParams(window.location.hash.slice(1)).get('experience') || sessionStorage.getItem('portfolio-model-invite')
+      if (data.ready && data.publicAccess && !saved) await authorize('', true)
+      else if (data.ready && invite && !saved) await authorize(invite)
+    } catch (err) { setReady(false); setPublicAccess(false); setError(err.message) }
+    finally { setCatalogLoading(false) }
+  }
   useEffect(() => {
     const saved = Number(sessionStorage.getItem('portfolio-model-session-expiry')) > Date.now() ? sessionStorage.getItem('portfolio-model-session') || '' : ''
     if (!saved) sessionStorage.removeItem('portfolio-model-session')
     setSession(saved)
     setHistory(read(localStorage, 'portfolio-model-history', []))
-    const invite = new URLSearchParams(window.location.hash.slice(1)).get('experience') || sessionStorage.getItem('portfolio-model-invite')
-    call('/api/models', {}, '').then(data => {
-      setModels(data.models); setReady(data.ready); setPublicAccess(Boolean(data.publicAccess))
-      if (data.publicAccess && !saved) authorize('', true)
-      else if (invite && !saved && data.ready) authorize(invite)
-    }).catch(() => setReady(false)).finally(() => setCatalogLoading(false))
+    connect(saved)
   }, [])
   useEffect(() => { end.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }) }, [messages])
   const save = (next, id = conversation) => {
@@ -215,7 +229,7 @@ export default function ModelWorkbench({ onBack, initialSection = 'models', init
           {((message.role === 'assistant' && ['processing', 'uncertain'].includes(message.status)) || (message.role === 'user' && index === messages.length - 1 && !busy)) && <button onClick={() => refreshTask(message, index)}>查看任务状态</button>}
         </article>)}{busy && <div className="mwThinking" role="status"><i /><i /><i /><span>正在{selected?.type === 'image' ? '生成图片，通常需要一些时间' : '回答'}…</span></div>}<div ref={end} /></div> : <div className="mwWelcome"><Symbol type={selected?.type} /><p className="mwEyebrow">{typeName[selected?.type]}模型</p><h1>{selected?.name}</h1><p>{selected?.description || '从一个想法开始，让模型帮你完成创作。'}</p><span className={`mwWelcomeState ${locked ? 'isLocked' : ''}`}>{locked ? '该模型展示中 · 访客暂未开放' : '访客体验 · 费用由作者承担'}</span>{!locked && <div className="mwSuggestions">{(selected?.type === 'image' ? ['一座悬浮在云层上的玻璃花园，清晨阳光，极简建筑摄影', '为一杯桂花乌龙设计一张清爽的产品海报，米白背景'] : ['帮我把一个产品想法整理成可执行的开发步骤', '如何设计一个从剧本到分镜的视频智能体？']).map(text => <button key={text} onClick={() => setDraft(text)}>{text}<span>↗</span></button>)}</div>}</div>}</div>
         <div className="mwComposeWrap">{locked && <p className="mwLockNotice">此模型保留展示入口。访客权限已覆盖聊天与图片模型，视频和音频不会提交生成任务。</p>}
-          {!session && !locked && <div className="mwAuth" role="status"><div><strong>{catalogLoading || authBusy ? '正在自动连接访客体验…' : ready && publicAccess ? '访客连接未完成' : '模型服务暂时不可用'}</strong><small>{catalogLoading || authBusy ? '无需注册或输入体验码，请稍候。' : ready && publicAccess ? '点击重新连接，即可开始体验。' : '作者正在更新模型接入，连接恢复后即可直接使用。'}</small></div>{!catalogLoading && !authBusy && ready && publicAccess && <button type="button" onClick={() => authorize('', true)}>重新连接</button>}</div>}
+          {(!session || !ready) && !locked && <div className="mwAuth" role="status"><div><strong>{catalogLoading || authBusy ? '正在自动连接访客体验…' : ready && publicAccess ? '访客连接未完成' : '模型服务暂时不可用'}</strong><small>{catalogLoading || authBusy ? '无需注册或输入体验码，请稍候。' : '请检查网络后点击重新连接，无需输入体验码。'}</small></div>{!catalogLoading && !authBusy && <button type="button" onClick={() => connect()}>重新连接</button>}</div>}
           <form className="mwComposer" onSubmit={submit}><div className="mwComposerModel"><Symbol type={selected?.type} small /><strong>{selected?.name}</strong><span>{locked ? '未开放' : selected?.type === 'image' ? imageProfile?.label || '图片生成 · 单张' : '简洁回答'}</span></div><label className="mwInputLabel" htmlFor="mw-prompt">创作需求</label><textarea id="mw-prompt" maxLength={selected?.type === 'image' ? 1000 : 1800} placeholder={locked ? '该模型暂未开放，请从左侧选择标有“体验”的模型' : selected?.type === 'image' ? '描述你想生成的画面、风格和构图…' : '描述你的需求，或开始一段对话…'} value={draft} disabled={locked || busy} onChange={event => setDraft(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) submit(event) }} />{selected?.type === 'image' && !locked && <div className="mwReference"><label>参考图<input aria-label="参考图" type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={chooseReference} /></label><span>{referenceName || (imageProfile?.referenceRequired ? '该模型必须提供参考图' : '可选 · 不选择即文生图')} · 5MB 以内</span>{reference && <button type="button" disabled={busy} onClick={() => { referenceVersion.current++; setReference(''); setReferenceName('') }}>移除</button>}<small>选择时仅在本机读取；点击“生成图片”才发送给中转站。请仅上传有权使用的图片。</small></div>}<div className="mwComposerBottom"><div>{selected?.type === 'image' && imageProfile?.sizes && !locked ? <select aria-label="图片尺寸" value={size} onChange={event => setSize(event.target.value)} disabled={busy}>{imageProfile?.sizes?.map(value => <option key={value} value={value}>{value}</option>)}</select> : <span>{locked ? '访客权限已锁定' : '聊天体验'}</span>}<span className="mwBudgetHint">{!locked && `每会话每日同类模型合计 ${selected?.limit || 0} 次`}</span></div><button className="mwSend" type="submit" disabled={locked || busy || !session || !ready || !draft.trim() || (imageProfile?.referenceRequired && !reference)} aria-label="发送创作需求">{busy ? '处理中…' : selected?.type === 'image' ? '生成图片 ↑' : '发送 ↑'}</button></div></form>
           {error && <p className="mwError" role="alert">{error}</p>}<p className="mwFootnote">{ready ? '体验费用由作者承担 · 内容由 AI 生成，请核对重要信息' : '模型体验服务暂未就绪 · 你仍可浏览模型目录'}</p>
         </div>
