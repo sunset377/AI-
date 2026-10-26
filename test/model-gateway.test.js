@@ -24,6 +24,59 @@ const mockChat = async (_url, options) => {
   return Response.json({ choices: [{ message: { content: '你好，这是测试回答。' } }] })
 }
 
+test('ordinary API key stays available without a CLI task or an artificial expiry', async () => {
+  const { env, request, session } = setup()
+  env.RELAY_PROTOCOL = 'api_key'; delete env.RELAY_TASK_ID; delete env.EXPERIENCE_EXPIRES_AT
+  const catalog = await (await handleModelRequest(request('/api/models'), env)).json()
+  assert.equal(catalog.ready, true); assert.equal(catalog.expiresAt, null)
+  const result = await (await handleModelRequest(request('/api/chat', chat(), await session()), env, mockChat)).json()
+  assert.equal(result.status, 'complete')
+  assert.equal((await (await handleModelRequest(request('/api/models'), { ...env, EXPERIENCE_EXPIRES_AT: 'invalid' })).json()).ready, false)
+  assert.equal((await (await handleModelRequest(request('/api/models'), { ...env, RELAY_PROTOCOL: undefined })).json()).ready, false)
+})
+
+test('ordinary image API submits once, polls its task, and hides upstream identifiers', async () => {
+  const { env, request, session } = setup()
+  env.RELAY_PROTOCOL = 'api_key'; delete env.RELAY_TASK_ID; delete env.EXPERIENCE_EXPIRES_AT
+  const token = await session(); const body = image(); let writes = 0
+  const submit = async (url, options) => {
+    writes++
+    assert.equal(url, 'https://aigchub.token6688.com/api/v1/model-runtime/invoke')
+    const input = JSON.parse(options.body)
+    assert.equal(input.client_request_id, body.requestId); assert.equal(input.model_id, body.modelId)
+    assert.equal(input.modality, 'image'); assert.equal(input.params.count, 1)
+    assert.equal(input.params.size, '1024x1024'); assert.equal(input.params.quality, 'medium')
+    assert.equal(input.task_id, undefined)
+    return Response.json({ object: 'model_runtime.invoke', mode: 'async', status: 'pending', task_id: 'task-private-fixture' })
+  }
+  const first = await (await handleModelRequest(request('/api/images', body, token), env, submit)).json()
+  assert.equal(first.status, 'processing')
+  await handleModelRequest(request('/api/images', body, token), env, submit)
+  assert.equal(writes, 1)
+  const unavailable = await (await handleModelRequest(request('/api/jobs/' + body.requestId, null, token), env, async (url, options) => {
+    assert.equal(url, 'https://aigchub.token6688.com/v1/tasks/task-private-fixture')
+    assert.equal(options.method, 'GET')
+    return Response.json({ error: 'unavailable' }, { status: 503 })
+  })).json()
+  assert.deepEqual(unavailable, first)
+  for (const [cdnPending, outputUrl, expected] of [[true, 'https://assets.token6688.com/image.jpg', 'processing'], [false, 'https://evil.test/image.jpg', 'uncertain'], [false, 'https://assets.token6688.com/image.jpg', 'complete']]) {
+    const result = await (await handleModelRequest(request('/api/jobs/' + body.requestId, null, token), env, async () => Response.json({ id: 'task-private-fixture', type: 'image', status: 'completed', is_final: true, cdn_pending: cdnPending, output_url: outputUrl }))).json()
+    assert.equal(result.status, expected)
+    if (expected === 'complete') assert.equal(result.imageUrl, outputUrl)
+    else assert.equal(result.imageUrl, undefined)
+    assert.doesNotMatch(JSON.stringify(result), /task-private-fixture|fixture-key/)
+  }
+})
+
+test('ordinary image submission uncertainty never calls CLI recovery or resubmits', async () => {
+  const { env, request, session } = setup()
+  env.RELAY_PROTOCOL = 'api_key'; delete env.RELAY_TASK_ID; delete env.EXPERIENCE_EXPIRES_AT
+  const token = await session(); const body = image(); let writes = 0
+  const first = await (await handleModelRequest(request('/api/images', body, token), env, async () => { writes++; throw new Error('transport') })).json()
+  const recovered = await (await handleModelRequest(request('/api/jobs/' + body.requestId, null, token), env, () => assert.fail('Unknown task must not be resubmitted or queried through CLI'))).json()
+  assert.deepEqual(recovered, first); assert.equal(first.status, 'uncertain'); assert.equal(writes, 1)
+})
+
 test('catalog is real, secrets are absent, and video/audio have no enabled models', async () => {
   const { env, request } = setup()
   const result = await (await handleModelRequest(request('/api/models'), env)).json()
@@ -163,20 +216,22 @@ test('image status query failures preserve the existing receipt, and an unverifi
 })
 
 test('accepted image tasks deliver only a confirmed final CDN image without resubmitting', async () => {
+  for (const host of ['cdn.token6688.com', 'assets.token6688.com']) {
   const { env, request, session } = setup(); const token = await session(); const body = image()
   const first = await (await handleModelRequest(request('/api/images', body, token), env, async () => Response.json({ request_id: body.requestId, generation_id: 'private-task', state: 'accepted' }))).json()
   assert.equal(first.status, 'processing')
   const result = await (await handleModelRequest(request('/api/jobs/' + body.requestId, null, token), env, async (url, options) => {
     assert.equal(options.method, 'GET'); assert.match(url, /\/generations\/private-task$/)
-    return Response.json({ id: 'private-task', status: 'completed', is_final: true, type: 'image', result_type: 'image', cdn_pending: false, output: { type: 'image', url: 'https://cdn.token6688.com/sha256/fixture.jpg' }, result_url: 'https://cdn.token6688.com/sha256/fixture.jpg', billing: { actual_cost_micro_usd: 7955 } })
+    return Response.json({ id: 'private-task', status: 'completed', is_final: true, type: 'image', result_type: 'image', cdn_pending: false, output: { type: 'image', url: `https://${host}/sha256/fixture.jpg` }, result_url: `https://${host}/sha256/fixture.jpg`, billing: { actual_cost_micro_usd: 7955 } })
   })).json()
   assert.equal(result.status, 'complete')
-  assert.equal(result.imageUrl, 'https://cdn.token6688.com/sha256/fixture.jpg')
+  assert.equal(result.imageUrl, `https://${host}/sha256/fixture.jpg`)
   assert.doesNotMatch(JSON.stringify(result), /private-task|billing|7955/)
+  }
 })
 
 test('image completion never trusts a fake, private-host, or unfinished URL', async () => {
-  for (const imageUrl of ['javascript:alert(1)', 'https://cdn.token6688.com.evil.test/x', 'https://127.0.0.1/x', 'https://user:password@cdn.token6688.com/x']) {
+  for (const imageUrl of ['javascript:alert(1)', 'https://cdn.token6688.com.evil.test/x', 'https://assets.token6688.com.evil.test/x', 'http://assets.token6688.com/x', 'https://assets.token6688.com:8443/x', 'https://127.0.0.1/x', 'https://user:password@cdn.token6688.com/x']) {
     const { env, request, session } = setup(); const token = await session(); const body = image()
     const result = await (await handleModelRequest(request('/api/images', body, token), env, async () => Response.json({ status: 'completed', is_final: true, type: 'image', output: { type: 'image', url: imageUrl } }))).json()
     assert.notEqual(result.status, 'complete'); assert.equal(result.imageUrl, undefined)

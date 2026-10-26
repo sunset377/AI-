@@ -3,6 +3,7 @@ import { MODEL_POLICY, validateModelRequest } from './model-policy.js'
 
 const encoder = new TextEncoder()
 const base = 'https://aigchub.token6688.com/v1'
+const imageDeliveryHosts = new Set(['cdn.token6688.com', 'assets.token6688.com'])
 const json = (value, status = 200) => Response.json(value, { status, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } })
 const encode = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '')
 const decode = (text) => Uint8Array.from(atob(text.replaceAll('-', '+').replaceAll('_', '/')), c => c.charCodeAt(0))
@@ -46,22 +47,22 @@ function publicJob(row) {
   return { id: row.id, status: row.status, ...result }
 }
 
-function imageReceipt(data, requestId, modelId, previous = {}) {
-  const relayGenerationId = data.generation_id || previous.relayGenerationId || data.id
+function imageReceipt(data, requestId, modelId, previous = {}, apiKeyMode = false) {
+  const relayGenerationId = (apiKeyMode ? data.task_id : data.generation_id) || previous.relayGenerationId || data.id
   const result = { modelId, ...(typeof relayGenerationId === 'string' && relayGenerationId.length <= 200 ? { relayGenerationId } : {}) }
   if (data.is_final === true) {
     if (data.status === 'failed') return { status: 'failed', result: { ...result, error: '上游图片任务失败，请联系作者核查结算。' } }
     if (['completed', 'succeeded'].includes(data.status) && (data.type === 'image' || data.output?.type === 'image')) {
       if (data.cdn_pending === true) return { status: 'processing', result }
-      const value = data.output?.url || data.result_url
+      const value = apiKeyMode ? data.output_url : data.output?.url || data.result_url
       try {
         const url = new URL(value)
-        if (url.protocol === 'https:' && url.hostname === 'cdn.token6688.com' && !url.port && !url.username && !url.password) return { status: 'complete', result: { ...result, imageUrl: url.href } }
+        if (url.protocol === 'https:' && imageDeliveryHosts.has(url.hostname) && !url.port && !url.username && !url.password) return { status: 'complete', result: { ...result, imageUrl: url.href } }
       } catch { /* Never render an unconfirmed or non-platform result URL. */ }
     }
     return { status: 'uncertain', result: { ...result, error: '图片任务已结束，成品尚未核实，请联系作者，不要重复提交。' } }
   }
-  if ((data.request_id === requestId && ['starting', 'accepted', 'pending', 'running'].includes(data.state)) || (typeof data.status === 'string' && data.is_final === false)) return { status: 'processing', result }
+  if ((apiKeyMode && data.mode === 'async' && data.status === 'pending' && typeof data.task_id === 'string' && result.relayGenerationId) || (data.request_id === requestId && ['starting', 'accepted', 'pending', 'running'].includes(data.state)) || (typeof data.status === 'string' && data.is_final === false)) return { status: 'processing', result }
   throw new Error('Unconfirmed image receipt')
 }
 
@@ -70,11 +71,12 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
   const origin = request.headers.get('origin')
   if (origin !== env.PUBLIC_ORIGIN) return json({ error: '该访问来源未获授权。' }, 403)
   if (request.method === 'OPTIONS') return new Response(null, { status: 204 })
-  const configured = Boolean(env.RELAY_API_KEY && env.RELAY_TASK_ID && env.SESSION_SECRET && (env.PUBLIC_GUEST_ACCESS === '1' || env.INVITE_TOKEN) && env.DB && env.RELAY_VERIFIED === '1')
+  const apiKeyMode = env.RELAY_PROTOCOL === 'api_key'
+  const configured = Boolean(env.RELAY_API_KEY && (apiKeyMode || env.RELAY_TASK_ID) && env.SESSION_SECRET && (env.PUBLIC_GUEST_ACCESS === '1' || env.INVITE_TOKEN) && env.DB && env.RELAY_VERIFIED === '1')
   const expiry = Date.parse(env.EXPERIENCE_EXPIRES_AT || '')
-  const expired = !Number.isFinite(expiry) || Date.now() >= expiry
+  const expired = apiKeyMode && !env.EXPERIENCE_EXPIRES_AT ? false : !Number.isFinite(expiry) || Date.now() >= expiry
   if (url.pathname === '/api/models' && request.method === 'GET') {
-    return json({ ...catalog, ready: configured && !expired, publicAccess: configured && !expired && env.PUBLIC_GUEST_ACCESS === '1', expiresAt: env.EXPERIENCE_EXPIRES_AT,
+    return json({ ...catalog, ready: configured && !expired, publicAccess: configured && !expired && env.PUBLIC_GUEST_ACCESS === '1', expiresAt: env.EXPERIENCE_EXPIRES_AT || null,
       models: catalog.models.map(model => ({ ...model, enabled: Boolean(MODEL_POLICY[model.id]) && model.available,
         limit: MODEL_POLICY[model.id]?.visitor || 0 })),
     })
@@ -100,11 +102,13 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
     const row = await env.DB.prepare('SELECT * FROM model_requests WHERE id = ? AND session = ?').bind(jobId, session.id).first()
     if (row?.kind === 'image' && ['processing', 'uncertain'].includes(row.status)) {
       const previous = row.result ? JSON.parse(row.result) : {}
+      if (apiKeyMode && !previous.relayGenerationId) return json(publicJob(row))
       try {
         const path = previous.relayGenerationId ? '/generations/' + encodeURIComponent(previous.relayGenerationId) : '/requests/' + jobId
-        const response = await upstreamFetch('https://aigchub.token6688.com/api/v1/model-runtime/cli' + path, { method: 'GET', headers: { authorization: `Bearer ${env.RELAY_API_KEY}` }, signal: AbortSignal.timeout(20000) })
+        const statusUrl = apiKeyMode ? base + '/tasks/' + encodeURIComponent(previous.relayGenerationId) : 'https://aigchub.token6688.com/api/v1/model-runtime/cli' + path
+        const response = await upstreamFetch(statusUrl, { method: 'GET', headers: { authorization: `Bearer ${env.RELAY_API_KEY}` }, signal: AbortSignal.timeout(20000) })
         if (response.ok) {
-          const next = imageReceipt(await readJson(response, 2_000_000), jobId, previous.modelId, previous)
+          const next = imageReceipt(await readJson(response, 2_000_000), jobId, previous.modelId, previous, apiKeyMode)
           row.status = next.status; row.result = JSON.stringify(next.result)
           await env.DB.prepare('UPDATE model_requests SET status = ?, result = ? WHERE id = ?').bind(row.status, row.result, jobId).run()
         } else await response.body?.cancel()
@@ -130,10 +134,12 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
   if (!reserved) return json({ error: '今日体验次数已用完，或同一请求正在处理。' }, 429)
   const body = input.type === 'chat'
     ? { model: input.modelId, messages: [{ role: 'system', content: '你是刘耀华作品集的 AI 创作助手。请用中文清晰简洁地回答用户的问题。' }, ...input.messages], stream: false, max_tokens: 600 }
-    : { task_id: env.RELAY_TASK_ID, request_id: input.requestId, input: { model_id: input.modelId, modality: 'image', params: input.params } }
+    : apiKeyMode
+      ? { model_id: input.modelId, modality: 'image', params: input.params, client_request_id: input.requestId }
+      : { task_id: env.RELAY_TASK_ID, request_id: input.requestId, input: { model_id: input.modelId, modality: 'image', params: input.params } }
   let result, status
   try {
-    const response = await upstreamFetch(input.type === 'chat' ? base + '/chat/completions' : 'https://aigchub.token6688.com/api/v1/model-runtime/cli/generations', {
+    const response = await upstreamFetch(input.type === 'chat' ? base + '/chat/completions' : 'https://aigchub.token6688.com/api/v1/model-runtime/' + (apiKeyMode ? 'invoke' : 'cli/generations'), {
       method: 'POST', headers: { authorization: `Bearer ${env.RELAY_API_KEY}`, 'content-type': 'application/json', 'x-request-id': input.requestId },
       body: JSON.stringify(body), signal: AbortSignal.timeout(input.type === 'chat' ? 60_000 : 180_000),
     })
@@ -146,7 +152,7 @@ export async function handleModelRequest(request, env, upstreamFetch = fetch) {
     } else {
       const data = await readJson(response, 2_000_000)
       const content = data.choices?.[0]?.message?.content
-      if (input.type === 'image') ({ result, status } = imageReceipt(data, input.requestId, input.modelId))
+      if (input.type === 'image') ({ result, status } = imageReceipt(data, input.requestId, input.modelId, {}, apiKeyMode))
       else if (typeof content === 'string' && content.trim()) { result = { text: content.slice(0, 12000), modelId: input.modelId }; status = 'complete' }
       else throw new Error('No confirmed result')
     }

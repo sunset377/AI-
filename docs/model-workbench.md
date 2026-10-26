@@ -1,5 +1,59 @@
 # 作品集模型工作台
 
+## 2026-10-26 普通 API Key 已上线（当前状态）
+
+公开入口：`https://sunset377.github.io/AI-/?view=studio`。作者提供的普通 Key 已加密保存并部署，Worker 版本为 `c35471ec-46be-4bad-9f70-cf0675b4585b`。后台使用 `RELAY_PROTOCOL=api_key`，不再绑定 CLI 任务，也不再设置旧凭据的 18:24 到期时间；正式目录返回 `ready:true`、`publicAccess:true`、`expiresAt:null`。访客自动建立独立会话，无需体验码或注册。
+
+聊天走 `/v1/chat/completions`；图片走 `/api/v1/model-runtime/invoke`，保存返回的 `task_id` 后只通过 `/v1/tasks/{task_id}` 查询原任务，不重复生成。普通 Key 最初仅有 `chat,image`，生成成功后实际任务查询返回 403；已补充 `tasks` 权限。虚构任务 ID 返回 404 不能证明实际任务查询权限可用。Key 原有 80 个模型、60 次/分钟及额度配置保持不变，未开放视频或音频生成。
+
+从正式首页以全新手机尺寸访客会话完成真实调用：
+
+- 聊天请求 `c44d4e8c-e620-40be-9a9a-957ad80778b8`：真实中文回答，账单 `success`，15 micro-USD。
+- 图片请求 `f0ef95f8-f5c3-4880-b23a-9096ffdfc874`：账单 `success`，4972 micro-USD。补齐查询权限后恢复同一任务，手机与电脑页面实际显示 1024×1536 成图，无额外生成。
+- 合计 4987 micro-USD（0.004987 USD），账户可用余额 4.295088 算力。155 项回归和 Worker dry-run 通过；浏览器无页面异常。仅实测上述两个模型，未测试真实微信设备。
+
+验收回执：`.local-audio/live-permanent-acceptance-20261026.json`；截图：`live-permanent-chat-20261026.png`、`live-permanent-image-20261026.png`、`live-permanent-image-desktop-20261026.png`。当前加密凭据同步保存在 `model-gateway-credential-permanent.json` 和默认 `model-gateway-credential.json`；旧凭据另存 `model-gateway-credential-before-permanent-20261026.json`。这些私密文件均不入库、不发布；临时部署明文文件已清理。
+
+本次维持原网站限制：同一会话每天聊天 6 次、图片 1 次；全站每天聊天 20 次、图片 3 次，按北京时间计数。实际可用性仍取决于账户余额、Key 状态及上游服务。以下记录为历史状态，不代表当前仍需导入 Key。
+
+## 2026-10-26 16:23 公网连接修复与临时凭据验收记录
+
+原 `workers.dev` 地址在当前网络出现连接超时，前端未设置超时且目录失败后没有可用重连入口。现由已有 Pages 网关 `https://ci-interview-gateway.pages.dev` 的 `MODEL_API` 服务绑定转发模型请求，保留 AI 面试服务绑定。网页已改用该入口，目录/访客连接最长等待 15 秒，失败后可重新连接；已提交的生成请求仅查询原任务，不自动重投。
+
+前端提交 `deca3b6` 已发布至 GitHub Pages，Actions 运行 `40291198756` 成功；Pages 网关部署为 `7201dc83`。本地构建、151 项回归，以及 1440/768/390/360 宽度浏览器检查通过，包含断网、挂起连接超时和已有会话恢复。
+
+北京时间 16:23，从正式网址首页进入工作台，以全新手机尺寸浏览器访问，无体验码完成两次真实调用：
+
+- 聊天请求 `6f6283fd-c154-4ffd-8a35-bac350d6aca9`：返回真实中文回答，账单成功，15 micro-USD。
+- 图片请求 `3dc72cb5-9965-446d-bc33-794a4758fc25`：最终 `complete`，浏览器成功加载 1024×1536 图片，账单成功，4972 micro-USD。
+- 合计 4987 micro-USD；账户可用余额实测为 4.330994 算力。验收回执与截图保存在忽略目录 `.local-audio/live-guest-acceptance-20261026.json`、`live-guest-chat-20261026.png`、`live-guest-image-20261026.png`，会话令牌加密保存。尚未验证真实微信浏览器。
+
+CLI 本机 Provider 和 Tool 连接均验证有效，无需重复接入。此次网页验收仍使用原专用任务凭据，**北京时间 2026-10-26 18:24:08 到期**；长期 Key 尚未成功导入。已从公开网页代码确认普通 Key 的管理入口为 `https://aigchub.token6688.com/zh-CN/console/keys`，页面标题与 HTTP 200 已验证。用户提供的一次性 CLI 接入命令未执行、未写入文件。Windows UI helper 不可用，启动 Chrome 自动化窗口及命令行打开标签页均被自动审批审核拒绝，未绕过限制。
+
+当时待办已由本页首节完成：普通 Key 已提供、加密保存、部署，并验证真实聊天和图片查询交付；未通过延长本地配置日期冒充长期可用。
+
+## 2026-10-25 真实聊天、图片恢复与余额提醒（最新实测）
+
+公开工作台已恢复，`/api/models` 返回 `ready:true`、`publicAccess:true`。不带体验码的 `POST /api/sessions {}` 返回 200 和独立访客会话。网站继续使用作者账户支付，访客无需注册、输入验证码或 API Key；后台每日与每会话限额保留。
+
+用户批准 100000 micro-USD 的本轮验收预算。通过生产 Cloudflare 网关分别只提交一次：
+
+- DeepSeek V4.1 Flash：请求 `88f652b0-ee38-4e11-8051-f2ec2ca38ca8`，最终 `complete`，真实中文回答已返回，账单 success，22 micro-USD。
+- GT Image 2 C：请求 `3764f83b-984f-4463-95ee-4a9139b49e8b`，1 张 1024×1024 / medium 图片，最终 `complete`，账单 success，4972 micro-USD；成品地址 HEAD 200、`image/jpeg`、157413 字节。
+- 合计 4994 micro-USD（0.004994 USD）；账户余额由 4.402858 ⚡变为 4.366901 ⚡。账户余额与 USD 结算分开记录。
+
+图片生成后最初被网关标为 uncertain，原因是新的真实交付域名为 `assets.token6688.com`，旧代码仅允许 `cdn.token6688.com`。已加入精确域名白名单并保留 HTTPS、无用户信息、无自定义端口检查；新增域名及伪造域名测试先复现失败再修复。只 GET 原任务恢复结果，没有重新提交生成。18 项网关、请求策略和验收保护测试通过。最终 Worker 版本：`e07ae4a0-5505-4f05-b446-f4f939ebf85b`。
+
+专用凭据仅有 chat/image/models/tasks 权限，Key 总额度 100000 micro-USD、4 请求/分钟，不含视频音频权限。新任务为 `e0b97bd9-100c-4a78-a2c1-0bc5a6908907`，**北京时间 2026-10-26 18:24:08 到期**。这仍是短期恢复，不能称永久公网接入；之后必须使用平台提供的普通长期 API Key 及其正式协议，不能定时新建 CLI 任务续命。上游 Key 额度在调用前检查，不代表单次最终结算绝不会超出剩余额度。
+
+旧加密凭据备份在 `.local-audio/model-gateway-credential-before-20261025-restore.json`；新凭据已激活至 `.local-audio/model-gateway-credential.json`。实际验收记录在 `.local-audio/model-paid-acceptance-20261025.json`，原始交付回执为同名 `.upstream.json`；全部不入库、不发布。管理脚本支持 `RELAY_CREDENTIAL_FILE` 和显式 `--create`；创建前记录操作，避免不确定响应重复创建。管理命令使用当前登录的 `tokengo.love`，旧 `aigchub.token6688.com` 管理会话无法访问新任务。
+
+已创建 Codex heartbeat `automation-2`，每小时只读检查账户余额和网关状态，余额低于 1 ⚡、实际额度拒绝、凭据临近到期或服务失效时，邮件通知用户在本次聊天指定的 QQ 邮箱；同一持续问题 24 小时去重。通知由本机 Codex 执行，需要电脑联网且 Codex 可运行。测试邮件发送接口确认 SENT，邮件 ID `1a172a338446a990`；尚未核对 QQ 收件箱是否收到。
+
+长期密钥的本机接收脚本为 `scripts/import-portfolio-api-key.ps1`：隐藏输入、Windows DPAPI 加密、不覆盖已有文件、不自动发布或调用模型。作者在 TokenGo 网页创建普通、不绑定 CLI 任务的专用 API Key 后，在 PowerShell 运行该脚本完成一次性导入，再核验权限和图片协议。此步骤只由作者完成，访客不需要任何验证码。长期凭据尚未提供，长期接入仍待完成。
+
+下方为历史记录，状态以本节为准。
+
 ## 2026-10-25 首屏与免体验码调整（本地已验证）
 
 默认首页以 AIGC 创作智能体为主入口，提供聊天、图片生成和现有语音试听入口；MineFlow 下移为次要项目。作品集页手机首屏也优先显示智能体卡片。`?view=studio&model=gpt-image-2-c` 直接选择图片模型。

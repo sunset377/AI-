@@ -8,9 +8,8 @@
   "vars": {
     "RELAY_VERIFIED": "1",
     "PUBLIC_GUEST_ACCESS": "1",
-    "RELAY_TASK_ID": "0bbf0968-77ee-404a-86d8-eedaad8867a8",
-    "PUBLIC_ORIGIN": "https://sunset377.github.io",
-    "EXPERIENCE_EXPIRES_AT": "2026-10-23T17:56:44Z"
+    "RELAY_PROTOCOL": "api_key",
+    "PUBLIC_ORIGIN": "https://sunset377.github.io"
   },
   "d1_databases": [{
     "binding": "DB",
