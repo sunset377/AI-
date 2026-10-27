@@ -1,0 +1,16 @@
+{
+  "name": "dazhou-local-whitebox-v4",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build --base=./ --outDir ../../public/dazhou-store"
+  },
+  "dependencies": {
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "vite": "8.3.3"
+  }
+}

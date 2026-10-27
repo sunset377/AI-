@@ -33,6 +33,16 @@ const wallpapers = [
 
 const projects = [
   {
+    title: '达州升华 · 3D 门店漫游',
+    subtitle: 'V4 结构白模 · 浏览器直接体验',
+    type: 'product',
+    image: 'dazhou-store/preview.png',
+    meta: 'Codex / Blender / Three.js / 旋转缩放 / 店内漫游',
+    description: '依据门店图纸制作墙体、地面、双入口、转角侧窗与仓库隔墙，用 Blender 输出 GLB，并通过 Three.js 实现视角切换、电脑和手机漫游。本版用于前期空间方案预演；墙厚及部分洞口尺寸待复核，不含货架和软装，不作为施工交付。',
+    href: 'dazhou-store/',
+    actionLabel: '打开 3D 门店 · 自由漫游',
+  },
+  {
     title: 'MineFlow · 矿山智慧运输调度',
     subtitle: '可交互业务 Demo · 浏览器直接体验',
     type: 'product',
@@ -167,6 +177,7 @@ const projects = [
 }))
 
 const projectOrder = [
+  '达州升华 · 3D 门店漫游',
   'MineFlow · 矿山智慧运输调度',
   '定制化视频工作流 · 预言', '量产样片 · 愚公移山', 'AI 漫剧导演工作流',
   '小刘带你挖三星堆', '品牌产品宣传片', '《星际穷途 X》',
@@ -176,6 +187,7 @@ const projectOrder = [
 projects.sort((a, b) => projectOrder.indexOf(a.title) - projectOrder.indexOf(b.title))
 
 const projectSummaries = {
+  '达州升华 · 3D 门店漫游': '从门店图纸到可旋转、缩放、进入行走的 3D 空间白模，支持电脑与手机。',
   'MineFlow · 矿山智慧运输调度': '从业务需求、车辆推荐与人工派单，到排队、称重、异常和运营看板的可交互调度演示。',
   '定制化视频工作流 · 预言': '以已跑通的定时任务与系列样片，展示从选题到成片、封面和发布文案的生产方法。',
   '量产样片 · 愚公移山': '同一套工作流的实际视频，直接查看画面风格、字幕和剪辑节奏。',
