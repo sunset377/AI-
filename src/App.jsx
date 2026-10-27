@@ -33,6 +33,16 @@ const wallpapers = [
 
 const projects = [
   {
+    title: 'PixelFit · AI 像素健身房',
+    subtitle: '可交互健身小游戏 · 浏览器直接试玩',
+    type: 'mini',
+    image: 'assets/pixelfit-home-a.png',
+    meta: '四位原创角色 / 器械归位 / 饮食分类 / 睡眠与热身',
+    description: '围绕原创健身角色制作的竖屏互动小游戏。选择角色后进入个人健身房，在限时器械归位中完成 22 件器械分类，也可以体验饮食分类、睡眠恢复和拳击热身；进度保存在当前浏览器。',
+    href: 'pixelfit/',
+    actionLabel: '打开 PixelFit · 立即试玩',
+  },
+  {
     title: '达州升华 · 3D 门店漫游',
     subtitle: 'V4 结构白模 · 浏览器直接体验',
     type: 'product',
@@ -177,6 +187,7 @@ const projects = [
 }))
 
 const projectOrder = [
+  'PixelFit · AI 像素健身房',
   '达州升华 · 3D 门店漫游',
   'MineFlow · 矿山智慧运输调度',
   '定制化视频工作流 · 预言', '量产样片 · 愚公移山', 'AI 漫剧导演工作流',
@@ -187,6 +198,7 @@ const projectOrder = [
 projects.sort((a, b) => projectOrder.indexOf(a.title) - projectOrder.indexOf(b.title))
 
 const projectSummaries = {
+  'PixelFit · AI 像素健身房': '选择原创角色进入个人健身房，体验器械归位、饮食分类、睡眠恢复和拳击热身。',
   '达州升华 · 3D 门店漫游': '从门店图纸到可旋转、缩放、进入行走的 3D 空间白模，支持电脑与手机。',
   'MineFlow · 矿山智慧运输调度': '从业务需求、车辆推荐与人工派单，到排队、称重、异常和运营看板的可交互调度演示。',
   '定制化视频工作流 · 预言': '以已跑通的定时任务与系列样片，展示从选题到成片、封面和发布文案的生产方法。',
