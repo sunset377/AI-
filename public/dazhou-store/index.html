@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071f22" />
+    <meta name="description" content="MOMOCO Plus 达州升华广场店三维门店漫游样机" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23071f22'/%3E%3Cpath d='M7 22V10h4l5 7 5-7h4v12h-4v-6l-5 6-5-6v6z' fill='%234fddd2'/%3E%3C/svg%3E" />
+    <title>MOMOCO Plus｜达州升华广场店 V4 结构白模</title>
+    <script type="module" crossorigin src="./assets/index-CledhUH0.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Eyq-lQCX.css">
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="scene" aria-label="达州升华广场店三维门店"></canvas>
+
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">MOMOCO PLUS · WHITEBOX V4</p>
+          <h1>达州升华广场店</h1>
+        </div>
+        <p id="status" role="status">正在加载门店模型…</p>
+      </header>
+
+      <nav class="view-switcher" aria-label="门店视角">
+        <button type="button" data-view="overview" class="active">整体</button>
+        <button type="button" data-view="facade">双入口</button>
+        <button type="button" data-view="interior">店内</button>
+        <button type="button" data-view="top">顶视</button>
+        <button type="button" data-view="side">侧面</button>
+      </nav>
+
+      <aside class="version-note">
+        <strong>图纸结构白模 · V4</strong>
+        <span>双入口 / 转角侧窗 / 仓库与试衣间</span>
+        <a href="../?view=portfolio#works">返回个人作品集 ↗</a>
+        <small>墙厚等暂定尺寸待复核；本版不含陈列。</small>
+      </aside>
+      <section class="entry-card" aria-label="漫游控制">
+        <p>拖动旋转 · 滚轮缩放</p>
+        <button id="enter-store" type="button" disabled>进入门店</button>
+      </section>
+
+      <section id="walk-help" class="walk-help" hidden>
+        <p><strong>WASD / 方向键</strong> 移动，鼠标控制视线</p>
+        <button id="exit-walk" type="button">退出漫游</button>
+      </section>
+
+      <section id="touch-controls" class="touch-controls" aria-label="触屏移动控制" hidden>
+        <button type="button" data-key="KeyW" aria-label="向前">▲</button>
+        <div>
+          <button type="button" data-key="KeyA" aria-label="向左">◀</button>
+          <button type="button" data-key="KeyS" aria-label="向后">▼</button>
+          <button type="button" data-key="KeyD" aria-label="向右">▶</button>
+        </div>
+      </section>
+
+      <section id="error-panel" class="error-panel" hidden>
+        <h2>模型暂时无法打开</h2>
+        <p>请检查网络后刷新页面，或返回作品集稍后重试。</p>
+      </section>
+    </main>
+  </body>
+</html>

@@ -58,6 +58,8 @@ test('separate gateway and portfolio retain the original visual entry and all pr
       for (const title of ['量产样片 · 愚公移山', '《星际穷途 X》', '品牌产品宣传片', '爆款视频复刻工作台', 'AI创作聚合平台', '《时光来信》· 屈臣氏 185 周年']) assert.ok(works.includes(title), title)
       assert.equal((html.match(/class="styleShot"/g) ?? []).length, 99)
       assert.match(html, /href="\/sanxingdui\/"/)
+      assert.match(html, /href="\/dazhou-store\/"[^>]*>打开 3D 门店/)
+      assert.match(html, /dazhou-store\/preview\.png/)
     }
     const studio = renderToStaticMarkup(React.createElement(App, { initialView: 'studio' }))
     assert.match(studio, /AI 创作工作台/)
