@@ -6,13 +6,14 @@ import { createSsrServer as createServer } from './helpers/vite.js'
 import { readView } from '../src/navigation.js'
 
 test('readView restores only supported public views', () => {
-  assert.equal(readView({ search: '' }), 'gateway')
+  assert.equal(readView({ search: '' }), 'home')
   assert.equal(readView({ search: '?view=portfolio' }), 'portfolio')
   assert.equal(readView({ search: '?view=interview' }), 'interview')
-  assert.equal(readView({ search: '?view=unknown' }), 'gateway')
+  assert.equal(readView({ search: '?view=unknown' }), 'home')
+  assert.equal(readView({ search: '?view=gateway' }), 'gateway')
 })
 
-test('the default gateway leads with direct AI creation and retains portfolio and interview access', async () => {
+test('the legacy gateway retains direct AI creation, portfolio and interview access', async () => {
   const vite = await createServer({
     appType: 'custom',
     server: { middlewareMode: true, hmr: false },
@@ -20,7 +21,7 @@ test('the default gateway leads with direct AI creation and retains portfolio an
 
   try {
     const { default: App } = await vite.ssrLoadModule('/src/App.jsx')
-    const html = renderToStaticMarkup(React.createElement(App))
+    const html = renderToStaticMarkup(React.createElement(App, { initialView: 'gateway' }))
 
     assert.match(html, /可调度/)
     assert.match(html, /和数字版的我聊聊/)

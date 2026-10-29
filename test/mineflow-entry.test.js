@@ -8,7 +8,7 @@ test('gateway and project list expose the interactive MineFlow entry without rem
   const vite = await createServer({ appType: 'custom', server: { middlewareMode: true, hmr: false } })
   try {
     const { default: App } = await vite.ssrLoadModule('/src/App.jsx')
-    const gateway = renderToStaticMarkup(React.createElement(App))
+    const gateway = renderToStaticMarkup(React.createElement(App, { initialView: 'gateway' }))
     assert.match(gateway, /href="\/mineflow\/"[^>]*>.*?体验 MineFlow/s)
     assert.match(gateway, /查看作品集/)
     assert.match(gateway, /和数字版的我聊聊/)
